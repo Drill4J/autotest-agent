@@ -1,0 +1,6 @@
+build/
+.idea/*
+/build-cache/
+.gradle/
+.kotlintest/
+test-1.txt
