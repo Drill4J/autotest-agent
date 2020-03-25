@@ -20,7 +20,7 @@ val drillLogger: String by rootProject
 val drillHttpInterceptorVersion: String by rootProject
 val transportVersion: String by rootProject
 
-val libName = "test"
+val libName = "autoTestAgent"
 kotlin {
 
     targets {
@@ -70,8 +70,9 @@ val jvmMainClasses by tasks.getting {
     dependsOn(shadowJar)
 }
 
+val nativeTargets = kotlin.targets.filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>()
 distributions {
-    kotlin.targets.filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().forEach {
+    nativeTargets.forEach {
         val name = it.name
         create(name) {
             distributionBaseName.set(name)
@@ -97,6 +98,14 @@ publishing {
                     if (project.hasProperty("bintrayApiKey"))
                         project.property("bintrayApiKey").toString()
                     else System.getenv("BINTRAY_API_KEY")
+            }
+        }
+    }
+    publications {
+        nativeTargets.forEach {
+            create<MavenPublication>("${it.name}Zip") {
+                artifactId = "$libName-${it.name}"
+                artifact(tasks["${it.name}DistZip"])
             }
         }
     }

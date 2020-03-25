@@ -37,7 +37,6 @@ fun String?.toAgentParams() = this.asParams().let { params ->
         warn = params["warn"]?.toBoolean() ?: false,
         rawFrameworkPlugins = params["plugins"] ?: ""
     )
-    println(result)
     if (result.agentId.isBlank() && result.serviceGroup.isBlank()) {
         error(WRONG_PARAMS)
     }
