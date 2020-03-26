@@ -4,6 +4,7 @@ plugins {
     id("org.jetbrains.kotlin.multiplatform") version "1.3.70"
     id("org.jetbrains.kotlin.plugin.serialization") version "1.3.70"
     id("com.epam.drill.cross-compilation") version "0.16.0"
+    id("com.epam.drill.agent.runner.autotest") version "0.1.0"
     distribution
     `maven-publish`
 }
@@ -126,30 +127,24 @@ val presetName: String =
 
 tasks.named<org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest>("jvmTest") {
     dependsOn(tasks.getByPath("link${libName.capitalize()}DebugShared${presetName.capitalize()}"))
-    val targetFromPreset = (kotlin.targets[presetName]) as org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-
+    dependsOn(tasks.getByPath("install${presetName.capitalize()}Dist"))
     useJUnitPlatform()
-    doFirst {
-        jvmArgs = listOf(
-            "-agentpath:${targetFromPreset
-                .binaries
-                .findSharedLib(libName, org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType.DEBUG)!!
-                .outputFile.toPath()}=" +
-                    "runtimePath=${runtimeProject.tasks.getByPath("shadowJar").outputs.files.singleFile}," +
-                    "adminHost=localhost," +
-                    "adminPort=8090," +
-                    "agentId=Petclinic," +
-                    "pluginId=test2code," +
-                    //"serviceGroupId=aaabbb" +
-                    "trace=true," +
-                    "debug=true," +
-                    "info=true," +
-                    "warn=true," +
-                    //plugins: junit, jmeter, testng. usage: [ plugins=junit;jmeter ]
-                    //by default all 3 plugins are active
-                    "plugins=junit"
-        )
-    }
+}
+
+val targetFromPreset = (kotlin.targets[presetName]) as org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+
+drill {
+    runtimePath = file("./build/install/$presetName")
+    agentPath =
+        targetFromPreset
+            .binaries
+            .findSharedLib(libName, org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType.DEBUG)!!
+            .outputFile.toPath().toFile()
+    agentId = "Petclinic"
+    adminHost = "localhost"
+    adminPort = 8090
+    plugins += "junit"
+    debug = true
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile> {

@@ -62,7 +62,7 @@ fun CPointer<JavaVMVar>.initAgent(runtimePath: String) = memScoped {
     jvmtiCapabilities.can_retransform_any_class = 1.toUInt()
     jvmtiCapabilities.can_maintain_original_method_order = 1.toUInt()
     AddCapabilities(jvmtiCapabilities.ptr)
-    AddToBootstrapClassLoaderSearch(runtimePath)
+    AddToBootstrapClassLoaderSearch("$runtimePath/drillRuntime.jar".apply { println(this) })
     callbackRegister()
 }
 

@@ -1,5 +1,5 @@
 rootProject.name = "autotest-agent"
-include (":runtime")
+include(":runtime")
 pluginManagement {
     repositories {
         mavenLocal()
