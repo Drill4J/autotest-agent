@@ -23,7 +23,7 @@ fun classFileLoadHookEvent(
     val className = kClassName?.toKString()
     if (notSuitableClass(loader, protection_domain, className, classData)) return
 
-    val instrumentedBytes = transform(classData, className!!) ?: return
+    val instrumentedBytes = transform(classData, className!!, classDataLen) ?: return
     val instrumentedSize = instrumentedBytes.size
     mainLogger.debug { "Class '$className' was transformed" }
     mainLogger.debug { "Applying instrumenting (old: $classDataLen to new: $instrumentedSize)" }
@@ -55,9 +55,17 @@ fun initializeStrategyManager(rawFrameworkPlugins: String) {
     CallStaticObjectMethod(managerClass, initialize, NewStringUTF(rawFrameworkPlugins))
 }
 
-fun transform(classBytes: CPointer<UByteVar>?, className: String): ByteArray? {
+fun transform(classBytes: CPointer<UByteVar>?, className: String, classDataLen: jint): ByteArray? {
     val transform: jmethodID? = GetStaticMethodID(transformerClass, "transform", "(Ljava/lang/String;[B)[B")
-    return CallStaticObjectMethod(transformerClass, transform, NewStringUTF(className), classBytes).toByteArray()
+    val classBytesInJBytesArray: jbyteArray = NewByteArray(classDataLen)!!
+    val readBytes = classBytes!!.readBytes(classDataLen)
+    SetByteArrayRegion(classBytesInJBytesArray, 0, classDataLen, readBytes.refTo(0))
+    return CallStaticObjectMethod(
+        transformerClass,
+        transform,
+        NewStringUTF(className),
+        classBytesInJBytesArray
+    ).toByteArray()
 }
 
 fun jobject?.toByteArray(): ByteArray? = this?.run {

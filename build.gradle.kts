@@ -1,4 +1,5 @@
 import  org.apache.tools.ant.taskdefs.condition.Os
+
 plugins {
     id("org.jetbrains.kotlin.multiplatform") version "1.3.70"
     id("org.jetbrains.kotlin.plugin.serialization") version "1.3.70"
@@ -35,7 +36,11 @@ kotlin {
                 }
             }
         }
-        sequenceOf(linuxX64(), macosX64(), mingwX64()).forEach {
+        sequenceOf(
+            linuxX64(),
+            macosX64(),
+            mingwX64 { binaries.all { linkerOpts("-lpsapi", "-lwsock32", "-lws2_32", "-lmswsock") } }
+        ).forEach {
             it.binaries {
                 sharedLib(libName, setOf(DEBUG))
             }
@@ -64,7 +69,7 @@ kotlin {
     }
 }
 
-val runtimeProject= project(":runtime")
+val runtimeProject = project(":runtime")
 val shadowJar = provider { runtimeProject.tasks.getByPath("shadowJar") }
 val jvmMainClasses by tasks.getting {
     dependsOn(shadowJar)
@@ -124,26 +129,26 @@ tasks.named<org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest>("jvmTes
     val targetFromPreset = (kotlin.targets[presetName]) as org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
     useJUnitPlatform()
-    doFirst{
-    jvmArgs = listOf(
-        "-agentpath:${targetFromPreset
-            .binaries
-            .findSharedLib(libName, org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType.DEBUG)!!
-            .outputFile.toPath()}=" +
-                "runtimePath=${runtimeProject.tasks.getByPath("shadowJar").outputs.files.singleFile.apply { println(this) } }," +
-                "adminHost=localhost," +
-                "adminPort=8090," +
-                "agentId=Petclinic," +
-                "pluginId=test2code," +
-                //"serviceGroupId=aaabbb" +
-                "trace=true," +
-                "debug=true," +
-                "info=true," +
-                "warn=true," +
-                //plugins: junit, jmeter, testng. usage: [ plugins=junit;jmeter ]
-                //by default all 3 plugins are active
-                "plugins=junit"
-    )
+    doFirst {
+        jvmArgs = listOf(
+            "-agentpath:${targetFromPreset
+                .binaries
+                .findSharedLib(libName, org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType.DEBUG)!!
+                .outputFile.toPath()}=" +
+                    "runtimePath=${runtimeProject.tasks.getByPath("shadowJar").outputs.files.singleFile}," +
+                    "adminHost=localhost," +
+                    "adminPort=8090," +
+                    "agentId=Petclinic," +
+                    "pluginId=test2code," +
+                    //"serviceGroupId=aaabbb" +
+                    "trace=true," +
+                    "debug=true," +
+                    "info=true," +
+                    "warn=true," +
+                    //plugins: junit, jmeter, testng. usage: [ plugins=junit;jmeter ]
+                    //by default all 3 plugins are active
+                    "plugins=junit"
+        )
     }
 }
 
