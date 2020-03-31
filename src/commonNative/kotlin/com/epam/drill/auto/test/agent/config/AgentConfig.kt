@@ -44,7 +44,7 @@ fun String?.toAgentParams() = this.asParams().let { params ->
 }
 
 fun String?.asParams(): Map<String, String> = try {
-    this?.split(",")?.associate {
+    this?.split(",")?.filter { it.isNotEmpty() }?.associate {
         val (key, value) = it.split("=")
         key to value
     } ?: emptyMap()
@@ -62,7 +62,7 @@ fun CPointer<JavaVMVar>.initAgent(runtimePath: String) = memScoped {
     jvmtiCapabilities.can_retransform_any_class = 1.toUInt()
     jvmtiCapabilities.can_maintain_original_method_order = 1.toUInt()
     AddCapabilities(jvmtiCapabilities.ptr)
-    AddToBootstrapClassLoaderSearch("$runtimePath/drillRuntime.jar".apply { println(this) })
+    AddToBootstrapClassLoaderSearch("$runtimePath/drillRuntime.jar")
     callbackRegister()
 }
 
