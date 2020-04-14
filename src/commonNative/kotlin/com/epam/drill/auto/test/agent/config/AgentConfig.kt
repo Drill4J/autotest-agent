@@ -9,7 +9,7 @@ import kotlin.native.concurrent.*
 
 data class AgentConfig(
     val agentId: String = "",
-    val serviceGroup: String = "",
+    val groupId: String = "",
     val pluginId: String = "",
     val adminHost: String = "",
     val adminPort: String = "",
@@ -26,7 +26,7 @@ const val WRONG_PARAMS = "Agent parameters are not specified correctly."
 fun String?.toAgentParams() = this.asParams().let { params ->
     val result = AgentConfig(
         agentId = params["agentId"] ?: "",
-        serviceGroup = params["serviceGroup"] ?: "",
+        groupId = params["groupId"] ?: "",
         pluginId = params["pluginId"] ?: error(WRONG_PARAMS),
         adminHost = params["adminHost"] ?: error(WRONG_PARAMS),
         adminPort = params["adminPort"] ?: error(WRONG_PARAMS),
@@ -37,7 +37,7 @@ fun String?.toAgentParams() = this.asParams().let { params ->
         warn = params["warn"]?.toBoolean() ?: false,
         rawFrameworkPlugins = params["plugins"] ?: ""
     )
-    if (result.agentId.isBlank() && result.serviceGroup.isBlank()) {
+    if (result.agentId.isBlank() && result.groupId.isBlank()) {
         error(WRONG_PARAMS)
     }
     result
