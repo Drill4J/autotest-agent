@@ -84,7 +84,9 @@ distributions {
             distributionBaseName.set(name)
             contents {
                 from(shadowJar)
-                from(tasks.getByPath("link${libName.capitalize()}DebugShared${name.capitalize()}"))
+                from(tasks.getByPath("link${libName.capitalize()}DebugShared${name.capitalize()}")){
+                    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+                }
             }
         }
     }
