@@ -108,7 +108,11 @@ publishing {
         }
     }
     publications {
-        nativeTargets.forEach {
+
+        kotlin.targets.filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().filter {
+            org.jetbrains.kotlin.konan.target.HostManager()
+                .isEnabled(it.konanTarget)
+        }.forEach {
             create<MavenPublication>("${it.name}Zip") {
                 artifactId = "$libName-${it.name}"
                 artifact(tasks["${it.name}DistZip"])
