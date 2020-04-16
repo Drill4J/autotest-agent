@@ -1,8 +1,8 @@
 name: Build & publish autotest artifacts
 on:
   push:
-    branches:
-      - master
+    tags:
+      - 'v*'
 
 jobs:
   build_and_publish_for_nix:
