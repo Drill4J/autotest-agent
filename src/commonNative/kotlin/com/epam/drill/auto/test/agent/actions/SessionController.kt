@@ -5,6 +5,7 @@ import com.epam.drill.auto.test.agent.config.*
 import com.epam.drill.auto.test.agent.http.*
 import com.epam.drill.jvmapi.gen.*
 import kotlinx.cinterop.*
+import kotlinx.serialization.builtins.*
 import kotlin.native.concurrent.*
 
 object SessionController {
@@ -15,14 +16,16 @@ object SessionController {
     private val dispatchActionPath: String
         get() = if (agentConfig.value.groupId.isBlank()) {
             "/api/agents/${agentConfig.value.agentId}/plugins/${agentConfig.value.pluginId}/dispatch-action"
-        } else "/api/service-group/${agentConfig.value.groupId}/plugins/${agentConfig.value.pluginId}/dispatch-action"
+        } else "/api/service-groups/${agentConfig.value.groupId}/plugins/${agentConfig.value.pluginId}/dispatch-action"
 
     fun startSession() {
         mainLogger.debug { "Attempting to start a Drill4J test session..." }
         val payload = StartSession.serializer() stringify StartSession()
         val response = dispatchAction(payload)
         mainLogger.debug { "Received response: ${response.body}" }
-        val startSessionResponse = StartSessionResponse.serializer() parse response.body
+        val startSessionResponse = if (agentConfig.value.groupId.isBlank())
+            StartSessionResponse.serializer() parse response.body
+        else (StartSessionResponse.serializer().list parse response.body).first()
         sessionId.value = startSessionResponse.data.payload.sessionId
         mainLogger.info { "Started a test session with ID ${sessionId.value}" }
     }
