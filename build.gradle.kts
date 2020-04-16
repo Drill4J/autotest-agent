@@ -9,6 +9,8 @@ plugins {
     `maven-publish`
 }
 
+apply(from = "gradle/git-version.gradle.kts")
+
 repositories {
     mavenCentral()
     jcenter()
