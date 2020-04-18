@@ -36,6 +36,7 @@ kotlin {
                     implementation("com.epam.drill.logger:logger:$drillLogger")
                     implementation("com.epam.drill.transport:core:$transportVersion")
                     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-native:$serializationRuntimeVersion")
+                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-properties-native:$serializationRuntimeVersion")
                 }
             }
         }
@@ -154,7 +155,9 @@ drill {
     plugins += "junit"
     debug = true
 }
-
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile> {
+    kotlinOptions.freeCompilerArgs += "-Xuse-experimental=kotlinx.serialization.ImplicitReflectionSerializer"
     kotlinOptions.freeCompilerArgs += "-Xuse-experimental=kotlin.ExperimentalUnsignedTypes"
+    kotlinOptions.freeCompilerArgs += "-Xuse-experimental=kotlin.time.ExperimentalTime"
+    kotlinOptions.freeCompilerArgs += "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
 }

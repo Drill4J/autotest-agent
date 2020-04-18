@@ -18,7 +18,7 @@ fun agentOnLoad(vmPointer: CPointer<JavaVMVar>, options: String, reservedPtr: Lo
     try {
         val agentConfig = options.toAgentParams().freeze()
         vmPointer.initAgent(agentConfig.runtimePath)
-        logConfig.value = agentConfig.extractLoggerConfig()
+
         SessionController.agentConfig.value = agentConfig
         SessionController.startSession()
     } catch (ex: Throwable) {

@@ -5,41 +5,36 @@ import com.epam.drill.jvmapi.*
 import com.epam.drill.jvmapi.gen.*
 import com.epam.drill.logger.*
 import kotlinx.cinterop.*
+import kotlinx.serialization.Properties
+import kotlinx.serialization.Serializable
 import kotlin.native.concurrent.*
 
+@Serializable
 data class AgentConfig(
     val agentId: String = "",
     val groupId: String = "",
     val pluginId: String = "",
     val adminHost: String = "",
-    val adminPort: String = "",
+    val adminPort: String = "80",
     val runtimePath: String = "",
-    val trace: Boolean = false,
-    val debug: Boolean = false,
-    val info: Boolean = false,
-    val warn: Boolean = false,
+    val logLevel: String = LogLevel.ERROR.name,
     val rawFrameworkPlugins: String = ""
-)
+){
+    val level: LogLevel
+        get() = LogLevel.valueOf(logLevel)
+
+    val frameworkPlugins: List<String>
+        get() = rawFrameworkPlugins.split(";")
+}
 
 const val WRONG_PARAMS = "Agent parameters are not specified correctly."
 
 fun String?.toAgentParams() = this.asParams().let { params ->
-    val result = AgentConfig(
-        agentId = params["agentId"] ?: "",
-        groupId = params["groupId"] ?: "",
-        pluginId = params["pluginId"] ?: error(WRONG_PARAMS),
-        adminHost = params["adminHost"] ?: error(WRONG_PARAMS),
-        adminPort = params["adminPort"] ?: error(WRONG_PARAMS),
-        runtimePath = params["runtimePath"] ?: error(WRONG_PARAMS),
-        trace = params["trace"]?.toBoolean() ?: false,
-        debug = params["debug"]?.toBoolean() ?: false,
-        info = params["info"]?.toBoolean() ?: false,
-        warn = params["warn"]?.toBoolean() ?: false,
-        rawFrameworkPlugins = params["plugins"] ?: ""
-    )
+    val result = Properties.load<AgentConfig>(params)
     if (result.agentId.isBlank() && result.groupId.isBlank()) {
         error(WRONG_PARAMS)
     }
+    logConfig.value = configByLoggerLevel(result.level).freeze()
     result
 }
 
@@ -77,5 +72,3 @@ private fun setJvmti(vm: JavaVMVar) = memScoped {
     jvmti.value = jvmtiEnvPtr.value
     jvmtiEnvPtr.value.freeze()
 }
-
-fun AgentConfig.extractLoggerConfig() = LoggerConfig(trace, debug, info, warn).freeze()
