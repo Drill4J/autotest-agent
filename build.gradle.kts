@@ -4,7 +4,7 @@ plugins {
     id("org.jetbrains.kotlin.multiplatform") version "1.3.70"
     id("org.jetbrains.kotlin.plugin.serialization") version "1.3.70"
     id("com.epam.drill.cross-compilation") version "0.16.0"
-    id("com.epam.drill.agent.runner.autotest") version "0.1.0"
+    id("com.epam.drill.agent.runner.autotest") version "0.1.2"
     distribution
     `maven-publish`
 }
@@ -153,7 +153,7 @@ drill {
     adminHost = "localhost"
     adminPort = 8090
     plugins += "junit"
-    debug = true
+    logLevel = com.epam.drill.agent.runner.LogLevels.TRACE
 }
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile> {
     kotlinOptions.freeCompilerArgs += "-Xuse-experimental=kotlinx.serialization.ImplicitReflectionSerializer"
