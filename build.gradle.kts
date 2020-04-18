@@ -9,7 +9,7 @@ plugins {
     `maven-publish`
 }
 
-apply(from = "gradle/git-version.gradle.kts")
+apply(from = "https://raw.githubusercontent.com/Drill4J/build-scripts/master/git-version.gradle.kts")
 
 repositories {
     mavenCentral()
@@ -86,7 +86,7 @@ distributions {
             distributionBaseName.set(name)
             contents {
                 from(shadowJar)
-                from(tasks.getByPath("link${libName.capitalize()}DebugShared${name.capitalize()}")){
+                from(tasks.getByPath("link${libName.capitalize()}DebugShared${name.capitalize()}")) {
                     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
                 }
             }
