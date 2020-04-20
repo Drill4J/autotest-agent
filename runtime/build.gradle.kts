@@ -23,4 +23,5 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
     archiveFileName.set("drillRuntime.jar")
+    relocate("kotlin", "kruntime")
 }
