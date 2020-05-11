@@ -2,6 +2,7 @@ package com.epam.drill.auto.test.agent.penetration;
 
 import com.epam.drill.auto.test.agent.penetration.jmeter.JMeterPenetration;
 import com.epam.drill.auto.test.agent.penetration.junit.JUnitPenetration;
+import com.epam.drill.auto.test.agent.penetration.junit.JUnitRunnerPenetration;
 import com.epam.drill.auto.test.agent.penetration.testng.TestNGPenetration;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -55,6 +56,7 @@ public class StrategyManager {
 
     private static void enableAllStrategies() {
         strategies.add(new JUnitPenetration());
+        strategies.add(new JUnitRunnerPenetration());
         strategies.add(new JMeterPenetration());
         strategies.add(new TestNGPenetration());
     }
