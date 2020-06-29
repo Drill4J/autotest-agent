@@ -1,16 +1,10 @@
-package com.epam.drill.auto.test.agent.penetration;
+package com.epam.drill.auto.test.agent.penetration
 
-import javassist.CannotCompileException;
-import javassist.CtClass;
-import javassist.NotFoundException;
+import javassist.CtClass
 
-import java.io.IOException;
+abstract class Strategy {
 
-public abstract class Strategy {
-    public abstract String id();
+    abstract fun permit(ctClass: CtClass): Boolean
 
-    public abstract boolean permit(CtClass ctClass);
-
-    public abstract byte[] instrument(CtClass ctClass) throws CannotCompileException, IOException, NotFoundException;
-
+    abstract fun instrument(ctClass: CtClass): ByteArray?
 }

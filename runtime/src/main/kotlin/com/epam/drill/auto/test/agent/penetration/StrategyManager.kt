@@ -1,64 +1,59 @@
-package com.epam.drill.auto.test.agent.penetration;
+package com.epam.drill.auto.test.agent.penetration
 
-import com.epam.drill.auto.test.agent.penetration.jmeter.JMeterPenetration;
-import com.epam.drill.auto.test.agent.penetration.junit.JUnitPenetration;
-import com.epam.drill.auto.test.agent.penetration.junit.JUnitRunnerPenetration;
-import com.epam.drill.auto.test.agent.penetration.testng.TestNGPenetration;
-import javassist.CannotCompileException;
-import javassist.CtClass;
-import javassist.NotFoundException;
+import com.epam.drill.auto.test.agent.penetration.testing.jmeter.JMeterPenetration
+import com.epam.drill.auto.test.agent.penetration.testing.junit.JUnitPenetration
+import com.epam.drill.auto.test.agent.penetration.testing.junit.JUnitRunnerPenetration
+import com.epam.drill.auto.test.agent.penetration.testing.testng.TestNGPenetration
+import javassist.CannotCompileException
+import javassist.CtClass
+import javassist.NotFoundException
+import java.io.IOException
+import java.util.*
 
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+object StrategyManager {
+    private const val JUNIT = "junit"
+    private const val JMETER = "jmeter"
+    private const val TESTNG = "testng"
+    var strategies: MutableSet<Strategy> =
+        HashSet()
 
-public class StrategyManager {
-
-    private static final String JUNIT = "junit";
-    private static final String JMETER = "jmeter";
-    private static final String TESTNG = "testng";
-
-    public static Set<Strategy> strategies = new HashSet<>();
-
-    public static void initialize(String rawFrameworkPlugins) {
-        String[] plugins = rawFrameworkPlugins.split(";");
-        for (String plugin : plugins) {
-            matchStrategy(plugin);
+    fun initialize(rawFrameworkPlugins: String) {
+        val plugins = rawFrameworkPlugins.split(";".toRegex()).toTypedArray()
+        for (plugin in plugins) {
+            matchStrategy(plugin)
         }
         if (strategies.isEmpty()) {
-            enableAllStrategies();
+            enableAllStrategies()
         }
     }
 
-    public static byte[] process(CtClass ctClass) throws NotFoundException, CannotCompileException, IOException {
-        for (Strategy strategy : strategies) {
-            if (strategy.permit(ctClass)) return strategy.instrument(ctClass);
+    @JvmStatic
+    @Throws(NotFoundException::class, CannotCompileException::class, IOException::class)
+    fun process(ctClass: CtClass): ByteArray? {
+        for (strategy in strategies) {
+            if (strategy.permit(ctClass)) return strategy.instrument(ctClass)
         }
-        return null;
+        return null
     }
 
-    private static void matchStrategy(String alias) {
-        switch (alias) {
-            case JUNIT: {
-                strategies.add(new JUnitPenetration());
-                break;
+    private fun matchStrategy(alias: String) {
+        when (alias) {
+            JUNIT -> {
+                strategies.add(JUnitPenetration())
             }
-            case JMETER: {
-                strategies.add(new JMeterPenetration());
-                break;
+            JMETER -> {
+                strategies.add(JMeterPenetration())
             }
-            case TESTNG: {
-                strategies.add(new TestNGPenetration());
-                break;
+            TESTNG -> {
+                strategies.add(TestNGPenetration())
             }
         }
     }
 
-    private static void enableAllStrategies() {
-        strategies.add(new JUnitPenetration());
-        strategies.add(new JUnitRunnerPenetration());
-        strategies.add(new JMeterPenetration());
-        strategies.add(new TestNGPenetration());
+    private fun enableAllStrategies() {
+        strategies.add(JUnitPenetration())
+        strategies.add(JUnitRunnerPenetration())
+        strategies.add(JMeterPenetration())
+        strategies.add(TestNGPenetration())
     }
-
 }
