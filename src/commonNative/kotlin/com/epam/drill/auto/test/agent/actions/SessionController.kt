@@ -18,9 +18,11 @@ object SessionController {
             "/api/agents/${agentConfig.value.agentId}/plugins/${agentConfig.value.pluginId}/dispatch-action"
         } else "/api/service-groups/${agentConfig.value.groupId}/plugins/${agentConfig.value.pluginId}/dispatch-action"
 
-    fun startSession() {
+    fun startSession(customSessionId: String?) {
         mainLogger.debug { "Attempting to start a Drill4J test session..." }
-        val payload = StartSession.serializer() stringify StartSession()
+        val payload =
+            StartSession.serializer() stringify StartSession(payload = StartPayload(sessionId = customSessionId ?: ""))
+        sessionId.value = customSessionId ?: ""
         val response = dispatchAction(payload)
         mainLogger.debug { "Received response: ${response.body}" }
         val startSessionResponse = if (agentConfig.value.groupId.isBlank())
@@ -62,9 +64,15 @@ object SessionController {
 }
 
 @Suppress("UNUSED", "UNUSED_PARAMETER")
-@CName("Java_com_epam_drill_auto_test_agent_AgentClassTransformer_memorizeTestName")
+@CName("Java_com_epam_drill_auto_test_agent_AgentClassTransformer_memorizeTestNameNative")
 fun memorizeTestName(env: CPointer<JNIEnvVar>?, thisObj: jobject, inJNIStr: jstring) {
     val testNameFromJava: String =
         env?.pointed?.pointed?.GetStringUTFChars?.invoke(env, inJNIStr, null)?.toKString() ?: ""
     SessionController.testName.value = testNameFromJava
+}
+
+@Suppress("UNUSED", "UNUSED_PARAMETER")
+@CName("Java_com_epam_drill_auto_test_agent_AgentClassTransformer_sessionId")
+fun sessionId(env: CPointer<JNIEnvVar>?, thisObj: jobject): jstring? {
+    return NewStringUTF(SessionController.sessionId.value)
 }

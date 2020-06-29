@@ -18,7 +18,8 @@ data class AgentConfig(
     val drillInstallationDir: String = "",
     val logFile: String? = null,
     val logLevel: String = LogLevel.ERROR.name,
-    val rawFrameworkPlugins: String = ""
+    val rawFrameworkPlugins: String = "",
+    val sessionId: String? = null
 ) {
     val level: LogLevel
         get() = LogLevel.valueOf(logLevel)
@@ -44,7 +45,9 @@ data class AgentConfig(
 const val WRONG_PARAMS = "Agent parameters are not specified correctly."
 
 fun String?.toAgentParams() = this.asParams().let { params ->
+    println(params)
     val result = Properties.load<AgentConfig>(params)
+    println(result)
     if (result.agentId.isBlank() && result.groupId.isBlank()) {
         error(WRONG_PARAMS)
     }
