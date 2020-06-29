@@ -5,7 +5,6 @@ package com.epam.drill.auto.test.agent
 import com.epam.drill.auto.test.agent.actions.*
 import com.epam.drill.auto.test.agent.config.*
 import com.epam.drill.jvmapi.gen.*
-import com.epam.drill.logger.*
 import kotlinx.cinterop.*
 import mu.*
 import kotlin.native.concurrent.*
@@ -17,7 +16,7 @@ val mainLogger = KotlinLogging.logger("AutoTestAgentLogger")
 fun agentOnLoad(vmPointer: CPointer<JavaVMVar>, options: String, reservedPtr: Long): jint = memScoped {
     try {
         val agentConfig = options.toAgentParams().freeze()
-        vmPointer.initAgent(agentConfig.runtimePath)
+        vmPointer.initAgent(agentConfig.drillInstallationDir)
 
         SessionController.agentConfig.value = agentConfig
         SessionController.startSession()

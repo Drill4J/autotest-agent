@@ -5,8 +5,8 @@ import com.epam.drill.jvmapi.*
 import com.epam.drill.jvmapi.gen.*
 import com.epam.drill.logger.*
 import kotlinx.cinterop.*
-import kotlinx.serialization.Properties
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.*
+import mu.*
 import kotlin.native.concurrent.*
 
 @Serializable
@@ -14,17 +14,31 @@ data class AgentConfig(
     val agentId: String = "",
     val groupId: String = "",
     val pluginId: String = "",
-    val adminHost: String = "",
-    val adminPort: String = "80",
-    val runtimePath: String = "",
+    val adminAddress: String = "",
+    val drillInstallationDir: String = "",
+    val logFile: String? = null,
     val logLevel: String = LogLevel.ERROR.name,
     val rawFrameworkPlugins: String = ""
-){
+) {
     val level: LogLevel
         get() = LogLevel.valueOf(logLevel)
 
     val frameworkPlugins: List<String>
         get() = rawFrameworkPlugins.split(";")
+    val adminHost: String
+        get() {
+            val url = adminAddress.split(":")
+            return if (url.size > 1)
+                url[0]
+            else adminAddress
+        }
+    val adminPort: String
+        get() {
+            val url = adminAddress.split(":")
+            return if (url.size > 1)
+                url[1]
+            else "80"
+        }
 }
 
 const val WRONG_PARAMS = "Agent parameters are not specified correctly."
@@ -34,6 +48,7 @@ fun String?.toAgentParams() = this.asParams().let { params ->
     if (result.agentId.isBlank() && result.groupId.isBlank()) {
         error(WRONG_PARAMS)
     }
+    KotlinLogging.file = result.logFile
     logConfig.value = configByLoggerLevel(result.level).freeze()
     result
 }
