@@ -1,49 +1,52 @@
-package com.epam.drill.auto.test.agent;
+package com.epam.drill.auto.test.agent
 
-import com.epam.drill.auto.test.agent.penetration.StrategyManager;
-import javassist.*;
-import org.jetbrains.annotations.Nullable;
+import com.epam.drill.auto.test.agent.penetration.StrategyManager.process
+import javassist.*
+import java.io.IOException
 
-import java.io.IOException;
+object AgentClassTransformer {
 
-public class AgentClassTransformer {
-    public static final ClassPool pool = ClassPool.getDefault();
-    public static final String CLASS_NAME = "com.epam.drill.auto.test.agent.AgentClassTransformer";
+    private val pool = ClassPool.getDefault()
 
-    public static native void memorizeTestName(String testName);
+    const val CLASS_NAME = "com.epam.drill.auto.test.agent.AgentClassTransformer"
 
-    public static byte[] transform(String className, byte[] classBytes) {
-        try {
-            CtClass ctClass = getCtClass(className, classBytes);
-            return insertTestNames(ctClass);
-        } catch (Exception e) {
-            return null;
+    @Suppress("unused")
+    external fun memorizeTestName(testName: String?)
+
+    @Suppress("unused")
+    fun transform(className: String, classBytes: ByteArray): ByteArray? {
+        return try {
+            getCtClass(className, classBytes)?.let { insertTestNames(it) }
+        } catch (e: Exception) {
+            null
         }
     }
 
-    private static byte[] insertTestNames(CtClass ctClass) {
-        byte[] result = null;
+    private fun insertTestNames(ctClass: CtClass): ByteArray? {
+        var result: ByteArray? = null
         try {
-            result = StrategyManager.process(ctClass);
-        } catch (CannotCompileException | IOException | NotFoundException ignored) {
+            result = process(ctClass)
+        } catch (ignored: CannotCompileException) {
+            ignored.printStackTrace()
+        } catch (ignored: IOException) {
+            ignored.printStackTrace()
+        } catch (ignored: NotFoundException) {
+            ignored.printStackTrace()
         }
-        return result;
+        return result
     }
 
-    @Nullable
-    private static CtClass getCtClass(String className, byte[] classBytes) {
-        CtClass ctClass = null;
+    private fun getCtClass(className: String, classBytes: ByteArray): CtClass? {
+        var ctClass: CtClass? = null
         try {
-            pool.insertClassPath(new ByteArrayClassPath(className, classBytes));
-            ctClass = pool.get(formatClassName(className));
-
-        } catch (NotFoundException ignored) {
+            pool.insertClassPath(ByteArrayClassPath(className, classBytes))
+            ctClass = pool[formatClassName(className)]
+        } catch (ignored: NotFoundException) {
         }
-        return ctClass;
+        return ctClass
     }
 
-    private static String formatClassName(String className) {
-        return className.replace("/", ".");
+    private fun formatClassName(className: String): String {
+        return className.replace("/", ".")
     }
-
 }

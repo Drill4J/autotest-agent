@@ -44,24 +44,20 @@ private fun notSuitableClass(
 ): Boolean =
     loader == null || protection_domain == null || className == null || classData == null
 
-val transformerClass: jclass
-    get() = FindClass("com/epam/drill/auto/test/agent/AgentClassTransformer")
-        ?: error("No AgentClassTransformer class!")
-
 fun initializeStrategyManager(rawFrameworkPlugins: String) {
-    val managerClass = FindClass("com/epam/drill/auto/test/agent/penetration/StrategyManager")
-        ?: error("No StrategyManager class!")
-    val initialize: jmethodID? = GetStaticMethodID(managerClass, "initialize", "(Ljava/lang/String;)V")
-    CallStaticObjectMethod(managerClass, initialize, NewStringUTF(rawFrameworkPlugins))
+    val (mangerClass, managerObject) = instance("com/epam/drill/auto/test/agent/penetration/StrategyManager")
+    val initialize: jmethodID? = GetMethodID(mangerClass, "initialize", "(Ljava/lang/String;)V")
+    CallObjectMethod(managerObject, initialize, NewStringUTF(rawFrameworkPlugins))
 }
 
 fun transform(classBytes: CPointer<UByteVar>?, className: String, classDataLen: jint): ByteArray? {
-    val transform: jmethodID? = GetStaticMethodID(transformerClass, "transform", "(Ljava/lang/String;[B)[B")
+    val (agentClass,agentObject) = instance("com/epam/drill/auto/test/agent/AgentClassTransformer")
+    val transform: jmethodID? = GetMethodID(agentClass, "transform", "(Ljava/lang/String;[B)[B")
     val classBytesInJBytesArray: jbyteArray = NewByteArray(classDataLen)!!
     val readBytes = classBytes!!.readBytes(classDataLen)
     SetByteArrayRegion(classBytesInJBytesArray, 0, classDataLen, readBytes.refTo(0))
-    return CallStaticObjectMethod(
-        transformerClass,
+    return CallObjectMethod(
+        agentObject,
         transform,
         NewStringUTF(className),
         classBytesInJBytesArray
@@ -72,4 +68,11 @@ fun jobject?.toByteArray(): ByteArray? = this?.run {
     val size = GetArrayLength(this)
     val getByteArrayElements: CPointer<ByteVarOf<jbyte>>? = GetByteArrayElements(this, null)
     return@run getByteArrayElements?.readBytes(size)
+}
+
+fun instance(name: String): Pair<jclass?, jobject?> {
+    val requestHolderClass = FindClass(name)
+    val selfMethodId: jfieldID? = GetStaticFieldID(requestHolderClass, "INSTANCE", "L$name;")
+    val requestHolder: jobject? = GetStaticObjectField(requestHolderClass, selfMethodId)
+    return Pair(requestHolderClass, requestHolder)
 }
