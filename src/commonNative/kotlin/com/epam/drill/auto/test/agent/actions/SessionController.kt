@@ -40,6 +40,7 @@ object SessionController {
 
     private fun dispatchAction(payload: String): HttpResponse {
         val token = getToken()
+        mainLogger.debug { "Auth token: $token" }
         return Sender.post(
             agentConfig.value.adminHost,
             agentConfig.value.adminPort,

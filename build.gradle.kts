@@ -4,7 +4,7 @@ plugins {
     id("org.jetbrains.kotlin.multiplatform") version "1.3.70"
     id("org.jetbrains.kotlin.plugin.serialization") version "1.3.70"
     id("com.epam.drill.cross-compilation") version "0.16.0"
-    id("com.epam.drill.agent.runner.autotest") version "0.1.2"
+    id("com.epam.drill.agent.runner.autotest") version "0.1.4"
     distribution
     `maven-publish`
 }
