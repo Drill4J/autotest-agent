@@ -143,6 +143,9 @@ tasks.named<org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest>("jvmTes
 val targetFromPreset = (kotlin.targets[presetName]) as org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 drill {
+    additionalParams = mutableMapOf(
+        "sessionId" to "testSession"
+    )
     runtimePath = file("./build/install/$presetName")
     agentPath =
         targetFromPreset
@@ -154,6 +157,7 @@ drill {
     adminPort = 8090
     plugins += "junit"
     logLevel = com.epam.drill.agent.runner.LogLevels.TRACE
+
 }
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile> {
     kotlinOptions.freeCompilerArgs += "-Xuse-experimental=kotlinx.serialization.ImplicitReflectionSerializer"

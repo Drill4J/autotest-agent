@@ -19,7 +19,7 @@ fun agentOnLoad(vmPointer: CPointer<JavaVMVar>, options: String, reservedPtr: Lo
         vmPointer.initAgent(agentConfig.drillInstallationDir)
 
         SessionController.agentConfig.value = agentConfig
-        SessionController.startSession()
+        SessionController.startSession(agentConfig.sessionId)
     } catch (ex: Throwable) {
         mainLogger.error { "Can't load the agent. Reason: ${ex.message}" }
     }

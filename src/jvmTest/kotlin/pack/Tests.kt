@@ -13,6 +13,7 @@ const val TEST_NAME_HEADER = "drill-test-name"
 
 class Tests {
 
+    @Suppress("unused")
     companion object {
 
         var httpServer: HttpServer = HttpServer.create(InetSocketAddress(0), 0)
@@ -22,11 +23,10 @@ class Tests {
         init {
             httpServer.createContext("/echo") { t ->
                 val response = "OK"
-                t.responseHeaders.add(
-                    TEST_NAME_HEADER, t.requestHeaders.getFirst(
-                        TEST_NAME_HEADER
-                    ) ?: "empty"
-                )
+
+                t.requestHeaders.forEach { k, v ->
+                    t.responseHeaders.add(k, v.firstOrNull())
+                }
                 t.sendResponseHeaders(200, response.toByteArray().size.toLong())
                 val os = t.responseBody
                 os.write(response.toByteArray())
@@ -71,5 +71,6 @@ class Tests {
         val request = HttpPost("http://localhost:$port/echo")
         val response = client.execute(request)
         assertEquals(methodName, response.getHeaders(TEST_NAME_HEADER)[0].value)
+        assertEquals("testSession", response.getHeaders("drill-session-id")[0].value)
     }
 }
