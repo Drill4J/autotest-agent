@@ -20,10 +20,11 @@ fun classFileLoadHookEvent(
     newData: CPointer<CPointerVar<UByteVar>>?
 ) {
     initRuntimeIfNeeded()
-    val className = kClassName?.toKString()
-    if (notSuitableClass(loader, protection_domain, className, classData)) return
-
-    val instrumentedBytes = transform(classData, className!!, classDataLen) ?: return
+    val className = kClassName?.toKString() ?: return
+    if (notSuitableClass(loader, protection_domain, className, classData)
+        && !className.contains("Http") // raw hack for http(s) classes
+    ) return
+    val instrumentedBytes = transform(classData, className, classDataLen) ?: return
     val instrumentedSize = instrumentedBytes.size
     mainLogger.debug { "Class '$className' was transformed" }
     mainLogger.debug { "Applying instrumenting (old: $classDataLen to new: $instrumentedSize)" }
@@ -51,7 +52,7 @@ fun initializeStrategyManager(rawFrameworkPlugins: String) {
 }
 
 fun transform(classBytes: CPointer<UByteVar>?, className: String, classDataLen: jint): ByteArray? {
-    val (agentClass,agentObject) = instance("com/epam/drill/auto/test/agent/AgentClassTransformer")
+    val (agentClass, agentObject) = instance("com/epam/drill/auto/test/agent/AgentClassTransformer")
     val transform: jmethodID? = GetMethodID(agentClass, "transform", "(Ljava/lang/String;[B)[B")
     val classBytesInJBytesArray: jbyteArray = NewByteArray(classDataLen)!!
     val readBytes = classBytes!!.readBytes(classDataLen)

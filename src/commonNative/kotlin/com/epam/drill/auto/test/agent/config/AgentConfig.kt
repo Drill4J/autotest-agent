@@ -68,6 +68,7 @@ fun String?.asParams(): Map<String, String> = try {
 fun CPointer<JavaVMVar>.initAgent(runtimePath: String) = memScoped {
     initAgentGlobals()
     setUnhandledExceptionHook({ thr: Throwable ->
+        thr.printStackTrace()
         mainLogger.error { "Unhandled event $thr" }
     }.freeze())
     val jvmtiCapabilities = alloc<jvmtiCapabilities>()
