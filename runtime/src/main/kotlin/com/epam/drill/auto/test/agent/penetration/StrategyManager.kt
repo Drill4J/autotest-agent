@@ -1,5 +1,8 @@
 package com.epam.drill.auto.test.agent.penetration
 
+import com.epam.drill.auto.test.agent.penetration.http.apache.*
+import com.epam.drill.auto.test.agent.penetration.http.java.*
+import com.epam.drill.auto.test.agent.penetration.http.ok.*
 import com.epam.drill.auto.test.agent.penetration.testing.jmeter.JMeterPenetration
 import com.epam.drill.auto.test.agent.penetration.testing.junit.JUnitPenetration
 import com.epam.drill.auto.test.agent.penetration.testing.junit.JUnitRunnerPenetration
@@ -14,8 +17,7 @@ object StrategyManager {
     private const val JUNIT = "junit"
     private const val JMETER = "jmeter"
     private const val TESTNG = "testng"
-    var strategies: MutableSet<Strategy> =
-        HashSet()
+    var strategies: MutableSet<Strategy> = HashSet()
 
     fun initialize(rawFrameworkPlugins: String) {
         val plugins = rawFrameworkPlugins.split(";".toRegex()).toTypedArray()
@@ -51,6 +53,9 @@ object StrategyManager {
     }
 
     private fun enableAllStrategies() {
+        strategies.add(OkHttpClient())
+        strategies.add(ApacheClient())
+        strategies.add(JavaHttpUrlConnection())
         strategies.add(JUnitPenetration())
         strategies.add(JUnitRunnerPenetration())
         strategies.add(JMeterPenetration())

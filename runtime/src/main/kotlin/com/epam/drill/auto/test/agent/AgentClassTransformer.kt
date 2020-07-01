@@ -1,8 +1,11 @@
+@file:Suppress("MemberVisibilityCanBePrivate")
+
 package com.epam.drill.auto.test.agent
 
+import com.epam.drill.auto.test.agent.ThreadStorage.storage
 import com.epam.drill.auto.test.agent.penetration.StrategyManager.process
 import javassist.*
-import java.io.IOException
+import java.io.*
 
 object AgentClassTransformer {
 
@@ -11,7 +14,15 @@ object AgentClassTransformer {
     const val CLASS_NAME = "com.epam.drill.auto.test.agent.AgentClassTransformer"
 
     @Suppress("unused")
-    external fun memorizeTestName(testName: String?)
+    fun memorizeTestName(testName: String?) {
+        storage.set(testName)
+        memorizeTestNameNative(testName)
+    }
+
+    external fun memorizeTestNameNative(testName: String?)
+
+    @Suppress("unused")
+    external fun sessionId(): String?
 
     @Suppress("unused")
     fun transform(className: String, classBytes: ByteArray): ByteArray? {

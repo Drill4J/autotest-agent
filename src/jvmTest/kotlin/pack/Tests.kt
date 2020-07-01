@@ -1,59 +1,24 @@
 package pack
 
-import com.sun.net.httpserver.*
+import com.google.gson.*
+import com.mashape.unirest.http.*
+import okhttp3.*
 import org.apache.http.client.methods.*
 import org.apache.http.impl.client.*
-import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
+import java.io.*
 import java.net.*
 
 const val TEST_NAME_HEADER = "drill-test-name"
+const val SESSION_ID_HEADER = "drill-session-id"
 
 class Tests {
-
-    @Suppress("unused")
-    companion object {
-
-        var httpServer: HttpServer = HttpServer.create(InetSocketAddress(0), 0)
-        var port: Int
-
-
-        init {
-            httpServer.createContext("/echo") { t ->
-                val response = "OK"
-
-                t.requestHeaders.forEach { k, v ->
-                    t.responseHeaders.add(k, v.firstOrNull())
-                }
-                t.sendResponseHeaders(200, response.toByteArray().size.toLong())
-                val os = t.responseBody
-                os.write(response.toByteArray())
-                os.close()
-            }
-            httpServer.executor = null
-            port = httpServer.address.port
-        }
-
-        @BeforeAll
-        @JvmStatic
-        fun startSimpleEchoServer() {
-            httpServer.start()
-        }
-
-        @AfterAll
-        @JvmStatic
-        fun destroySimpleEchoServer() {
-            httpServer.stop(1)
-        }
-    }
 
     @Test
     fun simpleTestMethodName() {
         test(::simpleTestMethodName.name)
     }
-
 
     @Test
     fun `method with backtick names`() {
@@ -67,10 +32,43 @@ class Tests {
     }
 
     private fun test(methodName: String) {
-        val client = HttpClients.createDefault()!!
-        val request = HttpPost("http://localhost:$port/echo")
-        val response = client.execute(request)
-        assertEquals(methodName, response.getHeaders(TEST_NAME_HEADER)[0].value)
-        assertEquals("testSession", response.getHeaders("drill-session-id")[0].value)
+        sequenceOf(
+            "http://postman-echo.com/headers",
+            "https://postman-echo.com/headers"
+        ).forEach {
+            clients.forEach { client -> client(methodName, it) }
+        }
+    }
+
+    private val clients: Sequence<(String, String) -> Unit> =
+        sequenceOf(::externalApacheCall, ::externalJavaCall, ::externalUnirestCall, ::externalOkHttpCall)
+
+    private fun externalApacheCall(methodName: String, url: String) {
+        val response = HttpClients.createDefault().execute(HttpGet(url))
+        check(methodName, bodyToMap(response.entity.content.reader()))
+    }
+
+    private fun externalUnirestCall(methodName: String, url: String) {
+        val reader = Unirest.get(url).asBinary().body.reader()
+        check(methodName, bodyToMap(reader))
+    }
+
+    private fun externalOkHttpCall(methodName: String, url: String) {
+        val response = OkHttpClient().newCall(Request.Builder().url(url).build()).execute()
+        check(methodName, bodyToMap(response.body()!!.byteStream().reader()))
+    }
+
+    private fun externalJavaCall(methodName: String, url: String) {
+        val con: HttpURLConnection = URL(url).openConnection() as HttpURLConnection
+        con.requestMethod = "GET"
+        check(methodName, bodyToMap(con.inputStream.reader()))
+    }
+
+    private fun bodyToMap(inpt: InputStreamReader) =
+        Gson().fromJson(inpt, Map::class.java)["headers"] as Map<*, *>
+
+    private fun check(methodName: String, headersContainer: Map<*, *>) {
+        assertEquals(methodName, headersContainer[TEST_NAME_HEADER])
+        assertEquals("testSession", headersContainer[SESSION_ID_HEADER])
     }
 }

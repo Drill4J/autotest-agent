@@ -12,6 +12,7 @@ plugins {
 apply(from = "https://raw.githubusercontent.com/Drill4J/build-scripts/master/git-version.gradle.kts")
 
 repositories {
+    mavenLocal()
     mavenCentral()
     jcenter()
     maven(url = "https://dl.bintray.com/kotlin/kotlinx/")
@@ -66,10 +67,26 @@ kotlin {
                     implementation("com.google.code.gson:gson:$gsonVersion")
                     implementation("org.junit.jupiter:junit-jupiter:$jupiterVersion")
                     implementation("io.rest-assured:rest-assured:$restAssuredVersion")
+                    implementation("com.mashape.unirest:unirest-java:1.4.9")
+                    implementation("com.squareup.okhttp3:okhttp:3.12.0")
                     implementation(kotlin("stdlib-jdk8"))
                 }
             }
         }
+
+        jvm("junit5Selenium") {
+            compilations["test"].defaultSourceSet {
+                dependencies {
+                    implementation("org.junit.jupiter:junit-jupiter:$jupiterVersion")
+                    implementation(kotlin("stdlib-jdk8"))
+                    implementation("org.seleniumhq.selenium:selenium-java:3.141.59")
+                    implementation("io.github.bonigarcia:webdrivermanager:3.8.1")
+                    implementation("org.testcontainers:testcontainers:1.11.4")
+                    implementation("org.testcontainers:junit-jupiter:1.11.4")
+                }
+            }
+        }
+
     }
 }
 
@@ -134,7 +151,7 @@ val presetName: String =
         else -> throw RuntimeException("Target ${System.getProperty("os.name")} is not supported")
     }
 
-tasks.named<org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest>("jvmTest") {
+tasks.withType<org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest>() {
     dependsOn(tasks.getByPath("link${libName.capitalize()}DebugShared${presetName.capitalize()}"))
     dependsOn(tasks.getByPath("install${presetName.capitalize()}Dist"))
     useJUnitPlatform()
