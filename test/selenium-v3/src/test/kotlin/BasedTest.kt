@@ -1,10 +1,8 @@
 package abs
 
 import com.sun.net.httpserver.*
-import io.github.bonigarcia.wdm.*
 import org.junit.jupiter.api.*
 import org.openqa.selenium.*
-import org.openqa.selenium.firefox.*
 import java.net.*
 
 

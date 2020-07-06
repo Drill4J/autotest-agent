@@ -1,11 +1,11 @@
-import org.apache.tools.ant.taskdefs.condition.*
+import org.jetbrains.kotlin.konan.target.*
 
 
 plugins {
-    id("org.jetbrains.kotlin.multiplatform") version "1.3.70"
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.3.70"
-    id("com.epam.drill.cross-compilation") version "0.16.0"
-    id("com.epam.drill.agent.runner.autotest") version "0.1.4"
+    id("org.jetbrains.kotlin.multiplatform")
+    id("org.jetbrains.kotlin.plugin.serialization")
+    id("com.epam.drill.cross-compilation")
+    id("com.github.johnrengelman.shadow") version "5.1.0"
     distribution
     `maven-publish`
 }
@@ -31,6 +31,9 @@ val serializationRuntimeVersion: String by rootProject
 val drillLoggerVersion: String by rootProject
 val drillHttpInterceptorVersion: String by rootProject
 val transportVersion: String by rootProject
+val websocketVersion: String by rootProject
+val javassistVersion: String by rootProject
+val klockVersion: String by rootProject
 
 val libName = "autoTestAgent"
 kotlin {
@@ -66,44 +69,19 @@ kotlin {
                 implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
             }
         }
-        val jupiterVersion = "5.4.2"
-        val gsonVersion = "2.8.5"
-        val restAssuredVersion = "4.0.0"
-        jvm {
-            compilations["test"].defaultSourceSet {
-                dependencies {
-                    implementation("com.google.code.gson:gson:$gsonVersion")
-                    implementation("org.junit.jupiter:junit-jupiter:$jupiterVersion")
-                    implementation("io.rest-assured:rest-assured:$restAssuredVersion")
-                    implementation("com.mashape.unirest:unirest-java:1.4.9")
-                    implementation("com.squareup.okhttp3:okhttp:3.12.0")
-                    implementation(kotlin("stdlib-jdk8"))
-                }
-            }
-        }
 
-        jvm("junit5Selenium") {
-            compilations["test"].defaultSourceSet {
-                dependencies {
-                    implementation("org.junit.jupiter:junit-jupiter:$jupiterVersion")
-                    implementation(kotlin("stdlib-jdk8"))
-                    implementation("org.seleniumhq.selenium:selenium-java:3.141.59")
-                    implementation("io.github.bonigarcia:webdrivermanager:3.8.1")
-                    implementation("org.testcontainers:testcontainers:1.11.4")
-                    implementation("org.testcontainers:junit-jupiter:1.11.4")
+        jvm("runtime") {
+            compilations["main"].defaultSourceSet {
+                languageSettings.apply {
+                    useExperimentalAnnotation("kotlinx.serialization.UnstableDefault")
                 }
-            }
-        }
-
-        jvm("junit5Selenium4") {
-            compilations["test"].defaultSourceSet {
                 dependencies {
-                    implementation("org.junit.jupiter:junit-jupiter:$jupiterVersion")
                     implementation(kotlin("stdlib-jdk8"))
-                    implementation("org.seleniumhq.selenium:selenium-java:4.0.0-alpha-2")
-                    implementation("io.github.bonigarcia:webdrivermanager:3.8.1")
-                    implementation("org.testcontainers:testcontainers:1.11.4")
-                    implementation("org.testcontainers:junit-jupiter:1.11.4")
+                    api("org.javassist:javassist:$javassistVersion")
+                    implementation("org.java-websocket:Java-WebSocket:$websocketVersion")
+                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$serializationRuntimeVersion")
+                    implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
+                    implementation("com.soywiz.korlibs.klock:klock-jvm:$klockVersion")
                 }
             }
         }
@@ -111,27 +89,60 @@ kotlin {
     }
 }
 
-val runtimeProject = project(":runtime")
-val shadowJar = provider { runtimeProject.tasks.getByPath("shadowJar") }
-
 val nativeTargets = kotlin.targets.filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>()
+
+val runtimeJar by tasks.getting(Jar::class) {
+    from(provider {
+        kotlin.jvm("runtime").compilations["main"].compileDependencyFiles.map { if (it.isDirectory) it else zipTree(it) }
+    })
+}
+
+val resourceDir = buildDir
+    .resolve("resources")
+    .resolve("main")
+
+val agentShadow by tasks.registering(com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar::class) {
+    val extensionDistZip = tasks.getByPath("extensionDistZip")
+    dependsOn(extensionDistZip)
+    doFirst {
+        val firefoxAddon = resourceDir.apply { mkdirs() }.resolve("header-transmitter.xpi")
+        extensionDistZip.outputs.files.singleFile.renameTo(firefoxAddon)
+    }
+    from(runtimeJar)
+    from(resourceDir)
+    archiveFileName.set("drillRuntime.jar")
+    relocate("kotlin", "kruntime")
+    relocate("javassist", "drill.javassist")
+    relocate("org.java_websocket", "drill.org.java_websocket")
+    relocate("org.slf4j", "drill.org.slf4j")
+}
+
 distributions {
     nativeTargets.forEach {
         val name = it.name
         create(name) {
             distributionBaseName.set(name)
             contents {
-                from(shadowJar)
+                from(agentShadow)
                 from(tasks.getByPath("link${libName.capitalize()}DebugShared${name.capitalize()}")) {
                     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
                 }
             }
         }
     }
-}
-
-val jvmMainClasses by tasks.getting {
-    dependsOn(shadowJar)
+    create("extension") {
+        distributionBaseName.set("extension")
+        contents {
+            from(file("drill-header-transmitter"))
+            eachFile(object : Action<FileCopyDetails> {
+                override fun execute(fcp: FileCopyDetails) {
+                    fcp.relativePath = RelativePath(true, fcp.relativePath.pathString
+                        .replace("extension-$version/", "")
+                        .replace("extension/", ""))
+                }
+            })
+        }
+    }
 }
 
 publishing {
@@ -152,10 +163,8 @@ publishing {
         }
     }
     publications {
-
         kotlin.targets.filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().filter {
-            org.jetbrains.kotlin.konan.target.HostManager()
-                .isEnabled(it.konanTarget)
+            HostManager().isEnabled(it.konanTarget)
         }.forEach {
             create<MavenPublication>("${it.name}Zip") {
                 artifactId = "$libName-${it.name}"
@@ -165,40 +174,6 @@ publishing {
     }
 }
 
-val presetName: String =
-    when {
-        Os.isFamily(Os.FAMILY_MAC) -> "macosX64"
-        Os.isFamily(Os.FAMILY_UNIX) -> "linuxX64"
-        Os.isFamily(Os.FAMILY_WINDOWS) -> "mingwX64"
-        else -> throw RuntimeException("Target ${System.getProperty("os.name")} is not supported")
-    }
-
-tasks.withType<org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest> {
-    dependsOn(tasks.getByPath("link${libName.capitalize()}DebugShared${presetName.capitalize()}"))
-    dependsOn(tasks.getByPath("install${presetName.capitalize()}Dist"))
-    dependsOn(jvmMainClasses)
-    useJUnitPlatform()
-}
-
-val targetFromPreset = (kotlin.targets[presetName]) as org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-
-drill {
-    additionalParams = mutableMapOf(
-        "sessionId" to "testSession"
-    )
-    runtimePath = file("./build/install/$presetName")
-    agentPath =
-        targetFromPreset
-            .binaries
-            .findSharedLib(libName, org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType.DEBUG)!!
-            .outputFile.toPath().toFile()
-    agentId = "Petclinic"
-    adminHost = "localhost"
-    adminPort = 8090
-    plugins += "junit"
-    logLevel = com.epam.drill.agent.runner.LogLevels.ERROR
-
-}
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile> {
     kotlinOptions.freeCompilerArgs += "-Xuse-experimental=kotlinx.serialization.ImplicitReflectionSerializer"
     kotlinOptions.freeCompilerArgs += "-Xuse-experimental=kotlin.ExperimentalUnsignedTypes"

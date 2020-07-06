@@ -44,7 +44,7 @@ class Selenium : Strategy() {
                     try {
                         if (this instanceof org.openqa.selenium.firefox.FirefoxDriver) {
                             java.util.HashMap hashMapq = new java.util.HashMap();
-                            hashMapq.put("path", "$extensionFile");
+                            hashMapq.put("path", "${extensionFile.replace("\\", "\\\\")}");
                             hashMapq.put("temporary", Boolean.TRUE);
                             this.execute("installExtension", hashMapq).getValue();
                         }
@@ -62,14 +62,16 @@ class Selenium : Strategy() {
             it.insertBefore(
                 """
                     if (!(${'$'}1.equals("newSession"))) {
-                        try {
-                            executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
-                            executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
-                        } catch(Exception e) {}
-                        java.util.HashMap hashMap = new java.util.HashMap();
-                        hashMap.put($SESSION_ID_CALC_LINE);
-                        hashMap.put($TEST_NAME_CALC_LINE);
-                        ${DevToolsClientThreadStorage::class.java.name}.INSTANCE.${DevToolsClientThreadStorage::addHeaders.name}(hashMap);
+                        if ($IF_CONDITION) {
+                            try {
+                                executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
+                                executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
+                                java.util.HashMap hashMap = new java.util.HashMap();
+                                hashMap.put($SESSION_ID_CALC_LINE);
+                                hashMap.put($TEST_NAME_CALC_LINE);
+                                ${DevToolsClientThreadStorage::class.java.name}.INSTANCE.${DevToolsClientThreadStorage::addHeaders.name}(hashMap);
+                            } catch(Exception e) {}
+                        }
                     }
                 """.trimIndent()
             )
