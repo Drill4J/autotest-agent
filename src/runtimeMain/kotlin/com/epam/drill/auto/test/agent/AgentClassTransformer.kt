@@ -11,13 +11,12 @@ object AgentClassTransformer {
 
     private val pool = ClassPool.getDefault()
 
-    const val CLASS_NAME = "com.epam.drill.auto.test.agent.AgentClassTransformer"
+    const val CLASS_NAME = "AgentClassTransformer"
 
     @Suppress("unused")
     fun transform(className: String, classBytes: ByteArray): ByteArray? = try {
         getCtClass(className, classBytes)?.let { insertTestNames(it) }
     } catch (e: Exception) {
-        logger.warn(e) { "Can't get the class." }
         null
     }
 

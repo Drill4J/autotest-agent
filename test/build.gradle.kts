@@ -1,0 +1,48 @@
+import org.jetbrains.kotlin.konan.target.*
+
+plugins {
+    kotlin("jvm")
+    id("com.epam.drill.agent.runner.autotest") version "0.1.4" apply false
+}
+val jupiterVersion = "5.4.2"
+val gsonVersion = "2.8.5"
+val restAssuredVersion = "4.0.0"
+allprojects{
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        jcenter()
+    }
+}
+subprojects {
+    apply(plugin = "org.jetbrains.kotlin.jvm")
+    apply(plugin = "com.epam.drill.agent.runner.autotest")
+    dependencies {
+        testImplementation("org.junit.jupiter:junit-jupiter:$jupiterVersion")
+        testImplementation("io.rest-assured:rest-assured:$restAssuredVersion")
+        testImplementation("com.google.code.gson:gson:$gsonVersion")
+        testImplementation("com.mashape.unirest:unirest-java:1.4.9")
+        testImplementation("com.squareup.okhttp3:okhttp:3.12.0")
+        testImplementation(kotlin("stdlib-jdk8"))
+    }
+    this.tasks.withType<Test> {
+        dependsOn(project(":").tasks.getByPath("linkAutoTestAgentDebugShared${HostManager.host.presetName.capitalize()}"))
+        dependsOn(project(":").tasks.getByPath("install${HostManager.host.presetName.capitalize()}Dist"))
+        useJUnitPlatform()
+    }
+
+    configure<com.epam.drill.agent.runner.AgentConfiguration> {
+        additionalParams = mutableMapOf("sessionId" to "testSession")
+        runtimePath = rootProject.file("./build/install/${HostManager.host.presetName}")
+        agentPath = rootProject
+            .file("./build/install/${HostManager.host.presetName}")
+            .resolve("${HostManager.host.family.dynamicPrefix}autoTestAgent.${HostManager.host.family.dynamicSuffix}")//todo
+        agentId = "Petclinic"
+        adminHost = "localhost"
+        adminPort = 8090
+        plugins += "junit"
+        logLevel = com.epam.drill.agent.runner.LogLevels.TRACE
+    }
+
+
+}
