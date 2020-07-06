@@ -50,7 +50,8 @@ object Sender {
 
     private fun connect(host: String, port: String): ULong =
         socket(AF_INET.convert(), SOCK_STREAM.convert(), IPPROTO_TCP.convert()).also { socketfd ->
-            connect(socketfd.convert(), resolveAddress(host, port.toInt()), sockaddr_in.size.convert())
+            @Suppress("UNCHECKED_CAST")
+            connect(socketfd.convert(), resolveAddress(host, port.toInt()) as CValuesRef<sockaddr>, sockaddr_in.size.convert())
         }.convert()
 
 }

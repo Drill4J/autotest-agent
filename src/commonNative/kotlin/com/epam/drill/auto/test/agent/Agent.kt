@@ -5,12 +5,12 @@ package com.epam.drill.auto.test.agent
 import com.epam.drill.auto.test.agent.actions.*
 import com.epam.drill.auto.test.agent.config.*
 import com.epam.drill.jvmapi.gen.*
+import com.epam.drill.logger.*
 import kotlinx.cinterop.*
-import mu.*
 import kotlin.native.concurrent.*
 
 @SharedImmutable
-val mainLogger = KotlinLogging.logger("AutoTestAgentLogger")
+val mainLogger = Logging.logger("AutoTestAgentLogger")
 
 @CName("Agent_OnLoad")
 fun agentOnLoad(vmPointer: CPointer<JavaVMVar>, options: String, reservedPtr: Long): jint = memScoped {
@@ -21,7 +21,7 @@ fun agentOnLoad(vmPointer: CPointer<JavaVMVar>, options: String, reservedPtr: Lo
         SessionController.agentConfig.value = agentConfig
         SessionController.startSession(agentConfig.sessionId)
     } catch (ex: Throwable) {
-        mainLogger.error { "Can't load the agent. Reason: ${ex.message}" }
+        mainLogger.error(ex) { "Can't load the agent. Reason:" }
     }
     JNI_OK
 }

@@ -3,6 +3,7 @@
 package com.epam.drill.auto.test.agent.instrumenting
 
 import com.epam.drill.auto.test.agent.*
+import com.epam.drill.jvmapi.*
 import com.epam.drill.jvmapi.gen.*
 import kotlinx.cinterop.*
 
@@ -33,7 +34,7 @@ fun classFileLoadHookEvent(
     instrumentedBytes.forEachIndexed { index, byte ->
         newBytes[index] = byte.toUByte()
     }
-    newClassDataLen!!.pointed.value = instrumentedSize
+    newClassDataLen?.pointed?.value = instrumentedSize
     mainLogger.info { "Successfully instrumented class $className" }
 }
 
@@ -69,11 +70,4 @@ fun jobject?.toByteArray(): ByteArray? = this?.run {
     val size = GetArrayLength(this)
     val getByteArrayElements: CPointer<ByteVarOf<jbyte>>? = GetByteArrayElements(this, null)
     return@run getByteArrayElements?.readBytes(size)
-}
-
-fun instance(name: String): Pair<jclass?, jobject?> {
-    val requestHolderClass = FindClass(name)
-    val selfMethodId: jfieldID? = GetStaticFieldID(requestHolderClass, "INSTANCE", "L$name;")
-    val requestHolder: jobject? = GetStaticObjectField(requestHolderClass, selfMethodId)
-    return Pair(requestHolderClass, requestHolder)
 }

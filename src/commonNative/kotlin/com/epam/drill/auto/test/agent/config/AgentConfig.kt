@@ -4,9 +4,9 @@ import com.epam.drill.auto.test.agent.*
 import com.epam.drill.jvmapi.*
 import com.epam.drill.jvmapi.gen.*
 import com.epam.drill.logger.*
+import com.epam.drill.logger.api.*
 import kotlinx.cinterop.*
 import kotlinx.serialization.*
-import mu.*
 import kotlin.native.concurrent.*
 
 @Serializable
@@ -51,8 +51,8 @@ fun String?.toAgentParams() = this.asParams().let { params ->
     if (result.agentId.isBlank() && result.groupId.isBlank()) {
         error(WRONG_PARAMS)
     }
-    KotlinLogging.file = result.logFile
-    logConfig.value = configByLoggerLevel(result.level).freeze()
+    Logging.filename = result.logFile
+    Logging.logLevel = result.level
     result
 }
 

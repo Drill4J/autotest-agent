@@ -2,59 +2,35 @@
 
 package com.epam.drill.auto.test.agent
 
-import com.epam.drill.auto.test.agent.ThreadStorage.storage
 import com.epam.drill.auto.test.agent.penetration.StrategyManager.process
+import com.epam.drill.logger.*
 import javassist.*
-import java.io.*
 
 object AgentClassTransformer {
+    private val logger = Logging.logger(AgentClassTransformer::class.java.name)
 
     private val pool = ClassPool.getDefault()
 
     const val CLASS_NAME = "com.epam.drill.auto.test.agent.AgentClassTransformer"
 
     @Suppress("unused")
-    fun memorizeTestName(testName: String?) {
-        storage.set(testName)
-        memorizeTestNameNative(testName)
+    fun transform(className: String, classBytes: ByteArray): ByteArray? = try {
+        getCtClass(className, classBytes)?.let { insertTestNames(it) }
+    } catch (e: Exception) {
+        logger.warn(e) { "Can't get the class." }
+        null
     }
 
-    external fun memorizeTestNameNative(testName: String?)
-
-    @Suppress("unused")
-    external fun sessionId(): String?
-
-    @Suppress("unused")
-    fun transform(className: String, classBytes: ByteArray): ByteArray? {
-        return try {
-            getCtClass(className, classBytes)?.let { insertTestNames(it) }
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun insertTestNames(ctClass: CtClass): ByteArray? {
-        var result: ByteArray? = null
-        try {
-            result = process(ctClass)
-        } catch (ignored: CannotCompileException) {
-            ignored.printStackTrace()
-        } catch (ignored: IOException) {
-            ignored.printStackTrace()
-        } catch (ignored: NotFoundException) {
-            ignored.printStackTrace()
-        }
-        return result
+    private fun insertTestNames(ctClass: CtClass): ByteArray? = try {
+        process(ctClass)
+    } catch (ex: Exception) {
+        logger.warn(ex) { "Can't instrument '${ctClass.name}' class." }
+        null
     }
 
     private fun getCtClass(className: String, classBytes: ByteArray): CtClass? {
-        var ctClass: CtClass? = null
-        try {
-            pool.insertClassPath(ByteArrayClassPath(className, classBytes))
-            ctClass = pool[formatClassName(className)]
-        } catch (ignored: NotFoundException) {
-        }
-        return ctClass
+        pool.insertClassPath(ByteArrayClassPath(className, classBytes))
+        return pool[formatClassName(className)]
     }
 
     private fun formatClassName(className: String): String {

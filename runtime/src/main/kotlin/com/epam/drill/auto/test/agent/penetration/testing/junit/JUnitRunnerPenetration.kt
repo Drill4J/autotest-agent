@@ -1,6 +1,6 @@
 package com.epam.drill.auto.test.agent.penetration.testing.junit
 
-import com.epam.drill.auto.test.agent.AgentClassTransformer
+import com.epam.drill.auto.test.agent.*
 import com.epam.drill.auto.test.agent.penetration.AbstractTestStrategy
 import javassist.CtClass
 
@@ -16,7 +16,7 @@ class JUnitRunnerPenetration : AbstractTestStrategy() {
         runChild.insertBefore(
             """
                 String drillTestName = $1.getDisplayName();
-                ${AgentClassTransformer.CLASS_NAME}.INSTANCE.memorizeTestName(drillTestName);
+                ${ThreadStorage::class.java.name}.INSTANCE.${ThreadStorage::memorizeTestName.name}(drillTestName);
                 
                 """.trimIndent()
         )
