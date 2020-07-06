@@ -1,4 +1,5 @@
-import  org.apache.tools.ant.taskdefs.condition.Os
+import org.apache.tools.ant.taskdefs.condition.*
+
 
 plugins {
     id("org.jetbrains.kotlin.multiplatform") version "1.3.70"
@@ -19,9 +20,15 @@ repositories {
     maven(url = "https://oss.jfrog.org/artifactory/list/oss-release-local")
 }
 
+configurations.all {
+    resolutionStrategy.dependencySubstitution {
+        substitute(module("org.jetbrains.kotlinx:kotlinx-coroutines-core-native:1.3.5")).with(module("org.jetbrains.kotlinx:kotlinx-coroutines-core-native:1.3.5-native-mt"))
+    }
+}
+
 val drillJvmApiLibVersion: String by rootProject
 val serializationRuntimeVersion: String by rootProject
-val drillLogger: String by rootProject
+val drillLoggerVersion: String by rootProject
 val drillHttpInterceptorVersion: String by rootProject
 val transportVersion: String by rootProject
 
@@ -32,12 +39,13 @@ kotlin {
         crossCompilation {
             common {
                 dependencies {
-                    implementation("com.epam.drill:jvmapi-native:$drillJvmApiLibVersion")
+                    implementation("com.epam.drill:jvmapi:$drillJvmApiLibVersion")
                     implementation("com.epam.drill.interceptor:http:$drillHttpInterceptorVersion")
-                    implementation("com.epam.drill.logger:logger:$drillLogger")
+                    implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
                     implementation("com.epam.drill.transport:core:$transportVersion")
                     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-native:$serializationRuntimeVersion")
                     implementation("org.jetbrains.kotlinx:kotlinx-serialization-properties-native:$serializationRuntimeVersion")
+                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf-native:$serializationRuntimeVersion")
                 }
             }
         }
@@ -87,14 +95,24 @@ kotlin {
             }
         }
 
+        jvm("junit5Selenium4") {
+            compilations["test"].defaultSourceSet {
+                dependencies {
+                    implementation("org.junit.jupiter:junit-jupiter:$jupiterVersion")
+                    implementation(kotlin("stdlib-jdk8"))
+                    implementation("org.seleniumhq.selenium:selenium-java:4.0.0-alpha-2")
+                    implementation("io.github.bonigarcia:webdrivermanager:3.8.1")
+                    implementation("org.testcontainers:testcontainers:1.11.4")
+                    implementation("org.testcontainers:junit-jupiter:1.11.4")
+                }
+            }
+        }
+
     }
 }
 
 val runtimeProject = project(":runtime")
 val shadowJar = provider { runtimeProject.tasks.getByPath("shadowJar") }
-val jvmMainClasses by tasks.getting {
-    dependsOn(shadowJar)
-}
 
 val nativeTargets = kotlin.targets.filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>()
 distributions {
@@ -110,6 +128,10 @@ distributions {
             }
         }
     }
+}
+
+val jvmMainClasses by tasks.getting {
+    dependsOn(shadowJar)
 }
 
 publishing {
@@ -151,9 +173,10 @@ val presetName: String =
         else -> throw RuntimeException("Target ${System.getProperty("os.name")} is not supported")
     }
 
-tasks.withType<org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest>() {
+tasks.withType<org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest> {
     dependsOn(tasks.getByPath("link${libName.capitalize()}DebugShared${presetName.capitalize()}"))
     dependsOn(tasks.getByPath("install${presetName.capitalize()}Dist"))
+    dependsOn(jvmMainClasses)
     useJUnitPlatform()
 }
 
@@ -173,7 +196,7 @@ drill {
     adminHost = "localhost"
     adminPort = 8090
     plugins += "junit"
-    logLevel = com.epam.drill.agent.runner.LogLevels.TRACE
+    logLevel = com.epam.drill.agent.runner.LogLevels.ERROR
 
 }
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile> {

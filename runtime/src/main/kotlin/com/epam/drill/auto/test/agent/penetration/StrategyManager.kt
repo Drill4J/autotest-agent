@@ -3,14 +3,12 @@ package com.epam.drill.auto.test.agent.penetration
 import com.epam.drill.auto.test.agent.penetration.http.apache.*
 import com.epam.drill.auto.test.agent.penetration.http.java.*
 import com.epam.drill.auto.test.agent.penetration.http.ok.*
-import com.epam.drill.auto.test.agent.penetration.testing.jmeter.JMeterPenetration
-import com.epam.drill.auto.test.agent.penetration.testing.junit.JUnitPenetration
-import com.epam.drill.auto.test.agent.penetration.testing.junit.JUnitRunnerPenetration
-import com.epam.drill.auto.test.agent.penetration.testing.testng.TestNGPenetration
-import javassist.CannotCompileException
-import javassist.CtClass
-import javassist.NotFoundException
-import java.io.IOException
+import com.epam.drill.auto.test.agent.penetration.http.selenium.*
+import com.epam.drill.auto.test.agent.penetration.testing.jmeter.*
+import com.epam.drill.auto.test.agent.penetration.testing.junit.*
+import com.epam.drill.auto.test.agent.penetration.testing.testng.*
+import javassist.*
+import java.io.*
 import java.util.*
 
 object StrategyManager {
@@ -53,6 +51,7 @@ object StrategyManager {
     }
 
     private fun enableAllStrategies() {
+        strategies.add(Selenium())
         strategies.add(OkHttpClient())
         strategies.add(ApacheClient())
         strategies.add(JavaHttpUrlConnection())

@@ -1,6 +1,6 @@
 package com.epam.drill.auto.test.agent.penetration
 
-import com.epam.drill.auto.test.agent.AgentClassTransformer
+import com.epam.drill.auto.test.agent.*
 import javassist.CannotCompileException
 import javassist.CtClass
 import javassist.CtMethod
@@ -18,7 +18,7 @@ abstract class AnnotationStrategy : AbstractTestStrategy() {
     @Throws(CannotCompileException::class, IOException::class)
     override fun instrument(ctClass: CtClass): ByteArray? {
         for (method in lastScannedMethods.get()) {
-            method.insertBefore(AgentClassTransformer.CLASS_NAME + ".INSTANCE.memorizeTestName(\"" + method.name + "\");")
+            method.insertBefore(ThreadStorage::class.java.name + ".INSTANCE.${ThreadStorage::memorizeTestName.name}(\"" + method.name + "\");")
         }
         return ctClass.toBytecode()
     }
