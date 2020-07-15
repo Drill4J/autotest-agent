@@ -15,8 +15,6 @@ jobs:
       matrix:
         config:
           - {os: ubuntu-latest, preset: linuxX64}
-          - {os: macos-latest, preset: macosX64}
-          - {os: windows-latest, preset: mingwX64}
     name: Check on ${{ matrix.config.os }}
     runs-on: ${{ matrix.config.os }}
     steps:

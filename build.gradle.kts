@@ -41,14 +41,17 @@ kotlin {
     targets {
         crossCompilation {
             common {
-                dependencies {
-                    implementation("com.epam.drill:jvmapi:$drillJvmApiLibVersion")
-                    implementation("com.epam.drill.interceptor:http:$drillHttpInterceptorVersion")
-                    implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
-                    implementation("com.epam.drill.transport:core:$transportVersion")
-                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-native:$serializationRuntimeVersion")
-                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-properties-native:$serializationRuntimeVersion")
-                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf-native:$serializationRuntimeVersion")
+                defaultSourceSet {
+                    dependsOn(sourceSets.commonMain.get())
+                    dependencies {
+                        implementation("com.epam.drill:jvmapi:$drillJvmApiLibVersion")
+                        implementation("com.epam.drill.interceptor:http:$drillHttpInterceptorVersion")
+                        implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
+                        implementation("com.epam.drill.transport:core:$transportVersion")
+                        implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-native:$serializationRuntimeVersion")
+                        implementation("org.jetbrains.kotlinx:kotlinx-serialization-properties-native:$serializationRuntimeVersion")
+                        implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf-native:$serializationRuntimeVersion")
+                    }
                 }
             }
         }
@@ -67,6 +70,8 @@ kotlin {
         commonMain {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-common:$serializationRuntimeVersion")
+                implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
             }
         }
 
@@ -136,9 +141,11 @@ distributions {
             from(file("drill-header-transmitter"))
             eachFile(object : Action<FileCopyDetails> {
                 override fun execute(fcp: FileCopyDetails) {
-                    fcp.relativePath = RelativePath(true, fcp.relativePath.pathString
-                        .replace("extension-$version/", "")
-                        .replace("extension/", ""))
+                    fcp.relativePath = RelativePath(
+                        true, fcp.relativePath.pathString
+                            .replace("extension-$version/", "")
+                            .replace("extension/", "")
+                    )
                 }
             })
         }
