@@ -55,12 +55,12 @@ class Junit5Selenium4Test {
     @Test
     fun itCanBeAnyTestName() {
         driver.get("http://localhost:$port/1")
-        Assertions.assertTrue(testNames.contains(::itCanBeAnyTestName.name))
+        Assertions.assertTrue(testNames.contains(this::class.simpleName + ":" + ::itCanBeAnyTestName.name))
     }
 
     @Test
     fun itCanBeAnyTestName2() {
         driver.get("http://localhost:$port/1")
-        Assertions.assertTrue(testNames.contains(::itCanBeAnyTestName2.name))
+        Assertions.assertTrue(testNames.contains(this::class.simpleName + ":" + ::itCanBeAnyTestName2.name))
     }
 }

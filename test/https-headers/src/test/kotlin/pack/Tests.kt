@@ -68,7 +68,7 @@ class Tests {
         Gson().fromJson(inpt, Map::class.java)["headers"] as Map<*, *>
 
     private fun check(methodName: String, headersContainer: Map<*, *>) {
-        assertEquals(methodName, headersContainer[TEST_NAME_HEADER])
+        assertEquals("${Tests::class.simpleName}:$methodName", headersContainer[TEST_NAME_HEADER])
         assertEquals("testSession", headersContainer[SESSION_ID_HEADER])
     }
 }
