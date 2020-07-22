@@ -46,7 +46,7 @@ subprojects {
         adminHost = "ecse0050029e.epam.com"
         adminPort = 8090
         plugins += "junit"
-        logLevel = INFO
+        logLevel = TRACE
     }
 
 

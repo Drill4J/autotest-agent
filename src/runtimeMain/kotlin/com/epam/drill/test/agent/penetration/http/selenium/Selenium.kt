@@ -70,15 +70,11 @@ class Selenium : Strategy() {
             """
                 try {Thread.sleep(100l); } catch(Exception es) {}
                 if ($IF_CONDITION) {
-                    org.openqa.selenium.remote.Response a = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
-                    org.openqa.selenium.remote.Response b = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
-                    while(b.getValue() instanceof Exception){
-                        try {Thread.sleep(100l); } catch(Exception es) {}
-                        a = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
-                        b = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
-                        
-                    }
-                    execute("get", $ImmutableMap.of("url", $1));
+                    try {
+                        org.openqa.selenium.remote.Response a = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
+                        org.openqa.selenium.remote.Response b = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
+                        execute("get", $ImmutableMap.of("url", $1));
+                    } catch(Exception dex){}
                 }
                 
             """.trimIndent()
