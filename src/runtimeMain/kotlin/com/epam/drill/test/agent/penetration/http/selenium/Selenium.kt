@@ -44,11 +44,13 @@ class Selenium : Strategy() {
 
         startSession.insertBefore(
             """
+                if (${ThreadStorage::class.java.name}.INSTANCE.${ThreadStorage::proxyUrl.name}() != null) {
                     $DesiredCapabilities dCap = new $DesiredCapabilities();
                     $Proxy dProxy = new $Proxy();
                     dProxy.setHttpProxy(${ThreadStorage::class.java.name}.INSTANCE.${ThreadStorage::proxyUrl.name}());
                     dCap.setCapability("proxy", dProxy);
                     $1 = $1.merge(dCap);
+                }
                 """
         )
         startSession.insertAfter(
