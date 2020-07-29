@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v1
       - name: Publish
         run: |
-          gradle -si publishMingwX64ZipPublicationToMavenRepository
+          gradle -si generateNativeClasses publishMingwX64ZipPublicationToMavenRepository
         env:
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
           BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}

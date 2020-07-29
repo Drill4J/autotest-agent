@@ -12,7 +12,6 @@ import java.net.*
 
 const val TEST_NAME_HEADER = "drill-test-name"
 const val SESSION_ID_HEADER = "drill-session-id"
-
 class Tests {
 
     @Test

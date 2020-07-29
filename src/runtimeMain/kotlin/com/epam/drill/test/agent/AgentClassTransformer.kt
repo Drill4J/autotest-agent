@@ -2,19 +2,20 @@
 
 package com.epam.drill.test.agent
 
+import com.epam.drill.kni.*
 import com.epam.drill.test.agent.penetration.StrategyManager.process
 import com.epam.drill.logger.*
 import javassist.*
 
-object AgentClassTransformer {
+@Kni
+actual object AgentClassTransformer {
     private val logger = Logging.logger(AgentClassTransformer::class.java.name)
 
     private val pool = ClassPool.getDefault()
 
     const val CLASS_NAME = "AgentClassTransformer"
 
-    @Suppress("unused")
-    fun transform(className: String, classBytes: ByteArray): ByteArray? = try {
+    actual fun transform(className: String, classBytes: ByteArray): ByteArray? = try {
         getCtClass(className, classBytes)?.let { insertTestNames(it) }
     } catch (e: Exception) {
         null
