@@ -1,5 +1,6 @@
 package com.epam.drill.test.agent.penetration
 
+import com.epam.drill.kni.*
 import com.epam.drill.test.agent.penetration.http.apache.*
 import com.epam.drill.test.agent.penetration.http.java.*
 import com.epam.drill.test.agent.penetration.http.ok.*
@@ -8,16 +9,16 @@ import com.epam.drill.test.agent.penetration.testing.jmeter.*
 import com.epam.drill.test.agent.penetration.testing.junit.*
 import com.epam.drill.test.agent.penetration.testing.testng.*
 import javassist.*
-import java.io.*
 import java.util.*
 
-object StrategyManager {
+@Kni
+actual object StrategyManager {
     private const val JUNIT = "junit"
     private const val JMETER = "jmeter"
     private const val TESTNG = "testng"
-    var strategies: MutableSet<Strategy> = HashSet()
+    private var strategies: MutableSet<Strategy> = HashSet()
 
-    fun initialize(rawFrameworkPlugins: String) {
+   actual fun initialize(rawFrameworkPlugins: String) {
         val plugins = rawFrameworkPlugins.split(";".toRegex()).toTypedArray()
         for (plugin in plugins) {
             matchStrategy(plugin)
@@ -27,9 +28,7 @@ object StrategyManager {
         }
     }
 
-    @JvmStatic
-    @Throws(NotFoundException::class, CannotCompileException::class, IOException::class)
-    fun process(ctClass: CtClass): ByteArray? {
+    internal fun process(ctClass: CtClass): ByteArray? {
         for (strategy in strategies) {
             if (strategy.permit(ctClass)) return strategy.instrument(ctClass)
         }

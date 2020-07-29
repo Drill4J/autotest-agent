@@ -2,12 +2,11 @@
 
 package com.epam.drill.test.agent.instrumenting
 
-import com.epam.drill.test.agent.*
-import com.epam.drill.jvmapi.*
 import com.epam.drill.jvmapi.gen.*
+import com.epam.drill.test.agent.*
+import io.ktor.utils.io.bits.*
 import kotlinx.cinterop.*
 
-@CName("jvmtiEventClassFileLoadHookEvent")
 fun classFileLoadHookEvent(
     jvmtiEnv: CPointer<jvmtiEnvVar>?,
     jniEnv: CPointer<JNIEnvVar>?,
@@ -25,7 +24,10 @@ fun classFileLoadHookEvent(
     if (notSuitableClass(loader, protection_domain, className, classData)
         && !className.contains("Http") // raw hack for http(s) classes
     ) return
-    val instrumentedBytes = transform(classData, className, classDataLen) ?: return
+    val classBytes = ByteArray(classDataLen).apply {
+        Memory.of(classData!!, classDataLen).loadByteArray(0, this)
+    }
+    val instrumentedBytes = AgentClassTransformer.transform(className, classBytes) ?: return
     val instrumentedSize = instrumentedBytes.size
     mainLogger.debug { "Class '$className' was transformed" }
     mainLogger.debug { "Applying instrumenting (old: $classDataLen to new: $instrumentedSize)" }
@@ -45,29 +47,3 @@ private fun notSuitableClass(
     classData: CPointer<UByteVar>?
 ): Boolean =
     loader == null || protection_domain == null || className == null || classData == null
-
-fun initializeStrategyManager(rawFrameworkPlugins: String) {
-    val (mangerClass, managerObject) = instance("com/epam/drill/test/agent/penetration/StrategyManager")
-    val initialize: jmethodID? = GetMethodID(mangerClass, "initialize", "(Ljava/lang/String;)V")
-    CallObjectMethod(managerObject, initialize, NewStringUTF(rawFrameworkPlugins))
-}
-
-fun transform(classBytes: CPointer<UByteVar>?, className: String, classDataLen: jint): ByteArray? {
-    val (agentClass, agentObject) = instance("com/epam/drill/test/agent/AgentClassTransformer")
-    val transform: jmethodID? = GetMethodID(agentClass, "transform", "(Ljava/lang/String;[B)[B")
-    val classBytesInJBytesArray: jbyteArray = NewByteArray(classDataLen)!!
-    val readBytes = classBytes!!.readBytes(classDataLen)
-    SetByteArrayRegion(classBytesInJBytesArray, 0, classDataLen, readBytes.refTo(0))
-    return CallObjectMethod(
-        agentObject,
-        transform,
-        NewStringUTF(className),
-        classBytesInJBytesArray
-    ).toByteArray()
-}
-
-fun jobject?.toByteArray(): ByteArray? = this?.run {
-    val size = GetArrayLength(this)
-    val getByteArrayElements: CPointer<ByteVarOf<jbyte>>? = GetByteArrayElements(this, null)
-    return@run getByteArrayElements?.readBytes(size)
-}

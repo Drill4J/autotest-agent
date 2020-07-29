@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.multiplatform")
     id("org.jetbrains.kotlin.plugin.serialization")
     id("com.epam.drill.cross-compilation")
+    id("com.epam.drill.gradle.plugin.kni")
     id("com.github.johnrengelman.shadow") version "5.1.0"
     distribution
     `maven-publish`
@@ -25,7 +26,7 @@ configurations.all {
         substitute(module("org.jetbrains.kotlinx:kotlinx-coroutines-core-native:1.3.5")).with(module("org.jetbrains.kotlinx:kotlinx-coroutines-core-native:1.3.5-native-mt"))
     }
 }
-
+val kniOutputDir = "src/kni/kotlin"
 val drillJvmApiLibVersion: String by rootProject
 val serializationRuntimeVersion: String by rootProject
 val drillLoggerVersion: String by rootProject
@@ -34,6 +35,7 @@ val transportVersion: String by rootProject
 val websocketVersion: String by rootProject
 val javassistVersion: String by rootProject
 val klockVersion: String by rootProject
+val kniVersion: String by rootProject
 
 val libName = "autoTestAgent"
 kotlin {
@@ -51,9 +53,16 @@ kotlin {
                         implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-native:$serializationRuntimeVersion")
                         implementation("org.jetbrains.kotlinx:kotlinx-serialization-properties-native:$serializationRuntimeVersion")
                         implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf-native:$serializationRuntimeVersion")
+                        implementation("com.epam.drill.kni:runtime:$kniVersion")
                     }
                 }
             }
+        }
+        kni {
+            jvmTargets = sequenceOf(jvm("runtime"))
+            additionalJavaClasses = sequenceOf()
+            srcDir = kniOutputDir
+            jvmtiAgentObjectPath= "com.epam.drill.test.agent.Agent"
         }
         sequenceOf(
             linuxX64(),
@@ -67,19 +76,22 @@ kotlin {
     }
 
     sourceSets {
+        all{
+            languageSettings.apply {
+                useExperimentalAnnotation("kotlinx.serialization.UnstableDefault")
+            }
+        }
         commonMain {
             dependencies {
                 implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-common:$serializationRuntimeVersion")
                 implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
+                implementation("com.epam.drill.kni:runtime:$kniVersion")
             }
         }
 
         jvm("runtime") {
             compilations["main"].defaultSourceSet {
-                languageSettings.apply {
-                    useExperimentalAnnotation("kotlinx.serialization.UnstableDefault")
-                }
                 dependencies {
                     implementation(kotlin("stdlib-jdk8"))
                     api("org.javassist:javassist:$javassistVersion")
@@ -87,6 +99,7 @@ kotlin {
                     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$serializationRuntimeVersion")
                     implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
                     implementation("com.soywiz.korlibs.klock:klock-jvm:$klockVersion")
+                    implementation("com.epam.drill.kni:runtime:$kniVersion")
                 }
             }
         }
@@ -178,6 +191,21 @@ publishing {
                 artifact(tasks["${it.name}DistZip"])
             }
         }
+    }
+}
+
+tasks {
+    val generateNativeClasses by getting {}
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile> {
+        dependsOn(generateNativeClasses)
+    }
+    val cleanExtraData by registering(Delete::class) {
+        group = "build"
+        delete(kniOutputDir)
+    }
+
+    clean {
+        dependsOn(cleanExtraData)
     }
 }
 
