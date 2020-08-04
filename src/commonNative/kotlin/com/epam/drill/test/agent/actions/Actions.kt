@@ -11,7 +11,7 @@ enum class Actions {
 data class StartSession(val type: String = Actions.START.name, val payload: StartPayload = StartPayload())
 
 @Serializable
-data class StartPayload(val testType: String = "AUTO", val sessionId: String = "")
+data class StartPayload(val testType: String = "AUTO", val sessionId: String = "", val isRealtime: Boolean = false)
 
 @Serializable
 data class StartSessionResponse(val code: Int, val data: StartSessionResponseData)

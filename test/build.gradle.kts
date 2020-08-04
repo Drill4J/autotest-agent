@@ -36,7 +36,8 @@ subprojects {
     configure<com.epam.drill.agent.runner.AgentConfiguration> {
         additionalParams = mutableMapOf(
             "sessionId" to "testSession",
-            "browserProxyAddress" to "host.docker.internal:7777"
+            "browserProxyAddress" to "host.docker.internal:7777",
+            "isRealtimeEnable" to "false"
         )
         runtimePath = rootProject.file("./build/install/${HostManager.host.presetName}")
         agentPath = rootProject
@@ -46,7 +47,7 @@ subprojects {
         adminHost = "ecse0050029e.epam.com"
         adminPort = 8090
         plugins += "junit"
-        logLevel = TRACE
+        logLevel = DEBUG
     }
 
 

@@ -19,7 +19,12 @@ object SessionController {
     fun startSession(customSessionId: String?) {
         mainLogger.debug { "Attempting to start a Drill4J test session..." }
         val payload =
-            StartSession.serializer() stringify StartSession(payload = StartPayload(sessionId = customSessionId ?: ""))
+            StartSession.serializer() stringify StartSession(
+                payload = StartPayload(
+                    sessionId = customSessionId ?: "",
+                    isRealtime = agentConfig.value.isRealtimeEnable
+                )
+            )
         sessionId.value = customSessionId ?: ""
         val response = dispatchAction(payload)
         mainLogger.debug { "Received response: ${response.body}" }
@@ -41,6 +46,12 @@ object SessionController {
     private fun dispatchAction(payload: String): HttpResponse {
         val token = getToken()
         mainLogger.debug { "Auth token: $token" }
+        mainLogger.debug {
+            """Dispatch action: 
+                                |path:$dispatchActionPath
+                                |payload:$payload
+                                |""".trimMargin()
+        }
         return Sender.post(
             agentConfig.value.adminHost,
             agentConfig.value.adminPort,

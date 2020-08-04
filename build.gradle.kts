@@ -79,6 +79,7 @@ kotlin {
         all{
             languageSettings.apply {
                 useExperimentalAnnotation("kotlinx.serialization.UnstableDefault")
+                useExperimentalAnnotation("kotlinx.serialization.InternalSerializationApi")
             }
         }
         commonMain {

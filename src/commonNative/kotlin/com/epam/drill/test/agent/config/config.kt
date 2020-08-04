@@ -14,6 +14,7 @@ data class AgentRawConfig(
     val logLevel: String = LogLevel.ERROR.name,
     val rawFrameworkPlugins: String = "",
     val sessionId: String? = null,
+    val isRealtimeEnable: Boolean = true,
     val browserProxyAddress: String? = null
 ) {
     val level: LogLevel
