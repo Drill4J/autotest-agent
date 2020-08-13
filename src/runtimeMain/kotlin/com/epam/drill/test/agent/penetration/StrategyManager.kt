@@ -5,8 +5,10 @@ import com.epam.drill.test.agent.penetration.http.apache.*
 import com.epam.drill.test.agent.penetration.http.java.*
 import com.epam.drill.test.agent.penetration.http.ok.*
 import com.epam.drill.test.agent.penetration.http.selenium.*
+import com.epam.drill.test.agent.penetration.testing.cucumber.Cucumber
 import com.epam.drill.test.agent.penetration.testing.jmeter.*
 import com.epam.drill.test.agent.penetration.testing.junit.*
+import com.epam.drill.test.agent.penetration.testing.spock.Spock
 import com.epam.drill.test.agent.penetration.testing.testng.*
 import javassist.*
 import java.util.*
@@ -51,6 +53,8 @@ actual object StrategyManager {
 
     private fun enableAllStrategies() {
         strategies.add(Selenium())
+        strategies.add(Spock())
+        strategies.add(Cucumber())
         strategies.add(OkHttpClient())
         strategies.add(ApacheClient())
         strategies.add(JavaHttpUrlConnection())

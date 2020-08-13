@@ -5,3 +5,4 @@ build/
 .kotlintest/
 test-1.txt
 src/kni/kotlin
+target/
