@@ -1,10 +1,7 @@
 package com.automatedtest.sample.infrastructure.driver;
 
-import io.cucumber.java.Scenario;
-import io.cucumber.java.After;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
+import io.cucumber.java.*;
+import org.openqa.selenium.*;
 
 public class TearDown {
 
@@ -15,17 +12,16 @@ public class TearDown {
     }
 
     @After
-    public void quitDriver(Scenario scenario){
-        if(scenario.isFailed()){
-           saveScreenshotsForScenario(scenario);
+    public void quitDriver(Scenario scenario) {
+        if (scenario.isFailed()) {
+            saveScreenshotsForScenario(scenario);
         }
         this.driver.quit();
     }
 
     private void saveScreenshotsForScenario(final Scenario scenario) {
-
         final byte[] screenshot = ((TakesScreenshot) driver)
                 .getScreenshotAs(OutputType.BYTES);
-        scenario.embed(screenshot, "image/png");
+        scenario.embed(screenshot, "image/png", "failed_scenario");
     }
 }
