@@ -1,4 +1,4 @@
-val cucumberVersion = "5.4.0"
+val cucumberVersion = "4.8.0"
 
 dependencies {
     testImplementation("io.github.bonigarcia:webdrivermanager:3.8.1")

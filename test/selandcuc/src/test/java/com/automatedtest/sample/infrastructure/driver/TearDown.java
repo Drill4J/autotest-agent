@@ -1,5 +1,6 @@
 package com.automatedtest.sample.infrastructure.driver;
 
+import io.cucumber.core.api.Scenario;
 import io.cucumber.java.*;
 import org.openqa.selenium.*;
 

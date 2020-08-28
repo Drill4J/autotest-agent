@@ -9,13 +9,16 @@ class Cucumber : AbstractTestStrategy() {
         get() = "cucumber"
 
     override fun permit(ctClass: CtClass): Boolean {
-        return ctClass.name == "io.cucumber.core.runner.TestStep"
+        val name = ctClass.name
+        return name == /*5.x.x*/"io.cucumber.core.runner.TestStep" || name == /*4.x.x*/"cucumber.runner.TestStep"
     }
 
     override fun instrument(ctClass: CtClass): ByteArray? {
-        ctClass.getDeclaredMethod("run").insertBefore("""
+        ctClass.getDeclaredMethod("run").insertBefore(
+            """
                 ${ThreadStorage::class.java.name}.INSTANCE.${ThreadStorage::memorizeTestName.name}($1.getName());
-        """.trimIndent())
+        """.trimIndent()
+        )
         return ctClass.toBytecode()
     }
 }

@@ -1,5 +1,6 @@
 package com.automatedtest.sample.test;
 
+import io.cucumber.core.api.Scenario;
 import io.cucumber.java.*;
 import io.cucumber.java.en.*;
 
