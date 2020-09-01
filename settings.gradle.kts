@@ -6,6 +6,7 @@ include(":test:selenium-v4")
 include(":test:rest-assure")
 include(":test:spock")
 include(":test:selandcuc")
+include(":test:springcuc")
 pluginManagement {
     repositories {
         mavenLocal()
