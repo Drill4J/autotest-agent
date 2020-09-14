@@ -27,7 +27,7 @@ fun classFileLoadHookEvent(
     val classBytes = ByteArray(classDataLen).apply {
         Memory.of(classData!!, classDataLen).loadByteArray(0, this)
     }
-    val instrumentedBytes = AgentClassTransformer.transform(className, classBytes) ?: return
+    val instrumentedBytes = AgentClassTransformer.transform(className, classBytes, loader, protection_domain) ?: return
     val instrumentedSize = instrumentedBytes.size
     mainLogger.debug { "Class '$className' was transformed" }
     mainLogger.debug { "Applying instrumenting (old: $classDataLen to new: $instrumentedSize)" }

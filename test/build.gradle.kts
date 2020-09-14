@@ -20,16 +20,17 @@ subprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
     apply(plugin = "com.epam.drill.agent.runner.autotest")
     dependencies {
-        testImplementation("io.rest-assured:rest-assured:$restAssuredVersion")
-        testImplementation("com.google.code.gson:gson:$gsonVersion")
-        testImplementation("com.mashape.unirest:unirest-java:1.4.9")
-        testImplementation("com.squareup.okhttp3:okhttp:3.12.0")
-        testImplementation(kotlin("stdlib-jdk8"))
-        testImplementation(kotlin("reflect"))
+        implementation("io.rest-assured:rest-assured:$restAssuredVersion")
+        implementation("com.google.code.gson:gson:$gsonVersion")
+        implementation("com.mashape.unirest:unirest-java:1.4.9")
+        implementation("com.squareup.okhttp3:okhttp:3.12.0")
+        implementation(kotlin("stdlib-jdk8"))
+        implementation(kotlin("reflect"))
     }
 
-    println(this.name)
-    if (this.name != "selandcuc" && this.name != "spock") {
+
+    if (this.name.endsWith("-ju5")) {
+        println("Engine jupiter: ${this.name}")
         dependencies {
             testImplementation("org.junit.jupiter:junit-jupiter:$jupiterVersion")
         }
@@ -55,7 +56,6 @@ subprojects {
         agentId = "test-pet-standalone"
         adminHost = "ecse0050029e.epam.com"
         adminPort = 8090
-        plugins += "junit"
         logLevel = TRACE
     }
 

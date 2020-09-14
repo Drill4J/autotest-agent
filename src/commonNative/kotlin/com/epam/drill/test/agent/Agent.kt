@@ -22,8 +22,7 @@ object Agent : JvmtiAgent {
         try {
             val config = options.toAgentParams().freeze()
             setUnhandledExceptionHook({ thr: Throwable ->
-                thr.printStackTrace()
-                mainLogger.error { "Unhandled event $thr" }
+                mainLogger.error(thr) { "Unhandled event $thr" }
             }.freeze())
             val jvmtiCapabilities = alloc<jvmtiCapabilities>()
             jvmtiCapabilities.can_retransform_classes = 1.toUInt()
@@ -33,8 +32,7 @@ object Agent : JvmtiAgent {
             AddToBootstrapClassLoaderSearch("${config.drillInstallationDir}/drillRuntime.jar")
             callbackRegister()
 
-            SessionController.agentConfig.value = config
-            SessionController.startSession(config.sessionId)
+            SessionController._agentConfig.value = config
         } catch (ex: Throwable) {
             mainLogger.error(ex) { "Can't load the agent. Reason:" }
         }

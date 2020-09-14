@@ -1,11 +1,16 @@
 rootProject.name = "autotest-agent"
 include(":test")
 include(":test:https-headers")
-include(":test:selenium-v3")
-include(":test:selenium-v4")
-include(":test:rest-assure")
+include(":test:https-headers:ju5")
+include(":test:https-headers:ju4")
+include(":test:https-headers:testng")
+include(":test:selenium:selenium-v3-ju5")
+include(":test:selenium:selenium-v4-ju5")
+include(":test:rest-assure-ju5")
+
 include(":test:spock")
-include(":test:selandcuc")
+include(":test:cucumber:cucumber-v4")
+include(":test:cucumber:cucumber-v5")
 pluginManagement {
     repositories {
         mavenLocal()

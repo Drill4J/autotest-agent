@@ -101,6 +101,8 @@ kotlin {
                     implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
                     implementation("com.soywiz.korlibs.klock:klock-jvm:$klockVersion")
                     implementation("com.epam.drill.kni:runtime:$kniVersion")
+                    implementation("com.squareup.okhttp3:okhttp:3.12.0")
+
                 }
             }
         }

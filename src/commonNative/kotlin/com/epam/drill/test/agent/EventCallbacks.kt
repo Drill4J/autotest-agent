@@ -2,16 +2,14 @@
 
 package com.epam.drill.test.agent
 
-import com.epam.drill.test.agent.actions.*
-import com.epam.drill.test.agent.instrumenting.*
 import com.epam.drill.hook.io.tcp.injectedHeaders
-import com.epam.drill.interceptor.*
-import com.epam.drill.jvmapi.JNIEnvPointer
+import com.epam.drill.interceptor.configureHttpInterceptor
 import com.epam.drill.jvmapi.gen.*
-import com.epam.drill.jvmapi.vmGlobal
-import com.epam.drill.test.agent.penetration.*
+import com.epam.drill.test.agent.actions.SessionController
+import com.epam.drill.test.agent.instrumentation.StrategyManager
+import com.epam.drill.test.agent.instrumenting.classFileLoadHookEvent
 import kotlinx.cinterop.*
-import kotlin.native.concurrent.*
+import kotlin.native.concurrent.freeze
 
 fun enableJvmtiEventVmDeath(thread: jthread? = null) {
     SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_VM_DEATH, thread)
@@ -43,7 +41,8 @@ fun callbackRegister() = memScoped {
 fun jvmtiEventVMInitEvent(env: CPointer<jvmtiEnvVar>?, jniEnv: CPointer<JNIEnvVar>?, thread: jthread?) {
     mainLogger.debug { "Init event" }
     initRuntimeIfNeeded()
-    StrategyManager.initialize(SessionController.agentConfig.value.rawFrameworkPlugins)
+    SessionController.startSession(SessionController.agentConfig.sessionId)
+    StrategyManager.initialize(SessionController.agentConfig.rawFrameworkPlugins)
     SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, null)
     configureHooks()
 }

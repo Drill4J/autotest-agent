@@ -12,6 +12,6 @@ actual object ThreadStorage {
     }
 
     actual fun proxyUrl(): String? {
-        return SessionController.agentConfig.value.browserProxyAddress
+        return SessionController._agentConfig.value.browserProxyAddress
     }
 }
