@@ -25,7 +25,7 @@ object Spock : AbstractTestStrategy() {
     ): ByteArray? {
         val createMethodInfo = ctClass.getDeclaredMethod("createMethodInfoForDoRunFeature")
         when (ctClass.name) {
-            //TODO need implementation for com.epam.drill.test.agent.instrumentation.testing.TestListener
+            //TODO need implementation for com.epam.drill.test.agent.TestListener
             baseRunner -> createMethodInfo.insertBefore(
                 """
                     String testName = currentFeature.getDescription().toString();

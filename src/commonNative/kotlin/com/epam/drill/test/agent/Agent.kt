@@ -52,34 +52,6 @@ object Agent : JvmtiAgent {
 
 const val WRONG_PARAMS = "Agent parameters are not specified correctly."
 
-class StringPropertyDecoder(val map: Map<String, String>) : NamedValueDecoder() {
-    override val context: SerialModule = Properties.context
-
-    private var currentIndex = 0
-
-    override fun decodeCollectionSize(descriptor: SerialDescriptor): Int {
-        return decodeTaggedInt(nested("size"))
-    }
-
-    override fun decodeTaggedValue(tag: String): Any {
-        return map.getValue(tag)
-    }
-
-    override fun decodeTaggedBoolean(tag: String): Boolean {
-        return map.getValue(tag).toBoolean()
-    }
-
-    override fun decodeElementIndex(descriptor: SerialDescriptor): Int {
-        val tag = nested("size")
-        val size = if (map.containsKey(tag)) decodeTaggedInt(tag) else descriptor.elementsCount
-        while (currentIndex < size) {
-            val name = descriptor.getTag(currentIndex++)
-            if (map.keys.any { it.startsWith(name) }) return currentIndex - 1
-        }
-        return CompositeDecoder.READ_DONE
-    }
-}
-
 fun String?.toAgentParams() = this.asParams().let { params ->
     val result = AgentRawConfig.serializer().deserialize(StringPropertyDecoder(params))
     println(result)

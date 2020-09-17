@@ -26,11 +26,45 @@ data class StartSessionResponse(val code: Int, val data: StartSessionResponseDat
 data class StartSessionResponseData(val payload: StartSessionPayload)
 
 @Serializable
-data class StopSession(val type: String = Actions.STOP.name, val payload: StopPayload)
+data class StopSession(val type: String = Actions.STOP.name, val payload: StopSessionPayload)
+
+fun stopAction(sessionId: String, testRun: TestRun? = null) = StopSession(
+    payload = StopSessionPayload(sessionId, testRun)
+)
+
 
 @Serializable
-data class StopPayload(val sessionId: String)
-
-fun stopAction(sessionId: String) = StopSession(
-    payload = StopPayload(sessionId)
+data class StopSessionPayload(
+    val sessionId: String,
+    val testRun: TestRun? = null
 )
+
+@Serializable
+data class TestRun(
+    val name: String = "",
+    val startedAt: Long,
+    val finishedAt: Long,
+    val tests: List<TestInfo>
+)
+
+@Serializable
+data class TestInfo(
+    val name: String,
+    val result: TestResult,
+    val startedAt: Long = 0,
+    val finishedAt: Long = 0
+)
+
+enum class TestResult {
+    PASSED,
+    FAILED,
+    SKIPPED,
+    ERROR;
+
+    companion object {
+        fun getByMapping(value: String): TestResult {
+            if (value == "SUCCESSFUL") return PASSED
+            return valueOf(value)
+        }
+    }
+}

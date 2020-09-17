@@ -1,7 +1,8 @@
 import pack.HttpHeadersTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 
-class Test {
+class TestJU5 {
 
     @Test
     fun simpleTestMethodName() {
@@ -15,6 +16,7 @@ class Test {
 
     @Suppress("RemoveRedundantBackticks")
     @Test
+    @Ignore
     fun `shortBacktick`() {
         HttpHeadersTest.test(::`shortBacktick`.name)
     }

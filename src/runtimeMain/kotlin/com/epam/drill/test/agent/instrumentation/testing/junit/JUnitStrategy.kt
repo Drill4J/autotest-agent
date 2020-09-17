@@ -1,12 +1,15 @@
 package com.epam.drill.test.agent.instrumentation.testing.junit
 
 import com.epam.drill.test.agent.instrumentation.AbstractTestStrategy
-import com.epam.drill.test.agent.instrumentation.testing.TestListener
+import com.epam.drill.test.agent.TestListener
+import com.epam.drill.test.agent.actions.TestResult
 import javassist.*
 import java.security.ProtectionDomain
 
 @Suppress("unused")
 object JUnitStrategy : AbstractTestStrategy() {
+    private const val engineSegment = """[engine:junit]"""
+
     override val id: String = "junit"
     override fun permit(ctClass: CtClass): Boolean {
         return ctClass.name == "org.junit.runner.notification.RunNotifier"
@@ -25,19 +28,20 @@ object JUnitStrategy : AbstractTestStrategy() {
         cc.addConstructor(
             CtNewConstructor.make(
                 """
-                            public MyList(org.junit.runner.notification.RunListener mainRunner) {
-                               this.mainRunner = mainRunner;
-                            }
+public MyList(org.junit.runner.notification.RunListener mainRunner) {
+   this.mainRunner = mainRunner;
+}
                         """.trimMargin()
                 , cc
             )
         )
+        val dp = """description"""
         cc.addMethod(
             CtMethod.make(
                 """
-                              public void testRunStarted(org.junit.runner.Description description) throws Exception {
-                                  this.mainRunner.testRunStarted(description);
-                              }
+public void testRunStarted(org.junit.runner.Description $dp) throws Exception {
+    this.mainRunner.testRunStarted($dp);
+}
                         """.trimIndent(),
                 cc
             )
@@ -46,35 +50,11 @@ object JUnitStrategy : AbstractTestStrategy() {
         cc.addMethod(
             CtMethod.make(
                 """
-                              public void testStarted(org.junit.runner.Description description) throws Exception {
-                                this.mainRunner.testStarted(description);
-                                
-                                 ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("[engine:junit]/[class:"+description.getClassName()+"]/[method:"+description.getMethodName()+"]");
-                              }
-                        """.trimIndent(),
-                cc
-            )
-        )
-
-
-        cc.addMethod(
-            CtMethod.make(
-                """
-                            public void testFinished(org.junit.runner.Description description) throws Exception {
-                                this.mainRunner.testFinished(description);
-                                ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("[engine:junit]/[class:"+description.getClassName()+"]/[method:"+description.getMethodName()+"]", "SUCCESSFULLY");
-                              }
-                        """.trimIndent(),
-                cc
-            )
-        )
-
-        cc.addMethod(
-            CtMethod.make(
-                """
-                              public void testRunFinished(org.junit.runner.Result result) throws Exception {
-                                this.mainRunner.testRunFinished(result);
-                              }
+public void testStarted(org.junit.runner.Description $dp) throws Exception {
+  this.mainRunner.testStarted($dp);
+   ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}
+("$engineSegment/${classSegment(dp)}/${methodSegment(dp)}");
+}
                         """.trimIndent(),
                 cc
             )
@@ -84,10 +64,38 @@ object JUnitStrategy : AbstractTestStrategy() {
         cc.addMethod(
             CtMethod.make(
                 """
-                               public void testFailure(org.junit.runner.notification.Failure failure) throws Exception {
-                                  this.mainRunner.testFailure(failure);
-                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("[engine:junit]/[class:"+failure.getDescription().getClassName()+"]/[method:"+failure.getDescription().getMethodName()+"]", "FAILURE");
-                              }
+public void testFinished(org.junit.runner.Description $dp) throws Exception {
+    this.mainRunner.testFinished(description);
+    ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}
+("$engineSegment/${classSegment(dp)}/${methodSegment(dp)}", "${TestResult.PASSED.name}");
+}
+                        """.trimIndent(),
+                cc
+            )
+        )
+
+        cc.addMethod(
+            CtMethod.make(
+                """
+public void testRunFinished(org.junit.runner.Result result) throws Exception {
+  this.mainRunner.testRunFinished(result);
+}
+                        """.trimIndent(),
+                cc
+            )
+        )
+
+
+        val failureParamName = """failure"""
+        val desct = """$failureParamName.getDescription()"""
+        cc.addMethod(
+            CtMethod.make(
+                """
+public void testFailure(org.junit.runner.notification.Failure $failureParamName) throws Exception {
+   this.mainRunner.testFailure($failureParamName);
+   ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}
+("$engineSegment/${classSegment(desct)}/${methodSegment(desct)}", "${TestResult.FAILED.name}");
+}
                         """.trimIndent(),
                 cc
             )
@@ -97,9 +105,9 @@ object JUnitStrategy : AbstractTestStrategy() {
         cc.addMethod(
             CtMethod.make(
                 """
-                               public void testAssumptionFailure(org.junit.runner.notification.Failure failure) {
-                                  this.mainRunner.testAssumptionFailure(failure);
-                              }
+public void testAssumptionFailure(org.junit.runner.notification.Failure $failureParamName) {
+    this.mainRunner.testAssumptionFailure(failure);
+}
                         """.trimIndent(),
                 cc
             )
@@ -110,9 +118,11 @@ object JUnitStrategy : AbstractTestStrategy() {
         cc.addMethod(
             CtMethod.make(
                 """
-                              public void testIgnored(org.junit.runner.Description description) throws Exception {
-                                    this.mainRunner.testIgnored(description);
-                              }
+public void testIgnored(org.junit.runner.Description $dp) throws Exception {
+      this.mainRunner.testIgnored($dp);
+${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}
+("$engineSegment/${classSegment(dp)}/${methodSegment(dp)}");      
+}
                         """.trimIndent(),
                 cc
             )
@@ -128,4 +138,9 @@ object JUnitStrategy : AbstractTestStrategy() {
         )
         return ctClass.toBytecode()
     }
+
+    private fun methodSegment(descriptionParamName: String) =
+        """[method:"+$descriptionParamName.getMethodName()+"]"""
+
+    private fun classSegment(descriptionParamName: String) = """[class:"+$descriptionParamName.getClassName()+"]"""
 }

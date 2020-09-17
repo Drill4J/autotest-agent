@@ -1,7 +1,7 @@
 package com.epam.drill.test.agent.instrumentation.testing.cucumber
 
 import com.epam.drill.test.agent.instrumentation.AbstractTestStrategy
-import com.epam.drill.test.agent.instrumentation.testing.TestListener
+import com.epam.drill.test.agent.TestListener
 import javassist.*
 import java.security.ProtectionDomain
 

@@ -1,7 +1,7 @@
 package com.epam.drill.test.agent.instrumentation.testing.junit
 
 import com.epam.drill.test.agent.instrumentation.AbstractTestStrategy
-import com.epam.drill.test.agent.instrumentation.testing.TestListener
+import com.epam.drill.test.agent.TestListener
 import javassist.*
 import java.security.ProtectionDomain
 
@@ -46,6 +46,7 @@ object JUnit5Strategy : AbstractTestStrategy() {
                 """
                             public void executionSkipped(org.junit.platform.engine.TestDescriptor testDescriptor, String reason) {
                                 mainRunner.executionSkipped(testDescriptor, reason);
+                                ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}(testDescriptor.getUniqueId().toString());
                             }
                         """.trimIndent(),
                 cc

@@ -1,7 +1,7 @@
 package com.epam.drill.test.agent.instrumentation.testing.testng
 
 import com.epam.drill.test.agent.instrumentation.AbstractTestStrategy
-import com.epam.drill.test.agent.instrumentation.testing.TestListener
+import com.epam.drill.test.agent.TestListener
 import javassist.CtClass
 import javassist.CtMethod
 import java.security.ProtectionDomain
@@ -52,9 +52,9 @@ object TestNGStrategy : AbstractTestStrategy() {
   }
         """.trimIndent(), ctClass))
         sequenceOf(
-            ctClass.getDeclaredMethod("onTestSuccess") to "SUCCESSFUL",
+            ctClass.getDeclaredMethod("onTestSuccess") to "PASSED",
             ctClass.getDeclaredMethod("onTestFailure") to "FAILED",
-            ctClass.getDeclaredMethod("onTestSkipped") to "ABORTED"
+            ctClass.getDeclaredMethod("onTestSkipped") to "SKIPPED"
         ).forEach { (method, status) ->
             method.insertAfter(
                 """

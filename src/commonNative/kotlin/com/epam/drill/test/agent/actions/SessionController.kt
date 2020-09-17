@@ -25,7 +25,8 @@ object SessionController {
             StartSession.serializer() stringify StartSession(
                 payload = StartSessionPayload(
                     sessionId = customSessionId ?: "",
-                    isRealtime = agentConfig.isRealtimeEnable
+                    isRealtime = agentConfig.isRealtimeEnable,
+                    isGlobal = agentConfig.isGlobal
                 )
             )
         sessionId.value = customSessionId ?: ""
@@ -38,9 +39,9 @@ object SessionController {
         mainLogger.info { "Started a test session with ID ${sessionId.value}" }
     }.onFailure {   mainLogger.warn(it) { "Can't startSession '${sessionId.value}'" } }.getOrNull()
 
-    fun stopSession() = runCatching{
+    fun stopSession() = runCatching {
         mainLogger.debug { "Attempting to stop a Drill4J test session..." }
-        val payload = StopSession.serializer() stringify stopAction(sessionId.value)
+        val payload = StopSession.serializer() stringify stopAction(sessionId.value, TestRun.serializer() parse TestListener.getData())
         val response = dispatchAction(payload)
         mainLogger.debug { "Received response: ${response.body}" }
         mainLogger.info { "Stopped a test session with ID ${sessionId.value}" }

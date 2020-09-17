@@ -15,6 +15,7 @@ data class AgentRawConfig(
     val rawFrameworkPlugins: String = "",
     val sessionId: String? = null,
     val isRealtimeEnable: Boolean = true,
+    val isGlobal: Boolean = false,
     val browserProxyAddress: String? = null
 ) {
     val level: LogLevel

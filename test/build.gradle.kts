@@ -47,7 +47,8 @@ subprojects {
         additionalParams = mutableMapOf(
             "sessionId" to "testSession",
             "browserProxyAddress" to "host.docker.internal:7777",
-            "isRealtimeEnable" to "false"
+            "isRealtimeEnable" to "false",
+            "isGlobal" to "false"
         )
         runtimePath = rootProject.file("./build/install/$presetName")
         agentPath = rootProject
