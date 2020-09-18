@@ -13,11 +13,14 @@ private const val CAPABILITY_NAME = "debuggerAddress"
 private const val DEV_TOOL_PROPERTY_NAME = "webSocketDebuggerUrl"
 
 object DevToolsClientThreadStorage {
+    private val logger = Logging.logger(ChromeDevTool::class.java.name)
     internal var crhmT: InheritableThreadLocal<ChromeDevTool> = InheritableThreadLocal()
 
     fun addHeaders(headers: Map<*, *>) {
         @Suppress("UNCHECKED_CAST")
         crhmT.get()?.addHeaders(headers as Map<String, String>)
+        logger.debug { "Chrome Tool activated: ${crhmT.get()!=null }. Headers: $headers" }
+
     }
 }
 
