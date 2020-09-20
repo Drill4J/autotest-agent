@@ -62,8 +62,8 @@ actual object TestListener {
     }
 
     actual fun getData(): String {
-        val map = _ml.values.map { u ->
-            TestInfo.serializer().deserialize(PropertyDecoder(u!!))
+        val map = _ml.values.filterNotNull().map { u ->
+            TestInfo.serializer().deserialize(PropertyDecoder(u))
         }
 
 

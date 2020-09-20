@@ -91,13 +91,15 @@ class Selenium : Strategy() {
                     if (!(${'$'}1.equals("newSession"))) {
                         if ($IF_CONDITION) {
                             try {
+                                org.openqa.selenium.remote.Response a = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
+                                org.openqa.selenium.remote.Response b = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
+                            } catch(Exception e) {}
+                            try {
                                 java.util.HashMap hashMap = new java.util.HashMap();
                                 hashMap.put($SESSION_ID_CALC_LINE);
                                 hashMap.put($TEST_NAME_CALC_LINE);
                                 ${DevToolsClientThreadStorage::class.java.name}.INSTANCE.${DevToolsClientThreadStorage::addHeaders.name}(hashMap);
-                                org.openqa.selenium.remote.Response a = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
-                                org.openqa.selenium.remote.Response b = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
-                            } catch(Exception e) {}
+                            } catch(Exception e) { e.printStackTrace();}
                         }
                     }
                 """.trimIndent()

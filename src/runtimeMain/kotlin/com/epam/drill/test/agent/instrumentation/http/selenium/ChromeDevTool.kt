@@ -17,17 +17,25 @@ object DevToolsClientThreadStorage {
     internal var crhmT: InheritableThreadLocal<ChromeDevTool> = InheritableThreadLocal()
 
     fun addHeaders(headers: Map<*, *>) {
-        @Suppress("UNCHECKED_CAST")
-        crhmT.get()?.addHeaders(headers as Map<String, String>)
-        logger.debug { "Chrome Tool activated: ${crhmT.get()!=null }. Headers: $headers" }
+        try {
+            logger.debug { "try to add headers: $headers" }
+            @Suppress("UNCHECKED_CAST")
+            crhmT.get()?.addHeaders(headers as Map<String, String>)
+            logger.debug { "Chrome Tool activated: ${crhmT.get() != null}. Headers: $headers" }
 
+        } catch (ex: Exception) {
+            logger.debug { "try to resend" }
+            Thread.sleep(2000)
+            @Suppress("UNCHECKED_CAST")
+            crhmT.get()?.addHeaders(headers as Map<String, String>)
+        }
     }
 }
 
 class ChromeDevTool {
     private val logger = Logging.logger(ChromeDevTool::class.java.name)
 
-    private var ws: ChromeDevToolWs? = null
+    internal var ws: ChromeDevToolWs? = null
 
     fun addHeaders(headers: Map<String, String>) {
         ws?.addHeaders(headers)
@@ -37,6 +45,7 @@ class ChromeDevTool {
         crhmT.set(this)
     }
 
+    lateinit var url:String
 
     fun connectToDevTools(capabilities: Map<*, *>?) = kotlin.runCatching {
         capabilities?.let { cap ->
@@ -49,17 +58,22 @@ class ChromeDevTool {
                 logger.debug { "Chrome info: $response" }
                 val chromeInfo = Json.parseJson(response) as JsonObject
                 chromeInfo[DEV_TOOL_PROPERTY_NAME]?.content?.let { url ->
-                    logger.debug { "DevTools URL: $url" }
-                    val cdl = CountDownLatch(4)
-                    ws = ChromeDevToolWs(URI(url), cdl)
-                    ws?.connect()
-                    cdl.await(5, TimeUnit.SECONDS)
+                    this.url = url
+                    connect()
                 } ?: logger.warn { "Can't get DevTools URL" }
             } else {
                 logger.warn { "Can't get chrome info: code=$responseCode" }
             }
         }
     }.getOrNull()
+
+    internal fun connect(): Boolean {
+        logger.debug { "DevTools URL: ${this.url}" }
+        val cdl = CountDownLatch(4)
+        ws = ChromeDevToolWs(URI(this.url), cdl ,this)
+        ws?.connect()
+        return cdl.await(5, TimeUnit.SECONDS)
+    }
 
     private fun doDevToolsRequest(debuggerURL: String): HttpURLConnection {
         val obj = URL("http://$debuggerURL/json/version")
@@ -70,7 +84,12 @@ class ChromeDevTool {
     }
 }
 
-class ChromeDevToolWs(uri: URI, private val cdl: CountDownLatch) : WebSocketClient(uri) {
+class ChromeDevToolWs(
+    val url: URI,
+    private val cdl: CountDownLatch,
+    val chromeDevTool: ChromeDevTool
+) : WebSocketClient(url) {
+
     private val json = Json(JsonConfiguration(encodeDefaults = false))
 
     private val logger = Logging.logger(ChromeDevToolWs::class.java.name)
@@ -78,6 +97,7 @@ class ChromeDevToolWs(uri: URI, private val cdl: CountDownLatch) : WebSocketClie
     private lateinit var sessionId: SessionId
 
     override fun onOpen(handshakedata: ServerHandshake?) {
+        logger.trace { "Ws was opened" }
         send(DevToolsRequest(1, "Target.getTargets", emptyMap()))
     }
 
@@ -139,6 +159,7 @@ class ChromeDevToolWs(uri: URI, private val cdl: CountDownLatch) : WebSocketClie
 
     override fun onError(ex: java.lang.Exception?) {
         logger.error(ex) { "socket closed by error:" }
+
     }
 
     private fun send(value: DevToolsRequest) {
@@ -151,7 +172,10 @@ class ChromeDevToolWs(uri: URI, private val cdl: CountDownLatch) : WebSocketClie
 
 
     override fun onClose(code: Int, reason: String?, remote: Boolean) {
-        logger.debug { "socket closed" }
+        logger.debug { "socket closed. Code: $code, reason: $reason, remote: $remote" }
+        Thread.sleep(1000)
+        logger.debug {"try reconnect to ${this.url}"}
+        chromeDevTool.connect()
     }
 
 }

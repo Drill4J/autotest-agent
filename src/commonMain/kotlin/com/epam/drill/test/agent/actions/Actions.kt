@@ -50,7 +50,7 @@ data class TestRun(
 @Serializable
 data class TestInfo(
     val name: String,
-    val result: TestResult,
+    val result: TestResult = TestResult.FAILED,
     val startedAt: Long = 0,
     val finishedAt: Long = 0
 )
