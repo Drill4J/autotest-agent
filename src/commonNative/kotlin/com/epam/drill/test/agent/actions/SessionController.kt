@@ -37,15 +37,18 @@ object SessionController {
         else (StartSessionResponse.serializer().list parse response.body).first()
         sessionId.value = startSessionResponse.data.payload.sessionId
         mainLogger.info { "Started a test session with ID ${sessionId.value}" }
-    }.onFailure {   mainLogger.warn(it) { "Can't startSession '${sessionId.value}'" } }.getOrNull()
+    }.onFailure { mainLogger.warn(it) { "Can't startSession '${sessionId.value}'" } }.getOrNull()
 
     fun stopSession() = runCatching {
         mainLogger.debug { "Attempting to stop a Drill4J test session..." }
-        val payload = StopSession.serializer() stringify stopAction(sessionId.value, TestRun.serializer() parse TestListener.getData())
+        val payload = StopSession.serializer() stringify stopAction(
+            sessionId.value,
+            runCatching { TestRun.serializer() parse TestListener.getData() }.getOrNull()
+        )
         val response = dispatchAction(payload)
         mainLogger.debug { "Received response: ${response.body}" }
         mainLogger.info { "Stopped a test session with ID ${sessionId.value}" }
-    }.onFailure {   mainLogger.warn(it) { "Can't stopSession ${sessionId.value}" } }.getOrNull()
+    }.onFailure { mainLogger.warn(it) { "Can't stopSession ${sessionId.value}" } }.getOrNull()
 
     private fun dispatchAction(payload: String): HttpResponse {
         val token = getToken()
@@ -63,12 +66,12 @@ object SessionController {
                     "Content-Type" to "application/json"
                 ), payload
             )
-        ).apply { if(code != 200) error("Can't perform request: $this") }
+        ).apply { if (code != 200) error("Can't perform request: $this") }
     }
 
     private fun getToken(): String {
         val httpCall = httpCall(agentConfig.adminAddress + "/api/login", HttpRequest("POST"))
-        if(httpCall.code != 200) error("Can't perform request: $httpCall")
+        if (httpCall.code != 200) error("Can't perform request: $httpCall")
         return httpCall.headers["authorization"] ?: error("No token received during login")
     }
 
