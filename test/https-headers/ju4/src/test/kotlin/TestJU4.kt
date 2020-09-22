@@ -12,12 +12,12 @@ class Test {
 
     @Test
     fun `method with backtick names`() {
-//        HttpHeadersTest.test(::`method with backtick names`.name)
+        HttpHeadersTest.test(::`method with backtick names`.name)
     }
 
     @Suppress("RemoveRedundantBackticks")
     @Test
     fun `shortBacktick`() {
-//        HttpHeadersTest.test(::`shortBacktick`.name)
+        HttpHeadersTest.test(::`shortBacktick`.name)
     }
 }

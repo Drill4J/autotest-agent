@@ -1,4 +1,5 @@
 rootProject.name = "autotest-agent"
+include(":runtime")
 include(":test")
 include(":test:https-headers")
 include(":test:https-headers:ju5")

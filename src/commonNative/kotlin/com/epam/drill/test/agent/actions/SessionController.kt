@@ -19,14 +19,22 @@ object SessionController {
         } else "/api/service-groups/${agentConfig.groupId}/plugins/${agentConfig.pluginId}/dispatch-action"
 
 
-    fun startSession(customSessionId: String?) = runCatching {
+    fun startSession(
+        customSessionId: String?,
+        testType: String = "AUTO",
+        isRealtime: Boolean = agentConfig.isRealtimeEnable,
+        testName: String? = null,
+        isGlobal: Boolean = agentConfig.isGlobal
+    ) = runCatching {
         mainLogger.debug { "Attempting to start a Drill4J test session..." }
         val payload =
             StartSession.serializer() stringify StartSession(
                 payload = StartSessionPayload(
                     sessionId = customSessionId ?: "",
-                    isRealtime = agentConfig.isRealtimeEnable,
-                    isGlobal = agentConfig.isGlobal
+                    testType = testType,
+                    testName = testName,
+                    isRealtime = isRealtime,
+                    isGlobal = isGlobal
                 )
             )
         sessionId.value = customSessionId ?: ""
@@ -39,10 +47,10 @@ object SessionController {
         mainLogger.info { "Started a test session with ID ${sessionId.value}" }
     }.onFailure { mainLogger.warn(it) { "Can't startSession '${sessionId.value}'" } }.getOrNull()
 
-    fun stopSession() = runCatching {
+    fun stopSession(sessionIds: String? = null) = runCatching {
         mainLogger.debug { "Attempting to stop a Drill4J test session..." }
         val payload = StopSession.serializer() stringify stopAction(
-            sessionId.value,
+            sessionIds ?: sessionId.value,
             runCatching { TestRun.serializer() parse TestListener.getData() }.getOrNull()
         )
         val response = dispatchAction(payload)

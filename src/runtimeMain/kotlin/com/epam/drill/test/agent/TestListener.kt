@@ -62,9 +62,11 @@ actual object TestListener {
     }
 
     actual fun getData(): String {
-        val map = _ml.values.filterNotNull().map { u ->
-            TestInfo.serializer().deserialize(PropertyDecoder(u))
-        }
+        val map = kotlin.runCatching {
+            _ml.values.filterNotNull().map { u ->
+                TestInfo.serializer().deserialize(PropertyDecoder(u))
+            }
+        }.getOrDefault(emptyList())
 
 
         return TestRun.serializer() stringify TestRun(
@@ -73,5 +75,9 @@ actual object TestListener {
             map.maxBy { it.finishedAt }?.finishedAt ?: 0,
             map
         )
+    }
+
+    actual fun reset() {
+        _ml.clear()
     }
 }

@@ -2,16 +2,21 @@
 
 package com.epam.drill.test.agent
 
-import com.epam.drill.jvmapi.gen.*
-import com.epam.drill.kni.*
-import com.epam.drill.logger.*
-import com.epam.drill.test.agent.actions.*
-import com.epam.drill.test.agent.config.*
-import kotlinx.cinterop.*
-import kotlinx.serialization.*
-import kotlinx.serialization.internal.*
-import kotlinx.serialization.modules.*
-import kotlin.native.concurrent.*
+import com.epam.drill.jvmapi.gen.AddCapabilities
+import com.epam.drill.jvmapi.gen.AddToBootstrapClassLoaderSearch
+import com.epam.drill.jvmapi.gen.JNI_OK
+import com.epam.drill.jvmapi.gen.jvmtiCapabilities
+import com.epam.drill.kni.JvmtiAgent
+import com.epam.drill.logger.Logging
+import com.epam.drill.logger.filename
+import com.epam.drill.logger.logLevel
+import com.epam.drill.test.agent.actions.SessionController
+import com.epam.drill.test.agent.config.AgentRawConfig
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.ptr
+import kotlin.native.concurrent.SharedImmutable
+import kotlin.native.concurrent.freeze
 
 @SharedImmutable
 val mainLogger = Logging.logger("AutoTestAgentLogger")
@@ -42,7 +47,8 @@ object Agent : JvmtiAgent {
     override fun agentOnUnload() {
         try {
             mainLogger.info { "Shutting the agent down" }
-            SessionController.stopSession()
+            if(!SessionController.agentConfig.isManuallyControlled)
+             SessionController.stopSession()
         } catch (ex: Throwable) {
             mainLogger.error { "Failed to unload the agent properly. Reason: ${ex.message}" }
         }

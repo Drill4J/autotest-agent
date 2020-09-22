@@ -41,7 +41,8 @@ fun callbackRegister() = memScoped {
 fun jvmtiEventVMInitEvent(env: CPointer<jvmtiEnvVar>?, jniEnv: CPointer<JNIEnvVar>?, thread: jthread?) {
     mainLogger.debug { "Init event" }
     initRuntimeIfNeeded()
-    SessionController.startSession(SessionController.agentConfig.sessionId)
+    if(!SessionController.agentConfig.isManuallyControlled)
+        SessionController.startSession(SessionController.agentConfig.sessionId)
     StrategyManager.initialize(SessionController.agentConfig.rawFrameworkPlugins)
     SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, null)
     configureHooks()

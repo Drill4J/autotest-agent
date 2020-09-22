@@ -5,4 +5,8 @@ actual object TestListener {
     actual fun getData(): String {
         return TestListenerStub.getData()
     }
+
+    actual fun reset() {
+        TestListenerStub.reset()
+    }
 }
