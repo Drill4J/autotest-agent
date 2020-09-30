@@ -65,7 +65,7 @@ abstract class BasedTest {
     @Test
     fun itCanBeAnyTestName1() {
         var localCount = -1
-        repeat(1000) {
+        repeat(20) {
             driver.get("http://localhost:$port/1")
             localCount += 2
             Assertions.assertEquals(testNames.filterKeys { it.contains(::itCanBeAnyTestName1.name)}.values.first(), localCount)
@@ -77,7 +77,7 @@ abstract class BasedTest {
     @Test
     fun itCanBeAnyTestName2() {
         var localCount = -1
-        repeat(400) {
+        repeat(10) {
             driver.get("http://localhost:$port/1")
             localCount += 2
             Assertions.assertEquals(testNames.filterKeys { it.contains(::itCanBeAnyTestName2.name)}.values.first(), localCount)

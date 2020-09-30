@@ -6,11 +6,12 @@ import com.epam.drill.test.agent.actions.TestInfo
 import com.epam.drill.test.agent.actions.TestResult
 import com.epam.drill.test.agent.actions.TestRun
 import com.epam.drill.test.agent.config.stringify
+import java.util.concurrent.ConcurrentHashMap
 
 @Kni
 actual object TestListener {
 
-    private val _ml = mutableMapOf<String, MutableMap<String, Any>?>()
+    private val _ml = ConcurrentHashMap<String, MutableMap<String, Any>?>()
 
     private fun addTestInfo(testId: String, vararg vals: Pair<String, Any>) {
         vals.forEach {
@@ -78,6 +79,6 @@ actual object TestListener {
     }
 
     actual fun reset() {
-        _ml.clear()
+//        _ml.clear()
     }
 }

@@ -7,5 +7,8 @@ dependencies {
 }
 
 tasks.named<Test>("test") {
-    useTestNG()
+    useTestNG {
+        parallel = "methods"
+        threadCount = 2
+    }
 }

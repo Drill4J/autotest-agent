@@ -10,8 +10,7 @@ object CucumberV5 : AbstractTestStrategy() {
         get() = "cucumber-v5"
 
     override fun permit(ctClass: CtClass): Boolean {
-//        return name == /*5.x.x*/"io.cucumber.core.runner.TestStep" || name == /*4.x.x*/"cucumber.runner.TestStep"
-        return false
+        return ctClass.name == /*5.x.x*/"io.cucumber.core.runner.TestStep"
     }
 
     override fun instrument(
@@ -65,7 +64,7 @@ object CucumberV5 : AbstractTestStrategy() {
                                   if (event instanceof io.cucumber.plugin.event.TestStepStarted){
                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}(((io.cucumber.plugin.event.TestStepStarted) event).getTestCase().getName());
                                   } else if(event instanceof io.cucumber.plugin.event.TestStepFinished){
-                                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}(((io.cucumber.plugin.event.TestStepFinished) event).getTestCase().getName(), "xx");
+                                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}(((io.cucumber.plugin.event.TestStepFinished) event).getTestCase().getName(), "PASSED");
                                   }
                                 }
                             """.trimIndent(),

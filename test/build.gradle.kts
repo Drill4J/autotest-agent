@@ -26,6 +26,7 @@ subprojects {
         implementation("com.squareup.okhttp3:okhttp:3.12.0")
         implementation(kotlin("stdlib-jdk8"))
         implementation(kotlin("reflect"))
+        implementation(project(":runtime"))
     }
 
 
