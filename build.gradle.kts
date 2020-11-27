@@ -136,6 +136,9 @@ val agentShadow by tasks.registering(com.github.jengelman.gradle.plugins.shadow.
     relocate("javassist", "drill.javassist")
     relocate("org.java_websocket", "drill.org.java_websocket")
     relocate("org.slf4j", "drill.org.slf4j")
+    relocate("com.squareup.okhttp3", "drill.com.squareup.okhttp3")
+    relocate("okhttp3", "drill.okhttp3")
+    relocate("okio", "drill.okio")
 }
 
 distributions {
