@@ -19,8 +19,8 @@ class Selenium : Strategy() {
 
     init {
         val extension = this::class.java.getResource("/$EXTENSION_NAME")
-        val extensionInstallationDir = defineInstallationDir(extension.file)
-        File(extensionInstallationDir).resolve(EXTENSION_NAME).apply {
+//        val extensionInstallationDir = defineInstallationDir(extension.file)
+        File("/tmp").resolve(EXTENSION_NAME).apply {
             extensionFile = absolutePath
             writeBytes(extension.readBytes())
         }

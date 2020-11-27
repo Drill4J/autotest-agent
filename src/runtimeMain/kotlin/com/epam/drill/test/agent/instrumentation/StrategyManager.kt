@@ -16,8 +16,8 @@ actual object StrategyManager {
     internal var allStrategies: MutableMap<String, MutableSet<Strategy>> = mutableMapOf()
     private var strategies: MutableSet<Strategy> = HashSet()
     private var systemStrategies: MutableSet<Strategy> = HashSet()
-    init{
-        systemStrategies.add(Selenium())
+
+    init {
         systemStrategies.add(OkHttpClient())
         systemStrategies.add(ApacheClient())
         systemStrategies.add(JavaHttpUrlConnection())
@@ -26,6 +26,9 @@ actual object StrategyManager {
     actual fun initialize(rawFrameworkPlugins: String) {
         hotLoad()
         val plugins = rawFrameworkPlugins.split(";".toRegex()).toTypedArray()
+        if (plugins.contains("selenium")) {
+            systemStrategies.add(Selenium())
+        }
         strategies.addAll(allStrategies.filterKeys { plugins.contains(it) }.values.flatten())
         if (strategies.isEmpty()) {
             strategies.addAll(allStrategies.values.flatten())
