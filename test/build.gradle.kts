@@ -23,7 +23,7 @@ subprojects {
         implementation("io.rest-assured:rest-assured:$restAssuredVersion")
         implementation("com.google.code.gson:gson:$gsonVersion")
         implementation("com.mashape.unirest:unirest-java:1.4.9")
-        implementation("com.squareup.okhttp3:okhttp:3.12.0")
+        implementation("com.squareup.okhttp3:okhttp:3.31.1")
         implementation(kotlin("stdlib-jdk8"))
         implementation(kotlin("reflect"))
         implementation(project(":runtime"))

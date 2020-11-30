@@ -9,7 +9,7 @@ import java.security.ProtectionDomain
 class OkHttpClient : Strategy() {
 
     override fun permit(ctClass: CtClass): Boolean {
-        return ctClass.interfaces.any { it.name == "okhttp3.internal.http.HttpCodec" }
+        return ctClass.interfaces.any { "drill." + it.name == "okhttp3.internal.http.HttpCodec" }
     }
 
     override fun instrument(
@@ -17,7 +17,7 @@ class OkHttpClient : Strategy() {
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray {
-        val sendRequestHeader = kotlin.runCatching { ctClass.getDeclaredMethod("writeRequestHeaders")}
+        val sendRequestHeader = kotlin.runCatching { ctClass.getDeclaredMethod("writeRequestHeaders") }
         sendRequestHeader.getOrNull()?.insertBefore(
             """
                 if ($IF_CONDITION) {
