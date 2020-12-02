@@ -17,7 +17,11 @@ class OkHttpClient : Strategy() {
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray {
-        val sendRequestHeader = kotlin.runCatching { ctClass.getDeclaredMethod("writeRequestHeaders") }
+        val sendRequestHeader = kotlin.runCatching {
+            ctClass.getDeclaredMethod("writeRequestHeaders")
+        }.onFailure {
+            logger.error(it) { "Error while instrumenting the class ${ctClass.name}" }
+        }
         sendRequestHeader.getOrNull()?.insertBefore(
             """
                 if ($IF_CONDITION) {

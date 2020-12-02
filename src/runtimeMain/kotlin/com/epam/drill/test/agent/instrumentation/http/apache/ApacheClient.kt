@@ -17,7 +17,11 @@ class ApacheClient : Strategy() {
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray {
-        val sendRequestHeader = kotlin.runCatching { ctClass.getDeclaredMethod("sendRequestHeader") }
+        val sendRequestHeader = kotlin.runCatching {
+            ctClass.getDeclaredMethod("sendRequestHeader")
+        }.onFailure {
+            logger.error(it) { "Error while instrumenting the class ${ctClass.name}" }
+        }
 
         sendRequestHeader.getOrNull()?.insertBefore(
             """
