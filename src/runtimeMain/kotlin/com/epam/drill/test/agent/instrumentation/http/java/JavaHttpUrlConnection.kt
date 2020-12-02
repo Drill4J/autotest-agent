@@ -19,7 +19,9 @@ class JavaHttpUrlConnection : Strategy() {
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray {
-        val sendRequestHeader = kotlin.runCatching { ctClass.constructors }
+        val sendRequestHeader = kotlin.runCatching { ctClass.constructors }.onFailure {
+            logger.error(it) { "Error while instrumenting the class ${ctClass.name}" }
+        }
         sendRequestHeader.getOrNull()?.forEach {
             it.insertAfter(
                 """

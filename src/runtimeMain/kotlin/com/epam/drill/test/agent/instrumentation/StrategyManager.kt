@@ -1,6 +1,7 @@
 package com.epam.drill.test.agent.instrumentation
 
 import com.epam.drill.kni.*
+import com.epam.drill.logger.*
 import com.epam.drill.test.agent.instrumentation.http.apache.*
 import com.epam.drill.test.agent.instrumentation.http.java.*
 import com.epam.drill.test.agent.instrumentation.http.ok.*
@@ -13,6 +14,8 @@ import java.util.jar.JarFile
 
 @Kni
 actual object StrategyManager {
+    private val logger = Logging.logger(StrategyManager::class.java.name)
+
     internal var allStrategies: MutableMap<String, MutableSet<Strategy>> = mutableMapOf()
     private var strategies: MutableSet<Strategy> = HashSet()
     private var systemStrategies: MutableSet<Strategy> = HashSet()
@@ -34,20 +37,22 @@ actual object StrategyManager {
             strategies.addAll(allStrategies.values.flatten())
         }
         strategies.addAll(systemStrategies)
+        logger.debug { "Added strategies: ${strategies.map { it::class.simpleName }.joinToString()}" }
     }
 
     private fun hotLoad() {
         val pack = this::class.java.`package`.name.replace(".", "/")
-        val removeSuffix =
-            this::class.java.getResource("/$pack").file
-                .removePrefix("file:")
-                .removeSuffix("!/$pack")
+        val removeSuffix = this::class.java.getResource("/$pack").file
+            .removePrefix("file:")
+            .removeSuffix("!/$pack")
         JarFile(File(removeSuffix)).use {
             it.entries().iterator().forEach {
                 val name = it.name
                 if (name.startsWith(pack) && name.endsWith(".class")) {
                     val replace = name.replace("/", ".").removeSuffix(".class")
-                    runCatching { Class.forName(replace) }
+                    runCatching { Class.forName(replace) }.onFailure { throwable ->
+                        logger.error(throwable) { "Error while loading $replace class" }
+                    }
                 }
             }
         }
