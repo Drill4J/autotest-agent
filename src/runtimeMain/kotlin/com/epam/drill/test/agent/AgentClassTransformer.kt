@@ -6,24 +6,22 @@ import com.epam.drill.kni.*
 import com.epam.drill.test.agent.instrumentation.StrategyManager.process
 import com.epam.drill.logger.*
 import javassist.*
+import java.io.ByteArrayInputStream
 import java.security.ProtectionDomain
 
 @Kni
 actual object AgentClassTransformer {
     private val logger = Logging.logger(AgentClassTransformer::class.java.name)
 
-    private val pool = ClassPool.getDefault()
     private val debug: String? = System.getProperty("drill.debug")
 
     const val CLASS_NAME = "AgentClassTransformer"
 
     actual fun transform(className: String, classBytes: ByteArray, loader: Any?, protectionDomain: Any?): ByteArray? =
         try {
-            if (debug == "true")
-                logger.trace { className }
             when (className) {
                 "io/netty/util/internal/logging/Log4J2Logger" -> null
-                else -> getCtClass(className, classBytes)?.let {
+                else -> getCtClass(classBytes, loader as? ClassLoader)?.let {
                     insertTestNames(
                         it,
                         loader as? ClassLoader,
@@ -32,8 +30,10 @@ actual object AgentClassTransformer {
                 }
             }
         } catch (e: Exception) {
-            if (debug == "true")
-                logger.trace(e) { "" }
+            if (debug == "true" && className.startsWith("org.junit.runner.notification.RunNotifier")) {
+                e.printStackTrace()
+            }
+
             null
         }
 
@@ -48,12 +48,18 @@ actual object AgentClassTransformer {
         null
     }
 
-    private fun getCtClass(className: String, classBytes: ByteArray): CtClass? {
-        pool.insertClassPath(ByteArrayClassPath(className, classBytes))
-        return pool[formatClassName(className)]
+    private fun getCtClass( classBytes: ByteArray, loader: ClassLoader?): CtClass? {
+        val classPool = ClassPool(true)
+        if (loader == null) {
+            classPool.appendClassPath(LoaderClassPath(ClassLoader.getSystemClassLoader()))
+        } else {
+            classPool.appendClassPath(LoaderClassPath(loader))
+        }
+
+        val clazz = classPool.makeClass(ByteArrayInputStream(classBytes), false)
+        clazz.defrost()
+
+        return clazz
     }
 
-    private fun formatClassName(className: String): String {
-        return className.replace("/", ".")
-    }
 }
