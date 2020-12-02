@@ -13,13 +13,16 @@ actual object AgentClassTransformer {
     private val logger = Logging.logger(AgentClassTransformer::class.java.name)
 
     private val pool = ClassPool.getDefault()
+    private val debug: String? = System.getProperty("drill.debug")
 
     const val CLASS_NAME = "AgentClassTransformer"
 
     actual fun transform(className: String, classBytes: ByteArray, loader: Any?, protectionDomain: Any?): ByteArray? =
         try {
+            if (debug == "true")
+                logger.trace { className }
             when (className) {
-                "io/netty/util/internal/logging/Log4J2Logger"-> null
+                "io/netty/util/internal/logging/Log4J2Logger" -> null
                 else -> getCtClass(className, classBytes)?.let {
                     insertTestNames(
                         it,
@@ -29,6 +32,8 @@ actual object AgentClassTransformer {
                 }
             }
         } catch (e: Exception) {
+            if (debug == "true")
+                logger.trace(e) { "" }
             null
         }
 
