@@ -9,6 +9,7 @@ import org.apache.http.impl.client.HttpClients
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -54,7 +55,7 @@ object HttpHeadersTest {
         Gson().fromJson(inpt, Map::class.java)["headers"] as Map<*, *>
 
     private fun check(methodName: String, headersContainer: Map<*, *>) {
-        assertTrue(headersContainer[TEST_NAME_HEADER]?.toString()?.contains(methodName) ?: false)
+        assertTrue(headersContainer[TEST_NAME_HEADER]?.toString()?.contains(URLEncoder.encode(methodName, "UTF-8")) ?: false)
         assertEquals("testSession", headersContainer[SESSION_ID_HEADER])
     }
 }

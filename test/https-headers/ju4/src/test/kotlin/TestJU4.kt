@@ -14,6 +14,10 @@ class Test {
     fun `method with backtick names`() {
         HttpHeadersTest.test(::`method with backtick names`.name)
     }
+    @Test
+    fun `Кириллик леттерс`() {
+        HttpHeadersTest.test(::`Кириллик леттерс`.name)
+    }
 
     @Suppress("RemoveRedundantBackticks")
     @Test

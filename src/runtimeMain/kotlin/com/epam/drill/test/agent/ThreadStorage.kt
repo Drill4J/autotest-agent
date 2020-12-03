@@ -1,6 +1,8 @@
 package com.epam.drill.test.agent
 
 import com.epam.drill.kni.*
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Kni
 actual object ThreadStorage {
@@ -8,8 +10,9 @@ actual object ThreadStorage {
 
     @Suppress("unused")
     fun memorizeTestName(testName: String?) {
-        storage.set(testName)
-        memorizeTestNameNative(testName)
+        val value = URLEncoder.encode(testName, "UTF-8")
+        storage.set(value)
+        memorizeTestNameNative(value)
     }
 
     actual external fun memorizeTestNameNative(testName: String?)
