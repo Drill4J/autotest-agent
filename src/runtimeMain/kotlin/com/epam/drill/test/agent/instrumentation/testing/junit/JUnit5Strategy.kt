@@ -41,12 +41,15 @@ object JUnit5Strategy : AbstractTestStrategy() {
                 cc
             )
         )
+        val testUniqueId = "testDescriptor.getUniqueId().toString()"
         cc.addMethod(
             CtMethod.make(
                 """
                             public void executionSkipped(org.junit.platform.engine.TestDescriptor testDescriptor, String reason) {
                                 mainRunner.executionSkipped(testDescriptor, reason);
-                                ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}(testDescriptor.getUniqueId().toString());
+                                if (!testDescriptor.isContainer()) {
+                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}($testUniqueId);
+                                }
                             }
                         """.trimIndent(),
                 cc
@@ -57,7 +60,9 @@ object JUnit5Strategy : AbstractTestStrategy() {
                 """
                             public void executionStarted(org.junit.platform.engine.TestDescriptor testDescriptor) {
                                 mainRunner.executionStarted(testDescriptor);
-                                ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}(testDescriptor.getUniqueId().toString());
+                                if (!testDescriptor.isContainer()) {
+                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}($testUniqueId);
+                                }
                             }
                         """.trimIndent(),
                 cc
@@ -68,7 +73,9 @@ object JUnit5Strategy : AbstractTestStrategy() {
                 """
                             public void executionFinished(org.junit.platform.engine.TestDescriptor testDescriptor, org.junit.platform.engine.TestExecutionResult testExecutionResult) {
                                 mainRunner.executionFinished(testDescriptor, testExecutionResult);
-                                ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}(testDescriptor.getUniqueId().toString(), testExecutionResult.getStatus().name());
+                                if (!testDescriptor.isContainer()) {
+                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}($testUniqueId, testExecutionResult.getStatus().name());
+                                }
                             }
                         """.trimIndent(),
                 cc
