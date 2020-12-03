@@ -15,12 +15,12 @@ object CucumberV5 : AbstractTestStrategy() {
 
     override fun instrument(
         ctClass: CtClass,
+        pool: ClassPool,
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray? {
 
         val run = ctClass.getDeclaredMethod("run")
-        val pool = ClassPool.getDefault()
         val SpockBus = "SpockBus"
         val cc: CtClass = pool.makeClass(SpockBus)
         cc.interfaces = arrayOf(pool.get("io.cucumber.core.eventbus.EventBus"))

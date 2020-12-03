@@ -16,6 +16,7 @@ class JavaHttpUrlConnection : Strategy() {
 
     override fun instrument(
         ctClass: CtClass,
+        pool: ClassPool,
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray {

@@ -14,10 +14,10 @@ object JUnit5Strategy : AbstractTestStrategy() {
 
     override fun instrument(
         ctClass: CtClass,
+        pool: ClassPool,
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray? {
-        val pool = ClassPool.getDefault()
         val cc: CtClass = pool.makeClass("MyList")
         cc.interfaces = arrayOf(pool.get("org.junit.platform.engine.EngineExecutionListener"))
         cc.addField(CtField.make("org.junit.platform.engine.EngineExecutionListener mainRunner = null;", cc))

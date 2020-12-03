@@ -21,9 +21,10 @@ actual object AgentClassTransformer {
         try {
             when (className) {
                 "io/netty/util/internal/logging/Log4J2Logger" -> null
-                else -> getCtClass(classBytes, loader as? ClassLoader)?.let {
+                else -> getCtClass(classBytes, loader as? ClassLoader)?.let { (pool, it)->
                     insertTestNames(
                         it,
+                        pool,
                         loader as? ClassLoader,
                         protectionDomain as? ProtectionDomain
                     )
@@ -39,16 +40,17 @@ actual object AgentClassTransformer {
 
     private fun insertTestNames(
         ctClass: CtClass,
+        pool: ClassPool,
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray? = try {
-        process(ctClass, classLoader, protectionDomain)
+        process(ctClass, pool, classLoader, protectionDomain)
     } catch (ex: Exception) {
         logger.warn(ex) { "Can't instrument '${ctClass.name}' class." }
         null
     }
 
-    private fun getCtClass( classBytes: ByteArray, loader: ClassLoader?): CtClass? {
+    private fun getCtClass( classBytes: ByteArray, loader: ClassLoader?): Pair<ClassPool, CtClass> {
         val classPool = ClassPool(true)
         if (loader == null) {
             classPool.appendClassPath(LoaderClassPath(ClassLoader.getSystemClassLoader()))
@@ -59,7 +61,7 @@ actual object AgentClassTransformer {
         val clazz = classPool.makeClass(ByteArrayInputStream(classBytes), false)
         clazz.defrost()
 
-        return clazz
+        return classPool to clazz
     }
 
 }

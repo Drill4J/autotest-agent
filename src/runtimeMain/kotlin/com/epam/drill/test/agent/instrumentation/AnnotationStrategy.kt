@@ -2,6 +2,7 @@ package com.epam.drill.test.agent.instrumentation
 
 import com.epam.drill.test.agent.*
 import javassist.CannotCompileException
+import javassist.ClassPool
 import javassist.CtClass
 import javassist.CtMethod
 import java.io.IOException
@@ -19,6 +20,7 @@ abstract class AnnotationStrategy : AbstractTestStrategy() {
     @Throws(CannotCompileException::class, IOException::class)
     override fun instrument(
         ctClass: CtClass,
+        pool: ClassPool,
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray? {

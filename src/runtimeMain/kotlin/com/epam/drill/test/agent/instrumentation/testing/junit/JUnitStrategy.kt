@@ -17,11 +17,11 @@ object JUnitStrategy : AbstractTestStrategy() {
 
     override fun instrument(
         ctClass: CtClass,
+        pool: ClassPool,
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray? {
 
-        val pool = ClassPool.getDefault()
         val cc: CtClass = pool.makeClass("MyList")
         cc.superclass = pool.get("org.junit.runner.notification.RunListener")
         cc.addField(CtField.make("org.junit.runner.notification.RunListener mainRunner = null;", cc))
@@ -31,8 +31,7 @@ object JUnitStrategy : AbstractTestStrategy() {
 public MyList(org.junit.runner.notification.RunListener mainRunner) {
    this.mainRunner = mainRunner;
 }
-                        """.trimMargin()
-                , cc
+                        """.trimMargin(), cc
             )
         )
         val dp = """description"""

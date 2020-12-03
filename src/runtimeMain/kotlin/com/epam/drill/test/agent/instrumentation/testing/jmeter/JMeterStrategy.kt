@@ -2,6 +2,7 @@ package com.epam.drill.test.agent.instrumentation.testing.jmeter
 
 import com.epam.drill.test.agent.AgentClassTransformer
 import com.epam.drill.test.agent.instrumentation.AbstractTestStrategy
+import javassist.ClassPool
 import javassist.CtClass
 import java.security.ProtectionDomain
 
@@ -16,6 +17,7 @@ object JMeterStrategy : AbstractTestStrategy() {
 
     override fun instrument(
         ctClass: CtClass,
+        pool: ClassPool,
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray? {

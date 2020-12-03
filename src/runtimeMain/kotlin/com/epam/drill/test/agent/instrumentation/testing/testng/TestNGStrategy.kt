@@ -2,6 +2,7 @@ package com.epam.drill.test.agent.instrumentation.testing.testng
 
 import com.epam.drill.test.agent.instrumentation.AbstractTestStrategy
 import com.epam.drill.test.agent.TestListener
+import javassist.ClassPool
 import javassist.CtClass
 import javassist.CtMethod
 import java.security.ProtectionDomain
@@ -17,6 +18,7 @@ object TestNGStrategy : AbstractTestStrategy() {
 
     override fun instrument(
         ctClass: CtClass,
+        pool: ClassPool,
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray? {

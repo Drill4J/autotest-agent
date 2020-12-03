@@ -20,7 +20,7 @@ class Selenium : Strategy() {
     init {
         val extension = this::class.java.getResource("/$EXTENSION_NAME")
 //        val extensionInstallationDir = defineInstallationDir(extension.file)
-        File("/tmp").resolve(EXTENSION_NAME).apply {
+        File(System.getProperty("java.io.tmpdir")).resolve(EXTENSION_NAME).apply {
             extensionFile = absolutePath
             writeBytes(extension.readBytes())
         }
@@ -38,6 +38,7 @@ class Selenium : Strategy() {
 
     override fun instrument(
         ctClass: CtClass,
+        pool: ClassPool,
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray? {

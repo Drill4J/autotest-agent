@@ -90,7 +90,7 @@ class ChromeDevToolWs(
     val chromeDevTool: ChromeDevTool
 ) : WebSocketClient(url) {
 
-    private val json = Json(JsonConfiguration(encodeDefaults = false))
+    private val json = Json(JsonConfiguration(encodeDefaults = false,ignoreUnknownKeys=true))
 
     private val logger = Logging.logger(ChromeDevToolWs::class.java.name)
 

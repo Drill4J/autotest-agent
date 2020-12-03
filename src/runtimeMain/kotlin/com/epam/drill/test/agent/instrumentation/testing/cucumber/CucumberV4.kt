@@ -15,8 +15,12 @@ object CucumberV4 : AbstractTestStrategy() {
         return ctClass.name == /*4.x.x*/"cucumber.runner.TestStep"
     }
 
-    override fun instrument(ctClass: CtClass, classLoader: ClassLoader?, protectionDomain: ProtectionDomain?): ByteArray? {
-        val pool = ClassPool.getDefault()
+    override fun instrument(
+        ctClass: CtClass,
+        pool: ClassPool,
+        classLoader: ClassLoader?,
+        protectionDomain: ProtectionDomain?
+    ): ByteArray? {
         val SpockBus = "SpockBus"
         val cc: CtClass = pool.makeClass(SpockBus)
         cc.interfaces = arrayOf(pool.get("cucumber.runner.EventBus"))

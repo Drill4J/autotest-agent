@@ -24,14 +24,12 @@ actual object StrategyManager {
         systemStrategies.add(OkHttpClient())
         systemStrategies.add(ApacheClient())
         systemStrategies.add(JavaHttpUrlConnection())
+        systemStrategies.add(Selenium())
     }
 
     actual fun initialize(rawFrameworkPlugins: String) {
         hotLoad()
         val plugins = rawFrameworkPlugins.split(";".toRegex()).toTypedArray()
-        if (plugins.contains("selenium")) {
-            systemStrategies.add(Selenium())
-        }
         strategies.addAll(allStrategies.filterKeys { plugins.contains(it) }.values.flatten())
         if (strategies.isEmpty()) {
             strategies.addAll(allStrategies.values.flatten())
@@ -60,11 +58,12 @@ actual object StrategyManager {
 
     internal fun process(
         ctClass: CtClass,
+        pool: ClassPool,
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray? {
         for (strategy in strategies) {
-            if (strategy.permit(ctClass)) return strategy.instrument(ctClass, classLoader, protectionDomain)
+            if (strategy.permit(ctClass)) return strategy.instrument(ctClass,pool, classLoader, protectionDomain)
         }
         return null
     }
