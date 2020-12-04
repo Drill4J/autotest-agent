@@ -37,7 +37,7 @@ object SessionController {
                     isGlobal = isGlobal
                 )
             )
-        sessionId.value = customSessionId ?: ""
+        sessionId.value.takeIf { it.isNotBlank() }?.let { stopSession(it) }
         val response = dispatchAction(payload)
         mainLogger.debug { "Received response: ${response.body}" }
         val startSessionResponse = if (agentConfig.groupId.isBlank())
