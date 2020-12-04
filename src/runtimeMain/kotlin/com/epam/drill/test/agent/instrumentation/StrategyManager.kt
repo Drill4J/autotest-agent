@@ -6,6 +6,7 @@ import com.epam.drill.test.agent.instrumentation.http.apache.*
 import com.epam.drill.test.agent.instrumentation.http.java.*
 import com.epam.drill.test.agent.instrumentation.http.ok.*
 import com.epam.drill.test.agent.instrumentation.http.selenium.*
+import com.epam.drill.test.agent.instrumentation.runners.*
 import javassist.*
 import java.io.File
 import java.security.ProtectionDomain
@@ -25,6 +26,7 @@ actual object StrategyManager {
         systemStrategies.add(ApacheClient())
         systemStrategies.add(JavaHttpUrlConnection())
         systemStrategies.add(Selenium())
+        systemStrategies.add(JunitRunner())
     }
 
     actual fun initialize(rawFrameworkPlugins: String) {
@@ -63,7 +65,7 @@ actual object StrategyManager {
         protectionDomain: ProtectionDomain?
     ): ByteArray? {
         for (strategy in strategies) {
-            if (strategy.permit(ctClass)) return strategy.instrument(ctClass,pool, classLoader, protectionDomain)
+            if (strategy.permit(ctClass)) return strategy.instrument(ctClass, pool, classLoader, protectionDomain)
         }
         return null
     }
