@@ -6,11 +6,12 @@ import com.epam.drill.test.agent.instrumentation.http.apache.*
 import com.epam.drill.test.agent.instrumentation.http.java.*
 import com.epam.drill.test.agent.instrumentation.http.ok.*
 import com.epam.drill.test.agent.instrumentation.http.selenium.*
+import com.epam.drill.test.agent.instrumentation.runners.*
 import javassist.*
-import java.io.File
-import java.security.ProtectionDomain
+import java.io.*
+import java.security.*
 import java.util.*
-import java.util.jar.JarFile
+import java.util.jar.*
 
 @Kni
 actual object StrategyManager {
@@ -27,13 +28,14 @@ actual object StrategyManager {
         systemStrategies.add(Selenium())
     }
 
-    actual fun initialize(rawFrameworkPlugins: String) {
+    actual fun initialize(rawFrameworkPlugins: String, isManuallyControlled: Boolean) {
         hotLoad()
         val plugins = rawFrameworkPlugins.split(";".toRegex()).toTypedArray()
         strategies.addAll(allStrategies.filterKeys { plugins.contains(it) }.values.flatten())
         if (strategies.isEmpty()) {
             strategies.addAll(allStrategies.values.flatten())
         }
+        if (isManuallyControlled) strategies.add(JunitRunner())
         strategies.addAll(systemStrategies)
         logger.debug { "Added strategies: ${strategies.map { it::class.simpleName }.joinToString()}" }
     }
@@ -63,7 +65,7 @@ actual object StrategyManager {
         protectionDomain: ProtectionDomain?
     ): ByteArray? {
         for (strategy in strategies) {
-            if (strategy.permit(ctClass)) return strategy.instrument(ctClass,pool, classLoader, protectionDomain)
+            if (strategy.permit(ctClass)) return strategy.instrument(ctClass, pool, classLoader, protectionDomain)
         }
         return null
     }

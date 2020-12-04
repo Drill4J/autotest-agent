@@ -135,6 +135,11 @@ ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}
                 $1= new MyList($1);
             """.trimIndent()
         )
+        ctClass.getDeclaredMethod("addFirstListener").insertBefore(
+            """
+                $1= new MyList($1);
+            """.trimIndent()
+        )
         return ctClass.toBytecode()
     }
 
