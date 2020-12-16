@@ -38,9 +38,9 @@ object SessionController {
             )
         )
         this.sessionId.value.takeIf { it.isNotBlank() }?.let { stopSession(it) }
+        this.sessionId.value = sessionId
         val response = dispatchAction(payload)
         mainLogger.debug { "Received response: ${response.body}" }
-        this.sessionId.value = sessionId
         mainLogger.info { "Started a test session with ID $sessionId" }
     }.onFailure { mainLogger.warn(it) { "Can't startSession '${sessionId.value}'" } }.getOrNull()
 

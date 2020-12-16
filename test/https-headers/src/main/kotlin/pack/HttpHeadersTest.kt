@@ -1,20 +1,18 @@
 package pack
 
-import com.google.gson.Gson
-import com.mashape.unirest.http.Unirest
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import org.apache.http.client.methods.HttpGet
-import org.apache.http.impl.client.HttpClients
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
-import java.net.URL
-import java.net.URLEncoder
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import com.epam.drill.test.common.*
+import com.google.gson.*
+import com.mashape.unirest.http.*
+import okhttp3.*
+import org.apache.http.client.methods.*
+import org.apache.http.impl.client.*
+import java.io.*
+import java.net.*
+import kotlin.test.*
 
 const val TEST_NAME_HEADER = "drill-test-name"
 const val SESSION_ID_HEADER = "drill-session-id"
+
 object HttpHeadersTest {
 
 
@@ -55,7 +53,7 @@ object HttpHeadersTest {
         Gson().fromJson(inpt, Map::class.java)["headers"] as Map<*, *>
 
     private fun check(methodName: String, headersContainer: Map<*, *>) {
-        assertTrue(headersContainer[TEST_NAME_HEADER]?.toString()?.contains(URLEncoder.encode(methodName, "UTF-8")) ?: false)
+        assertTrue(headersContainer[TEST_NAME_HEADER]?.toString()?.contains(methodName.urlEncode()) ?: false)
         assertEquals("testSession", headersContainer[SESSION_ID_HEADER])
     }
 }
