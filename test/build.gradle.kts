@@ -56,8 +56,8 @@ subprojects {
             .file("./build/install/$presetName")
             .resolve("${HostManager.host.family.dynamicPrefix}autoTestAgent.${HostManager.host.family.dynamicSuffix}")//todo
         agentId = "test-pet-standalone"
-        adminHost = "ecse0050029e.epam.com"
-        adminPort = 8090
+        adminHost = "stub"
+        adminPort = -1
         logLevel = TRACE
     }
 

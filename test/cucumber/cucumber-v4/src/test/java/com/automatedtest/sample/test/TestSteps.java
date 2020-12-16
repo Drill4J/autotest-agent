@@ -3,6 +3,10 @@ package com.automatedtest.sample.test;
 import io.cucumber.core.api.Scenario;
 import io.cucumber.java.*;
 import io.cucumber.java.en.*;
+import com.epam.drill.test.common.*;
+
+import java.io.UnsupportedEncodingException;
+
 
 public class TestSteps {
 
@@ -24,7 +28,7 @@ public class TestSteps {
     }
 
     @Before
-    public void saveScenarioName(Scenario scenario) {
-        actualTestName = scenario.getName();
+    public void saveScenarioName(Scenario scenario) throws UnsupportedEncodingException {
+        actualTestName = UtilKt.urlEncode(scenario.getName());
     }
 }
