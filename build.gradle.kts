@@ -36,6 +36,7 @@ val websocketVersion: String by rootProject
 val javassistVersion: String by rootProject
 val klockVersion: String by rootProject
 val kniVersion: String by rootProject
+val uuidVersion: String by rootProject
 
 val libName = "autoTestAgent"
 kotlin {
@@ -54,6 +55,7 @@ kotlin {
                         implementation("org.jetbrains.kotlinx:kotlinx-serialization-properties-native:$serializationRuntimeVersion")
                         implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf-native:$serializationRuntimeVersion")
                         implementation("com.epam.drill.kni:runtime:$kniVersion")
+                        implementation("com.benasher44:uuid:$uuidVersion")
                     }
                 }
             }

@@ -1,9 +1,9 @@
 package com.epam.drill.test.agent.actions
 
+import com.benasher44.uuid.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.config.*
 import com.epam.drill.test.agent.http.*
-import kotlinx.serialization.builtins.*
 import kotlin.native.concurrent.*
 
 object SessionController {
@@ -27,24 +27,21 @@ object SessionController {
         isGlobal: Boolean = agentConfig.isGlobal
     ) = runCatching {
         mainLogger.debug { "Attempting to start a Drill4J test session..." }
-        val payload =
-            StartSession.serializer() stringify StartSession(
-                payload = StartSessionPayload(
-                    sessionId = customSessionId ?: "",
-                    testType = testType,
-                    testName = testName,
-                    isRealtime = isRealtime,
-                    isGlobal = isGlobal
-                )
+        val sessionId = customSessionId ?: uuid4().toString()
+        val payload = StartSession.serializer() stringify StartSession(
+            payload = StartSessionPayload(
+                sessionId = sessionId,
+                testType = testType,
+                testName = testName,
+                isRealtime = isRealtime,
+                isGlobal = isGlobal
             )
-        sessionId.value.takeIf { it.isNotBlank() }?.let { stopSession(it) }
+        )
+        this.sessionId.value.takeIf { it.isNotBlank() }?.let { stopSession(it) }
         val response = dispatchAction(payload)
         mainLogger.debug { "Received response: ${response.body}" }
-        val startSessionResponse = if (agentConfig.groupId.isBlank())
-            StartSessionResponse.serializer() parse response.body
-        else (StartSessionResponse.serializer().list parse response.body).first()
-        sessionId.value = startSessionResponse.data.payload.sessionId
-        mainLogger.info { "Started a test session with ID ${sessionId.value}" }
+        this.sessionId.value = sessionId
+        mainLogger.info { "Started a test session with ID $sessionId" }
     }.onFailure { mainLogger.warn(it) { "Can't startSession '${sessionId.value}'" } }.getOrNull()
 
     fun stopSession(sessionIds: String? = null) = runCatching {
