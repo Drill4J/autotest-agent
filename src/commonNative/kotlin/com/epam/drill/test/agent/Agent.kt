@@ -47,8 +47,9 @@ object Agent : JvmtiAgent {
     override fun agentOnUnload() {
         try {
             mainLogger.info { "Shutting the agent down" }
-            if(!SessionController.agentConfig.isManuallyControlled)
-             SessionController.stopSession()
+            val agentConfig = SessionController.agentConfig
+            if (!agentConfig.isManuallyControlled && !agentConfig.sessionForEachTest)
+                SessionController.stopSession()
         } catch (ex: Throwable) {
             mainLogger.error { "Failed to unload the agent properly. Reason: ${ex.message}" }
         }

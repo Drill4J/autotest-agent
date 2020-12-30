@@ -6,4 +6,6 @@ expect object ThreadStorage {
     fun sessionId(): String?
 
     fun proxyUrl(): String?
+    fun startSession(testName: String?)
+    fun stopSession()
 }

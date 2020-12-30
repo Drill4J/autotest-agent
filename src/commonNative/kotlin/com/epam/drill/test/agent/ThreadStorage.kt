@@ -15,4 +15,19 @@ actual object ThreadStorage {
     actual fun proxyUrl(): String? {
         return SessionController._agentConfig.value.browserProxyAddress
     }
+
+    actual fun startSession(testName: String?) = SessionController.run {
+        if (agentConfig.sessionForEachTest) {
+            startSession(
+                customSessionId = agentConfig.sessionId,
+                testName = testName
+            )
+        }
+    }
+
+    actual fun stopSession() = SessionController.run {
+        if (agentConfig.sessionForEachTest) {
+            stopSession(sessionIds = sessionId.value)
+        }
+    }
 }
