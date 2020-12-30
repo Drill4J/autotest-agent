@@ -5,7 +5,6 @@ import io.cucumber.java.*;
 import io.cucumber.java.en.*;
 import com.epam.drill.test.common.*;
 
-import java.io.UnsupportedEncodingException;
 
 
 public class TestSteps {
@@ -28,7 +27,7 @@ public class TestSteps {
     }
 
     @Before
-    public void saveScenarioName(Scenario scenario) throws UnsupportedEncodingException {
+    public void saveScenarioName(Scenario scenario) {
         actualTestName = UtilKt.urlEncode(scenario.getName());
     }
 }
