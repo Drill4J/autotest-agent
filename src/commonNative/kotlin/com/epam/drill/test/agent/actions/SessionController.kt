@@ -37,7 +37,6 @@ object SessionController {
                 isGlobal = isGlobal
             )
         )
-        this.sessionId.value.takeIf { it.isNotBlank() }?.let { stopSession(it) }
         this.sessionId.value = sessionId
         val response = dispatchAction(payload)
         mainLogger.debug { "Received response: ${response.body}" }

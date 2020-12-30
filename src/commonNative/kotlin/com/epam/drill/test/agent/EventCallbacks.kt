@@ -41,9 +41,10 @@ fun callbackRegister() = memScoped {
 fun jvmtiEventVMInitEvent(env: CPointer<jvmtiEnvVar>?, jniEnv: CPointer<JNIEnvVar>?, thread: jthread?) {
     mainLogger.debug { "Init event" }
     initRuntimeIfNeeded()
-    if (!SessionController.agentConfig.isManuallyControlled)
-        SessionController.startSession(SessionController.agentConfig.sessionId)
-    SessionController.agentConfig.run {
+    val agentConfig = SessionController.agentConfig
+    if (!agentConfig.isManuallyControlled && !agentConfig.sessionForEachTest)
+        SessionController.startSession(agentConfig.sessionId)
+    agentConfig.run {
         StrategyManager.initialize(rawFrameworkPlugins, isManuallyControlled)
     }
     SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, null)

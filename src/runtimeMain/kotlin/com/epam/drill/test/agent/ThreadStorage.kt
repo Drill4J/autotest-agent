@@ -20,4 +20,8 @@ actual object ThreadStorage {
     actual external fun sessionId(): String?
 
     actual external fun proxyUrl(): String?
+
+    actual external fun startSession(testName: String?)
+
+    actual external fun stopSession()
 }

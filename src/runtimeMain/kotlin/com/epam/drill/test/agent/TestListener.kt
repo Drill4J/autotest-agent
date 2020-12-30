@@ -35,6 +35,7 @@ actual object TestListener {
                 TestInfo::name.name to test,
                 TestInfo::startedAt.name to System.currentTimeMillis()
             )
+            ThreadStorage.startSession(it)
             ThreadStorage.memorizeTestName(it)
         }
     }
@@ -49,6 +50,7 @@ actual object TestListener {
             )
             logger.trace { "Test: $test FINISHED. Result:$status" }
         }
+        ThreadStorage.stopSession()
     }
 
     fun testIgnored(test: String?) {
