@@ -50,7 +50,7 @@ data class TestRun(
 @Serializable
 data class TestInfo(
     val name: String,
-    val result: TestResult = TestResult.FAILED,
+    val result: TestResult = TestResult.UNKNOWN,
     val startedAt: Long = 0,
     val finishedAt: Long = 0
 )
@@ -59,7 +59,8 @@ enum class TestResult {
     PASSED,
     FAILED,
     SKIPPED,
-    ERROR;
+    ERROR,
+    UNKNOWN;
 
     companion object {
         fun getByMapping(value: String): TestResult {

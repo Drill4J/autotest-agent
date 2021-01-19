@@ -1,31 +1,36 @@
 package com.epam.drill.test.agent
 
-import com.epam.drill.kni.Kni
-import com.epam.drill.logger.Logging
-import com.epam.drill.test.agent.actions.TestInfo
-import com.epam.drill.test.agent.actions.TestResult
-import com.epam.drill.test.agent.actions.TestRun
-import com.epam.drill.test.agent.config.stringify
-import java.util.concurrent.ConcurrentHashMap
+import com.epam.drill.kni.*
+import com.epam.drill.logger.*
+import com.epam.drill.test.agent.actions.*
+import com.epam.drill.test.agent.config.*
+import kotlinx.atomicfu.*
+import kotlinx.collections.immutable.*
 
 @Kni
 actual object TestListener {
 
-    private val _ml = ConcurrentHashMap<String, MutableMap<String, Any>?>()
+    private val logger = Logging.logger(TestListener::class.java.simpleName)
+
+    private val _testInfo = atomic(persistentHashMapOf<String, PersistentMap<String, Any>?>())
 
     private fun addTestInfo(testId: String, vararg vals: Pair<String, Any>) {
         vals.forEach {
             val (paramName, value) = it
-            val meta = _ml[testId] ?: _ml.run {
-                val mmo = mutableMapOf<String, Any>()
-                put(testId, mmo)
-                mmo
+            if (_testInfo.value[testId] == null) {
+                _testInfo.updateAndGet { testProperties ->
+                    testProperties.put(testId, persistentHashMapOf(paramName to value))
+                }
+            } else {
+                _testInfo.getAndUpdate { testProperties ->
+                    testProperties.put(
+                        testId,
+                        testProperties[testId]?.put(paramName, value)
+                    )
+                }
             }
-            meta[paramName] = value
         }
     }
-
-    private val logger = Logging.logger(TestListener::class.java.simpleName)
 
     fun testStarted(test: String?) {
         test?.let {
@@ -42,6 +47,12 @@ actual object TestListener {
 
 
     fun testFinished(test: String?, status: String) {
+        if (isNotFinalizeTestState(test)) {
+            addTestResult(test, status)
+        }
+    }
+
+    private fun addTestResult(test: String?, status: String) {
         test?.let {
             addTestInfo(
                 test,
@@ -52,6 +63,14 @@ actual object TestListener {
         }
         ThreadStorage.stopSession()
     }
+
+
+    private fun isNotFinalizeTestState(test: String?): Boolean = _testInfo.value[test]?.let { testProperties ->
+        testProperties[TestInfo::result.name]?.let { result ->
+            result as TestResult == TestResult.UNKNOWN
+        }
+    } ?: true
+
 
     fun testIgnored(test: String?) {
         test?.let {
@@ -66,8 +85,8 @@ actual object TestListener {
 
     actual fun getData(): String {
         val map = kotlin.runCatching {
-            _ml.values.filterNotNull().map { u ->
-                TestInfo.serializer().deserialize(PropertyDecoder(u))
+            _testInfo.value.values.filterNotNull().map { testProperties ->
+                TestInfo.serializer().deserialize(PropertyDecoder(testProperties))
             }
         }.getOrDefault(emptyList())
 

@@ -37,6 +37,9 @@ val javassistVersion: String by rootProject
 val klockVersion: String by rootProject
 val kniVersion: String by rootProject
 val uuidVersion: String by rootProject
+val atomicFuVersion: String by rootProject
+val collectionImmutableVersion: String by rootProject
+
 
 val libName = "autoTestAgent"
 kotlin {
@@ -64,7 +67,7 @@ kotlin {
             jvmTargets = sequenceOf(jvm("runtime"))
             additionalJavaClasses = sequenceOf()
             srcDir = kniOutputDir
-            jvmtiAgentObjectPath= "com.epam.drill.test.agent.Agent"
+            jvmtiAgentObjectPath = "com.epam.drill.test.agent.Agent"
         }
         sequenceOf(
             linuxX64(),
@@ -78,7 +81,7 @@ kotlin {
     }
 
     sourceSets {
-        all{
+        all {
             languageSettings.apply {
                 useExperimentalAnnotation("kotlinx.serialization.UnstableDefault")
                 useExperimentalAnnotation("kotlinx.serialization.InternalSerializationApi")
@@ -104,6 +107,8 @@ kotlin {
                     implementation("com.soywiz.korlibs.klock:klock-jvm:$klockVersion")
                     implementation("com.epam.drill.kni:runtime:$kniVersion")
                     implementation("com.squareup.okhttp3:okhttp:3.13.1")
+                    implementation("org.jetbrains.kotlinx:atomicfu:$atomicFuVersion")
+                    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:$collectionImmutableVersion")
                     implementation(project(":runtime"))
                 }
             }
