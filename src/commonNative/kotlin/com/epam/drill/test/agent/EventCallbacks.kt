@@ -38,6 +38,8 @@ fun callbackRegister() = memScoped {
     enableJvmtiEventVmDeath()
 }
 
+private const val isHttpHookEnabled = false // based on args
+
 fun jvmtiEventVMInitEvent(env: CPointer<jvmtiEnvVar>?, jniEnv: CPointer<JNIEnvVar>?, thread: jthread?) {
     mainLogger.debug { "Init event" }
     initRuntimeIfNeeded()
@@ -48,7 +50,8 @@ fun jvmtiEventVMInitEvent(env: CPointer<jvmtiEnvVar>?, jniEnv: CPointer<JNIEnvVa
         StrategyManager.initialize(rawFrameworkPlugins, isManuallyControlled)
     }
     SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, null)
-    configureHooks()
+    if (isHttpHookEnabled)
+        configureHooks()
 }
 
 fun configureHooks() {
