@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.konan.target.*
 
 plugins {
     kotlin("jvm")
-    id("com.epam.drill.agent.runner.autotest") apply false
+    id("com.epam.drill.agent.runner.autotest") version "0.2.2" apply false
 }
 val jupiterVersion = "5.6.2"
 val gsonVersion = "2.8.5"
@@ -24,7 +24,6 @@ subprojects {
         implementation("com.google.code.gson:gson:$gsonVersion")
         implementation("com.mashape.unirest:unirest-java:1.4.9")
         implementation("com.squareup.okhttp3:okhttp:3.12.0")
-        implementation(kotlin("stdlib-jdk8"))
         implementation(kotlin("reflect"))
         implementation(project(":runtime"))
     }

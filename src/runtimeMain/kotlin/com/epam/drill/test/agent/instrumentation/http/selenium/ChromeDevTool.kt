@@ -2,6 +2,7 @@ package com.epam.drill.test.agent.instrumentation.http.selenium
 
 import com.epam.drill.test.agent.instrumentation.http.selenium.DevToolsClientThreadStorage.crhmT
 import com.epam.drill.logger.*
+import com.epam.drill.test.agent.config.*
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 import org.java_websocket.client.*
@@ -45,7 +46,7 @@ class ChromeDevTool {
         crhmT.set(this)
     }
 
-    lateinit var url:String
+    lateinit var url: String
 
     fun connectToDevTools(capabilities: Map<*, *>?) = kotlin.runCatching {
         capabilities?.let { cap ->
@@ -56,8 +57,8 @@ class ChromeDevTool {
 
                 val response = con.inputStream.reader().readText()
                 logger.debug { "Chrome info: $response" }
-                val chromeInfo = Json.parseJson(response) as JsonObject
-                chromeInfo[DEV_TOOL_PROPERTY_NAME]?.content?.let { url ->
+                val chromeInfo = Json.parseToJsonElement(response) as JsonObject
+                chromeInfo[DEV_TOOL_PROPERTY_NAME]?.jsonPrimitive?.contentOrNull?.let { url ->
                     this.url = url
                     connect()
                 } ?: logger.warn { "Can't get DevTools URL" }
@@ -70,7 +71,7 @@ class ChromeDevTool {
     internal fun connect(): Boolean {
         logger.debug { "DevTools URL: ${this.url}" }
         val cdl = CountDownLatch(4)
-        ws = ChromeDevToolWs(URI(this.url), cdl ,this)
+        ws = ChromeDevToolWs(URI(this.url), cdl, this)
         ws?.connect()
         return cdl.await(5, TimeUnit.SECONDS)
     }
@@ -90,7 +91,7 @@ class ChromeDevToolWs(
     val chromeDevTool: ChromeDevTool
 ) : WebSocketClient(url) {
 
-    private val json = Json(JsonConfiguration(encodeDefaults = false,ignoreUnknownKeys=true))
+    private val json = Json { ignoreUnknownKeys = true }
 
     private val logger = Logging.logger(ChromeDevToolWs::class.java.name)
 
@@ -103,10 +104,10 @@ class ChromeDevToolWs(
 
     override fun onMessage(message: String) = runCatching {
         logger.trace { message }
-        val parsedMessage = json.parseJson(message) as JsonObject
+        val parsedMessage = json.parseToJsonElement(message) as JsonObject
         val id = parsedMessage["id"] ?: return@runCatching
         val result = (parsedMessage["result"] as JsonObject).toString()
-        val step = (id as JsonLiteral).int
+        val step = (id as JsonPrimitive).int
         when (step) {
             1 -> sendCreateSessionRequest(result)
             2 -> sendAttachRequest(result)
@@ -137,20 +138,20 @@ class ChromeDevToolWs(
 
     private fun sendAttachRequest(result: String) {
         logger.debug { "DevTools session created" }
-        sessionId = json.parse(SessionId.serializer(), result)
-        val params = mapOf("autoAttach" to true, "waitForDebuggerOnStart" to false)
+        sessionId = json.decodeFromString(SessionId.serializer(), result)
+        val params = mapOf("autoAttach" to true, "waitForDebuggerOnStart" to false).toOutput()
         send(DevToolsRequest(3, "Target.setAutoAttach", params, sessionId.sessionId))
         cdl.countDown()
     }
 
     private fun sendCreateSessionRequest(result: String) {
         val targetId = retrieveTargetId(result)
-        val params = mapOf("targetId" to targetId, "flatten" to true)
+        val params = mapOf("targetId" to targetId, "flatten" to true).toOutput()
         send(DevToolsRequest(2, "Target.attachToTarget", params))
         cdl.countDown()
     }
 
-    private fun retrieveTargetId(result: String) = json.parse(TargetInfos.serializer(), result).targetInfos
+    private fun retrieveTargetId(result: String) = json.decodeFromString(TargetInfos.serializer(), result).targetInfos
         .filter { it.type == "page" }
         .map { it.targetId }
         .first()
@@ -163,22 +164,31 @@ class ChromeDevToolWs(
     }
 
     private fun send(value: DevToolsRequest) {
-        send(json.stringify(DevToolsRequest.serializer(), value))
+        send(json.encodeToString(DevToolsRequest.serializer(), value))
     }
 
     private fun send(value: DevToolsHeaderRequest) {
-        send(json.stringify(DevToolsHeaderRequest.serializer(), value))
+        send(json.encodeToString(DevToolsHeaderRequest.serializer(), value))
     }
 
 
     override fun onClose(code: Int, reason: String?, remote: Boolean) {
         logger.debug { "socket closed. Code: $code, reason: $reason, remote: $remote" }
         Thread.sleep(1000)
-        logger.debug {"try reconnect to ${this.url}"}
+        logger.debug { "try reconnect to ${this.url}" }
         chromeDevTool.connect()
     }
 
 }
+
+fun Map<String, Any>.toOutput(): Map<String, JsonElement> = mapValues { (_, value) ->
+    val serializer = value::class.serializer().cast()
+    json.encodeToJsonElement(serializer, value)
+}
+
+@Suppress("NOTHING_TO_INLINE", "UNCHECKED_CAST")
+internal inline fun <T> KSerializer<out T>.cast(): KSerializer<T> = this as KSerializer<T>
+
 
 @Serializable
 data class TargetInfos(val targetInfos: List<Target>)
@@ -200,7 +210,7 @@ data class Target(
 data class DevToolsRequest(
     val id: Int,
     val method: String,
-    val params: Map<String, @ContextualSerialization Any> = emptyMap(),
+    val params: Map<String, JsonElement> = emptyMap(),
     val sessionId: String? = null
 )
 

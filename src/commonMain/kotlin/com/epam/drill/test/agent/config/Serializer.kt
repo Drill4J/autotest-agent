@@ -7,6 +7,6 @@ import kotlin.native.concurrent.*
 @SharedImmutable
 val json = Json { ignoreUnknownKeys = true }
 
-infix fun <T> KSerializer<T>.parse(rawData: String) = json.parse(this, rawData)
+infix fun <T> KSerializer<T>.parse(rawData: String) = json.decodeFromString(this, rawData)
 
-infix fun <T> KSerializer<T>.stringify(rawData: T) = json.stringify(this, rawData)
+infix fun <T> KSerializer<T>.stringify(rawData: T) = json.encodeToString(this, rawData)
