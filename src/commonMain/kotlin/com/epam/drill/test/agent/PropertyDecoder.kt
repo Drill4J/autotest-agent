@@ -1,14 +1,10 @@
 package com.epam.drill.test.agent
 
-import kotlinx.serialization.CompositeDecoder
-import kotlinx.serialization.SerialDescriptor
-import kotlinx.serialization.internal.NamedValueDecoder
-import kotlinx.serialization.modules.EmptyModule
-import kotlinx.serialization.modules.SerialModule
+import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.encoding.*
+import kotlinx.serialization.internal.*
 
 class PropertyDecoder(val map: Map<String, Any>) : NamedValueDecoder() {
-    override val context: SerialModule = EmptyModule
-
     private var currentIndex = 0
 
     override fun decodeCollectionSize(descriptor: SerialDescriptor): Int {
@@ -27,7 +23,7 @@ class PropertyDecoder(val map: Map<String, Any>) : NamedValueDecoder() {
         return map.getValue(tag) as Long
     }
 
-    override fun decodeTaggedEnum(tag: String, enumDescription: SerialDescriptor): Int {
+    override fun decodeTaggedEnum(tag: String, enumDescriptor: SerialDescriptor): Int {
         return (map.getValue(tag) as Enum<*>).ordinal
     }
 
@@ -38,6 +34,6 @@ class PropertyDecoder(val map: Map<String, Any>) : NamedValueDecoder() {
             val name = descriptor.getTag(currentIndex++)
             if (map.keys.any { it.startsWith(name) }) return currentIndex - 1
         }
-        return CompositeDecoder.READ_DONE
+        return CompositeDecoder.DECODE_DONE
     }
 }

@@ -21,17 +21,11 @@ repositories {
     maven(url = "https://oss.jfrog.org/artifactory/list/oss-release-local")
 }
 
-configurations.all {
-    resolutionStrategy.dependencySubstitution {
-        substitute(module("org.jetbrains.kotlinx:kotlinx-coroutines-core-native:1.3.5")).with(module("org.jetbrains.kotlinx:kotlinx-coroutines-core-native:1.3.5-native-mt"))
-    }
-}
 val kniOutputDir = "src/kni/kotlin"
 val drillJvmApiLibVersion: String by rootProject
 val serializationRuntimeVersion: String by rootProject
 val drillLoggerVersion: String by rootProject
 val drillHttpInterceptorVersion: String by rootProject
-val transportVersion: String by rootProject
 val websocketVersion: String by rootProject
 val javassistVersion: String by rootProject
 val klockVersion: String by rootProject
@@ -53,10 +47,9 @@ kotlin {
                         implementation("com.epam.drill:jvmapi:$drillJvmApiLibVersion")
                         implementation("com.epam.drill.interceptor:http:$drillHttpInterceptorVersion")
                         implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
-                        implementation("com.epam.drill.transport:core:$transportVersion")
-                        implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-native:$serializationRuntimeVersion")
-                        implementation("org.jetbrains.kotlinx:kotlinx-serialization-properties-native:$serializationRuntimeVersion")
-                        implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf-native:$serializationRuntimeVersion")
+                        implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$serializationRuntimeVersion")
+                        implementation("org.jetbrains.kotlinx:kotlinx-serialization-properties:$serializationRuntimeVersion")
+                        implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:$serializationRuntimeVersion")
                         implementation("com.epam.drill.kni:runtime:$kniVersion")
                         implementation("com.benasher44:uuid:$uuidVersion")
                     }
@@ -83,14 +76,14 @@ kotlin {
     sourceSets {
         all {
             languageSettings.apply {
-                useExperimentalAnnotation("kotlinx.serialization.UnstableDefault")
                 useExperimentalAnnotation("kotlinx.serialization.InternalSerializationApi")
+                useExperimentalAnnotation("kotlinx.serialization.ExperimentalSerializationApi")
             }
         }
         commonMain {
             dependencies {
-                implementation("org.jetbrains.kotlin:kotlin-stdlib-common")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-common:$serializationRuntimeVersion")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$serializationRuntimeVersion")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationRuntimeVersion")
                 implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
                 implementation("com.epam.drill.kni:runtime:$kniVersion")
             }
@@ -99,12 +92,11 @@ kotlin {
         jvm("runtime") {
             compilations["main"].defaultSourceSet {
                 dependencies {
-                    implementation(kotlin("stdlib-jdk8"))
                     api("org.javassist:javassist:$javassistVersion")
                     implementation("org.java-websocket:Java-WebSocket:$websocketVersion")
-                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$serializationRuntimeVersion")
+                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$serializationRuntimeVersion")
                     implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
-                    implementation("com.soywiz.korlibs.klock:klock-jvm:$klockVersion")
+                    implementation("com.soywiz.korlibs.klock:klock:$klockVersion")
                     implementation("com.epam.drill.kni:runtime:$kniVersion")
                     implementation("com.squareup.okhttp3:okhttp:3.13.1")
                     implementation("org.jetbrains.kotlinx:atomicfu:$atomicFuVersion")
@@ -196,7 +188,7 @@ publishing {
         }
     }
     publications {
-        kotlin.targets.filterIsInstance<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().filter {
+        nativeTargets.filter {
             HostManager().isEnabled(it.konanTarget)
         }.forEach {
             create<MavenPublication>("${it.name}Zip") {
@@ -223,8 +215,6 @@ tasks {
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile> {
-    kotlinOptions.freeCompilerArgs += "-Xuse-experimental=kotlinx.serialization.ImplicitReflectionSerializer"
     kotlinOptions.freeCompilerArgs += "-Xuse-experimental=kotlin.ExperimentalUnsignedTypes"
     kotlinOptions.freeCompilerArgs += "-Xuse-experimental=kotlin.time.ExperimentalTime"
-    kotlinOptions.freeCompilerArgs += "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
 }

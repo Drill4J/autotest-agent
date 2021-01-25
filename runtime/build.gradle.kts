@@ -13,7 +13,6 @@ repositories {
     maven(url = "https://oss.jfrog.org/artifactory/list/oss-release-local")
 }
 dependencies {
-    implementation(kotlin("stdlib"))
     implementation("com.epam.drill.kni:runtime:$kniVersion")
 }
 

@@ -93,8 +93,8 @@ actual object TestListener {
 
         return TestRun.serializer() stringify TestRun(
             "",
-            map.filter { it.startedAt != 0L }.minBy { it.startedAt }?.startedAt ?: 0,
-            map.maxBy { it.finishedAt }?.finishedAt ?: 0,
+            map.filter { it.startedAt != 0L }.minByOrNull { it.startedAt }?.startedAt ?: 0,
+            map.maxByOrNull { it.finishedAt }?.finishedAt ?: 0,
             map
         )
     }

@@ -21,13 +21,11 @@ pluginManagement {
     }
     val kotlinVersion: String by extra
     val drillGradlePluginVersion: String by extra
-    val drillGradleAutotestPluginVersion: String by extra
     val kniVersion: String by extra
     plugins {
         kotlin("multiplatform") version kotlinVersion
         id("org.jetbrains.kotlin.plugin.serialization") version kotlinVersion
         id("com.epam.drill.cross-compilation") version drillGradlePluginVersion
-        id("com.epam.drill.agent.runner.autotest") version drillGradleAutotestPluginVersion
         id("com.epam.drill.gradle.plugin.kni") version kniVersion
     }
 }
