@@ -5,7 +5,10 @@ import kotlinx.serialization.json.*
 import kotlin.native.concurrent.*
 
 @SharedImmutable
-val json = Json { ignoreUnknownKeys = true }
+val json = Json {
+    encodeDefaults = true
+    ignoreUnknownKeys = true
+}
 
 infix fun <T> KSerializer<T>.parse(rawData: String) = json.decodeFromString(this, rawData)
 
