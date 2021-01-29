@@ -100,6 +100,6 @@ actual object TestListener {
     }
 
     actual fun reset() {
-//        _ml.clear()
+        _testInfo.update { it.clear() }
     }
 }
