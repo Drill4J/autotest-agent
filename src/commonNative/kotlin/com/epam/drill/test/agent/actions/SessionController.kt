@@ -52,7 +52,9 @@ object SessionController {
         val response = dispatchAction(payload)
         mainLogger.debug { "Received response: ${response.body}" }
         mainLogger.info { "Stopped a test session with ID ${sessionId.value}" }
-    }.onFailure { mainLogger.warn(it) { "Can't stopSession ${sessionId.value}" } }.getOrNull()
+    }.onFailure {
+        mainLogger.warn(it) { "Can't stopSession ${sessionId.value}" }
+    }.getOrNull().also { TestListener.reset() }
 
     private fun dispatchAction(payload: String): HttpResponse {
         val token = getToken()
