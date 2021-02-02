@@ -78,6 +78,7 @@ kotlin {
             languageSettings.apply {
                 useExperimentalAnnotation("kotlinx.serialization.InternalSerializationApi")
                 useExperimentalAnnotation("kotlinx.serialization.ExperimentalSerializationApi")
+                useExperimentalAnnotation("kotlin.time.ExperimentalTime")
             }
         }
         commonMain {

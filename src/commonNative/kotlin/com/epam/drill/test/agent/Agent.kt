@@ -37,7 +37,11 @@ object Agent : JvmtiAgent {
             AddToBootstrapClassLoaderSearch("${config.drillInstallationDir}/drillRuntime.jar")
             callbackRegister()
 
-            SessionController._agentConfig.value = config
+            if (config.dispatcherUrl.isNullOrBlank() xor config.agentUrl.isNullOrBlank()) {
+                throw RuntimeException("To collect js coverage, specify both parameters: dispatcherUrl and agentUrl")
+            }
+
+            AgentConfig._config.value = config
         } catch (ex: Throwable) {
             mainLogger.error(ex) { "Can't load the agent. Reason:" }
         }
@@ -47,7 +51,7 @@ object Agent : JvmtiAgent {
     override fun agentOnUnload() {
         try {
             mainLogger.info { "Shutting the agent down" }
-            val agentConfig = SessionController.agentConfig
+            val agentConfig = AgentConfig.config
             if (!agentConfig.isManuallyControlled && !agentConfig.sessionForEachTest)
                 SessionController.stopSession()
         } catch (ex: Throwable) {

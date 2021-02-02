@@ -4,6 +4,7 @@ import com.epam.drill.kni.*
 import com.epam.drill.logger.*
 import com.epam.drill.test.agent.actions.*
 import com.epam.drill.test.agent.config.*
+import com.epam.drill.test.agent.js.*
 import com.epam.drill.test.agent.instrumentation.http.selenium.*
 import kotlinx.atomicfu.*
 import kotlinx.collections.immutable.*
@@ -23,7 +24,6 @@ actual object TestListener {
         testProperties.put(testId, currentInfo + vals)
     }
 
-
     fun testStarted(test: String?) {
         test?.let {
             if (it !in _testInfo.value) {
@@ -39,6 +39,7 @@ actual object TestListener {
                 }
                 ThreadStorage.startSession(it)
                 ThreadStorage.memorizeTestName(it)
+                ExtensionDispatcher.send(EventType.START_TEST)
             } else if (isFinalizeTestState(it)) {
                 val prevDuration = _testInfo.value[it]?.let { testProperties ->
                     val startedAt = testProperties[TestInfo::startedAt.name] as Long
@@ -70,10 +71,10 @@ actual object TestListener {
                 TestInfo::result.name to TestResult.getByMapping(status)
             )
             logger.info { "Test: $test FINISHED. Result:$status" }
+            ExtensionDispatcher.send(EventType.FINISH_TEST)
+            ThreadStorage.stopSession()
         }
-        ThreadStorage.stopSession()
     }
-
 
     private fun isFinalizeTestState(test: String?): Boolean = !isNotFinalizeTestState(test)
 

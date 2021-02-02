@@ -4,29 +4,25 @@ import com.epam.drill.test.agent.actions.*
 
 actual object ThreadStorage {
 
-    actual fun memorizeTestNameNative(testName: String?) {
-        SessionController.testName.value = testName ?: ""
-    }
-
     actual fun sessionId(): String? {
         return SessionController.sessionId.value
     }
 
-    actual fun proxyUrl(): String? {
-        return SessionController._agentConfig.value.browserProxyAddress
+    actual fun testName(): String? {
+        return ThreadStorageStub.testName()
     }
 
-    actual fun startSession(testName: String?) = SessionController.run {
-        if (agentConfig.sessionForEachTest) {
-            startSession(
-                customSessionId = agentConfig.sessionId,
+    actual fun startSession(testName: String?) = AgentConfig.run {
+        if (config.sessionForEachTest) {
+            SessionController.startSession(
+                customSessionId = config.sessionId,
                 testName = testName
             )
         }
     }
 
     actual fun stopSession() = SessionController.run {
-        if (agentConfig.sessionForEachTest) {
+        if (AgentConfig.config.sessionForEachTest) {
             stopSession(sessionIds = sessionId.value)
         }
     }

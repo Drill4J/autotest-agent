@@ -7,10 +7,8 @@ import com.epam.drill.test.agent.http.*
 import kotlin.native.concurrent.*
 
 object SessionController {
-    val _agentConfig = AtomicReference(AgentRawConfig().freeze()).freeze()
-    val agentConfig
-        get() = _agentConfig.value
-    val testName = AtomicReference("undefined")
+    private val agentConfig
+        get() = AgentConfig.config
     val sessionId = AtomicReference("")
 
     private val dispatchActionPath: String
