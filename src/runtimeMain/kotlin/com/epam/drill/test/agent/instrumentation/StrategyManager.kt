@@ -17,9 +17,11 @@ package com.epam.drill.test.agent.instrumentation
 
 import com.epam.drill.kni.*
 import com.epam.drill.logger.*
+import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.http.apache.*
 import com.epam.drill.test.agent.instrumentation.http.java.*
 import com.epam.drill.test.agent.instrumentation.http.ok.*
+import com.epam.drill.test.agent.instrumentation.http.selenide.*
 import com.epam.drill.test.agent.instrumentation.http.selenium.*
 import com.epam.drill.test.agent.instrumentation.runners.*
 import javassist.*
@@ -41,6 +43,10 @@ actual object StrategyManager {
         systemStrategies.add(ApacheClient())
         systemStrategies.add(JavaHttpUrlConnection())
         systemStrategies.add(Selenium())
+        AgentConfig.dispatcherUrl()?.let {
+            systemStrategies.add(ChromeOptions())
+            systemStrategies.add(ChromeDriverFactory())
+        }
     }
 
     actual fun initialize(rawFrameworkPlugins: String, isManuallyControlled: Boolean) {
