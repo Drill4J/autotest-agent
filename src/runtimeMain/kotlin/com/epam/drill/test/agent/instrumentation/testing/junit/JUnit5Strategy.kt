@@ -7,7 +7,9 @@ import java.security.ProtectionDomain
 
 @Suppress("unused")
 object JUnit5Strategy : AbstractTestStrategy() {
-    override val id: String = "junit"
+    override val id: String
+        get() = "junit"
+
     override fun permit(ctClass: CtClass): Boolean {
         return ctClass.name == "org.junit.platform.engine.support.hierarchical.NodeTestTaskContext"
     }
@@ -27,8 +29,7 @@ object JUnit5Strategy : AbstractTestStrategy() {
                             public MyList(org.junit.platform.engine.EngineExecutionListener mainRunner) { 
                                this.mainRunner = mainRunner;
                             }
-                        """.trimMargin()
-                , cc
+                        """.trimMargin(), cc
             )
         )
         cc.addMethod(

@@ -33,7 +33,7 @@ actual object TestListener {
     }
 
     fun testStarted(test: String?) {
-        test?.let {
+        test?.takeIf { it !in _testInfo.value }?.let {
             logger.trace { "Test: $it STARTED" }
             addTestInfo(
                 test,
