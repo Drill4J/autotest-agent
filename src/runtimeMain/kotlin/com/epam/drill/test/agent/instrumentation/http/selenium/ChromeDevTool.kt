@@ -1,11 +1,12 @@
 package com.epam.drill.test.agent.instrumentation.http.selenium
 
-import com.epam.drill.test.agent.instrumentation.http.selenium.DevToolsClientThreadStorage.crhmT
 import com.epam.drill.logger.*
 import com.epam.drill.test.agent.config.*
+import com.epam.drill.test.agent.instrumentation.http.selenium.DevToolsClientThreadStorage.crhmT
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 import org.java_websocket.client.*
+import org.java_websocket.framing.CloseFrame.*
 import org.java_websocket.handshake.*
 import java.net.*
 import java.util.concurrent.*
@@ -159,7 +160,7 @@ class ChromeDevToolWs(
 
 
     override fun onError(ex: java.lang.Exception?) {
-        logger.error(ex) { "socket closed by error:" }
+        logger.error(ex) { "socket ${this.url} closed by error:" }
 
     }
 
@@ -172,11 +173,12 @@ class ChromeDevToolWs(
     }
 
 
-    override fun onClose(code: Int, reason: String?, remote: Boolean) {
-        logger.debug { "socket closed. Code: $code, reason: $reason, remote: $remote" }
-        Thread.sleep(1000)
-        logger.debug { "try reconnect to ${this.url}" }
-        chromeDevTool.connect()
+    override fun onClose(code: Int, reason: String?, remote: Boolean) = when (code) {
+        NORMAL, ABNORMAL_CLOSE -> logger.debug { "socket closed. Code: $code, reason: $reason, remote: $remote" }
+        else -> {
+            Thread.sleep(1000)
+            logger.debug { "try reconnect to ${this.url}" }.also { chromeDevTool.connect() }
+        }
     }
 
 }
