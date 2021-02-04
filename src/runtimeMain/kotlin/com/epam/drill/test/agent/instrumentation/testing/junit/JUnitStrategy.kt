@@ -10,7 +10,9 @@ import java.security.ProtectionDomain
 object JUnitStrategy : AbstractTestStrategy() {
     private const val engineSegment = """[engine:junit]"""
 
-    override val id: String = "junit"
+    override val id: String
+        get() = "junit"
+
     override fun permit(ctClass: CtClass): Boolean {
         return ctClass.name == "org.junit.runner.notification.RunNotifier"
     }

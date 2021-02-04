@@ -9,7 +9,8 @@ import java.security.ProtectionDomain
 @Suppress("unused")
 object JMeterStrategy : AbstractTestStrategy() {
     private val testNameSourceClass = "org.apache.jmeter.protocol.http.sampler.HTTPHC4Impl"
-    override val id: String = "jmeter"
+    override val id: String
+        get() = "jmeter"
 
     override fun permit(ctClass: CtClass): Boolean {
         return ctClass.name == testNameSourceClass

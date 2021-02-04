@@ -10,7 +10,8 @@ import java.security.ProtectionDomain
 @Suppress("unused")
 object TestNGStrategy : AbstractTestStrategy() {
 
-    override val id: String = "testng"
+    override val id: String
+        get() = "testng"
 
     override fun permit(ctClass: CtClass): Boolean {
         return ctClass.name == "org.testng.TestListenerAdapter"
@@ -52,7 +53,9 @@ object TestNGStrategy : AbstractTestStrategy() {
     }
     return paramString.length() > 0 ? paramString : "";
   }
-        """.trimIndent(), ctClass))
+        """.trimIndent(), ctClass
+            )
+        )
         sequenceOf(
             ctClass.getDeclaredMethod("onTestSuccess") to "PASSED",
             ctClass.getDeclaredMethod("onTestFailure") to "FAILED",
