@@ -57,6 +57,13 @@ class Selenium : Strategy() {
                     dCap.setCapability("proxy", dProxy);
                     $1 = $1.merge(dCap);
                 }
+               if ($IF_CONDITION) {
+                   System.out.println("startSession before:"  + $TEST_NAME_VALUE_CALC_LINE);
+                   try {
+                       org.openqa.selenium.remote.Response a = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
+                       org.openqa.selenium.remote.Response b = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
+                   } catch(Exception e) {}
+               }
                 """
         )
         startSession.insertAfter(
@@ -76,10 +83,10 @@ class Selenium : Strategy() {
             """
                 try {Thread.sleep(100l); } catch(Exception es) {}
                 if ($IF_CONDITION) {
+                    System.out.println("get:"  + $TEST_NAME_VALUE_CALC_LINE);
                     try {
                         org.openqa.selenium.remote.Response a = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
                         org.openqa.selenium.remote.Response b = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
-                        execute("get", $ImmutableMap.of("url", $1));
                     } catch(Exception dex){}
                 }
                 
@@ -91,10 +98,7 @@ class Selenium : Strategy() {
                 """
                     if (!(${'$'}1.equals("newSession"))) {
                         if ($IF_CONDITION) {
-                            try {
-                                org.openqa.selenium.remote.Response a = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
-                                org.openqa.selenium.remote.Response b = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
-                            } catch(Exception e) {}
+                            System.out.println("execute:"  + $TEST_NAME_VALUE_CALC_LINE);
                             try {
                                 java.util.HashMap hashMap = new java.util.HashMap();
                                 hashMap.put($SESSION_ID_CALC_LINE);
