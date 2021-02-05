@@ -20,7 +20,6 @@ public class Setup {
 
     @Before
     public void setWebDriver() throws Exception {
-
         String browser = System.getProperty("browser");
         if (browser == null) {
             browser = "chrome";

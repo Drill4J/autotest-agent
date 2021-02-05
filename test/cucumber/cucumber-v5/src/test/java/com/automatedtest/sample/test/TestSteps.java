@@ -1,9 +1,8 @@
 package com.automatedtest.sample.test;
 
+import com.epam.drill.test.common.*;
 import io.cucumber.java.*;
 import io.cucumber.java.en.*;
-import com.epam.drill.test.common.*;
-
 
 
 public class TestSteps {
@@ -15,6 +14,11 @@ public class TestSteps {
         this.test = new Test();
     }
 
+    @Before
+    public void saveScenarioName(Scenario scenario) {
+        actualTestName = UtilKt.urlEncode(scenario.getName());
+    }
+
     @Given("^A user navigates to HomePage$")
     public void aUserNavigatesToHomePage() {
         this.test.goToHomePage();
@@ -23,10 +27,5 @@ public class TestSteps {
     @Then("^Headers are injected$")
     public void headersAreInjected() {
         this.test.checkTestName(actualTestName);
-    }
-
-    @Before
-    public void saveScenarioName(Scenario scenario)  {
-        actualTestName = UtilKt.urlEncode(scenario.getName());
     }
 }
