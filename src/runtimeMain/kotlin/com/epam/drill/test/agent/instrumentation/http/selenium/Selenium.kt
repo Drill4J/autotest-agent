@@ -1,10 +1,10 @@
- package com.epam.drill.test.agent.instrumentation.http.selenium
+package com.epam.drill.test.agent.instrumentation.http.selenium
 
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.*
 import javassist.*
 import java.io.*
-import java.security.ProtectionDomain
+import java.security.*
 
 const val EXTENSION_NAME = "header-transmitter.xpi"
 
@@ -43,7 +43,10 @@ class Selenium : Strategy() {
         protectionDomain: ProtectionDomain?
     ): ByteArray? {
         ctClass.addField(
-            CtField.make("${ChromeDevTool::class.java.name} drillDevTools;", ctClass).apply { modifiers = 9 })
+            CtField.make(
+                "${ChromeDevTool::class.java.name} drillDevTools=(${ChromeDevTool::class.java.name}) new ${ChromeDevTool::class.java.name}();",
+                ctClass
+            ).apply { modifiers = 9 })
         ctClass.addField(
             CtField.make("boolean drillIsGet = false;", ctClass).apply { modifiers = 9 })
         val startSession = ctClass.getDeclaredMethod("startSession")
@@ -57,11 +60,17 @@ class Selenium : Strategy() {
                     dCap.setCapability("proxy", dProxy);
                     $1 = $1.merge(dCap);
                 }
+                if ($IF_CONDITION) {
+                    try {
+                        org.openqa.selenium.remote.Response a = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
+                        org.openqa.selenium.remote.Response b = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
+                    } catch(Exception e) {}
+                } 
                 """
         )
         startSession.insertAfter(
             """
-                    new ${ChromeDevTool::class.java.name}().${ChromeDevTool::connectToDevTools.name}(((java.util.Map)getCapabilities().getCapability("goog:chromeOptions")));
+                    drillDevTools.${ChromeDevTool::connectToDevTools.name}(((java.util.Map)getCapabilities().getCapability("goog:chromeOptions")));
                     try {
                         if (this instanceof org.openqa.selenium.firefox.FirefoxDriver) {
                             java.util.HashMap hashMapq = new java.util.HashMap();
@@ -72,40 +81,23 @@ class Selenium : Strategy() {
                     } catch (Exception e){}
                 """
         )
-        ctClass.getDeclaredMethod("get").insertAfter(
+        ctClass.getDeclaredMethod("get").insertBefore(
             """
-                try {Thread.sleep(100l); } catch(Exception es) {}
                 if ($IF_CONDITION) {
                     try {
-                        org.openqa.selenium.remote.Response a = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
-                        org.openqa.selenium.remote.Response b = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
-                        execute("get", $ImmutableMap.of("url", $1));
-                    } catch(Exception dex){}
+                        java.util.HashMap hashMap = new java.util.HashMap();
+                        hashMap.put($SESSION_ID_CALC_LINE);
+                        hashMap.put($TEST_NAME_CALC_LINE);
+                        ${DevToolsClientThreadStorage::class.java.name}.INSTANCE.${DevToolsClientThreadStorage::addHeaders.name}(hashMap);
+                    } catch(Exception e) { e.printStackTrace();}
                 }
-                
             """.trimIndent()
         )
-
-        ctClass.declaredMethods.filter { it.name == "execute" }.forEach {
-            it.insertBefore(
+        ctClass.getDeclaredMethod("quit").insertBefore(
                 """
-                    if (!(${'$'}1.equals("newSession"))) {
-                        if ($IF_CONDITION) {
-                            try {
-                                org.openqa.selenium.remote.Response a = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
-                                org.openqa.selenium.remote.Response b = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
-                            } catch(Exception e) {}
-                            try {
-                                java.util.HashMap hashMap = new java.util.HashMap();
-                                hashMap.put($SESSION_ID_CALC_LINE);
-                                hashMap.put($TEST_NAME_CALC_LINE);
-                                ${DevToolsClientThreadStorage::class.java.name}.INSTANCE.${DevToolsClientThreadStorage::addHeaders.name}(hashMap);
-                            } catch(Exception e) { e.printStackTrace();}
-                        }
-                    }
+                    drillDevTools.${ChromeDevTool::close.name}();
                 """.trimIndent()
             )
-        }
         return ctClass.toBytecode()
     }
 

@@ -26,7 +26,7 @@ object DevToolsClientThreadStorage {
             logger.debug { "Chrome Tool activated: ${crhmT.get() != null}. Headers: $headers" }
 
         } catch (ex: Exception) {
-            logger.debug { "try to resend" }
+            logger.debug { "exception $ex; try to resend" }
             Thread.sleep(2000)
             @Suppress("UNCHECKED_CAST")
             crhmT.get()?.addHeaders(headers as Map<String, String>)
@@ -68,6 +68,11 @@ class ChromeDevTool {
             }
         }
     }.getOrNull()
+
+    fun close() {
+        logger.debug { "${this.url} closing..." }
+        ws?.close()
+    }
 
     internal fun connect(): Boolean {
         logger.debug { "DevTools URL: ${this.url}" }
@@ -174,7 +179,7 @@ class ChromeDevToolWs(
 
 
     override fun onClose(code: Int, reason: String?, remote: Boolean) = when (code) {
-        NORMAL, ABNORMAL_CLOSE -> logger.debug { "socket closed. Code: $code, reason: $reason, remote: $remote" }
+        NORMAL -> logger.debug { "socket closed. Code: $code, reason: $reason, remote: $remote" }
         else -> {
             Thread.sleep(1000)
             logger.debug { "try reconnect to ${this.url}" }.also { chromeDevTool.connect() }

@@ -1,7 +1,5 @@
 package com.epam.drill.test.agent
 
-import com.epam.drill.kni.*
-
 const val TEST_NAME_HEADER = "drill-test-name"
 const val SESSION_ID_HEADER = "drill-session-id"
 

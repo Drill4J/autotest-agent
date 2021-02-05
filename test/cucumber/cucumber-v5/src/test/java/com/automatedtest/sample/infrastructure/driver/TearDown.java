@@ -5,7 +5,7 @@ import org.openqa.selenium.*;
 
 public class TearDown {
 
-    private WebDriver driver;
+    private final WebDriver driver;
 
     public TearDown() {
         this.driver = Setup.driver;

@@ -7,7 +7,7 @@ import org.openqa.selenium.support.*;
 
 import java.util.*;
 
-
+//todo move/union to common module for v4 & v5
 public class Test {
     protected WebDriver driver;
     protected Wait wait;
@@ -15,7 +15,6 @@ public class Test {
     protected Set<String> testNames;
 
     Test() {
-
         this.testNames = Setup.testNames;
         this.port = Setup.port;
         this.driver = Setup.driver;
@@ -30,6 +29,6 @@ public class Test {
 
     void checkTestName(String testName) {
         Assert.assertFalse(testNames.isEmpty());
-        Assert.assertTrue(testNames.stream().anyMatch(x->x.contains(testName)));
+        Assert.assertTrue(testNames.stream().anyMatch(x -> x.contains(testName)));
     }
 }
