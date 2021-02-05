@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.konan.target.*
+import java.net.*
 
 
 plugins {
@@ -7,6 +8,7 @@ plugins {
     id("com.epam.drill.cross-compilation")
     id("com.epam.drill.gradle.plugin.kni")
     id("com.github.johnrengelman.shadow") version "5.1.0"
+    id("com.github.hierynomus.license")
     distribution
     `maven-publish`
 }
@@ -218,3 +220,13 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile> {
     kotlinOptions.freeCompilerArgs += "-Xuse-experimental=kotlin.ExperimentalUnsignedTypes"
     kotlinOptions.freeCompilerArgs += "-Xuse-experimental=kotlin.time.ExperimentalTime"
 }
+
+val licenseFormatSettings by tasks.registering(com.hierynomus.gradle.license.tasks.LicenseFormat::class) {
+    source = fileTree(project.projectDir).also {
+        include("**/*.kt", "**/*.java", "**/*.groovy")
+        exclude("**/.idea")
+    }.asFileTree
+    headerURI = URI("https://raw.githubusercontent.com/Drill4J/drill4j/develop/COPYRIGHT")
+}
+
+tasks["licenseFormat"].dependsOn(licenseFormatSettings)
