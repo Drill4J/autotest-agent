@@ -16,7 +16,7 @@ object SessionController {
     private val dispatchActionPath: String
         get() = if (agentConfig.groupId.isBlank()) {
             "/api/agents/${agentConfig.agentId}/plugins/${agentConfig.pluginId}/dispatch-action"
-        } else "/api/service-groups/${agentConfig.groupId}/plugins/${agentConfig.pluginId}/dispatch-action"
+        } else "/api/groups/${agentConfig.groupId}/plugins/${agentConfig.pluginId}/dispatch-action"
 
 
     fun startSession(
