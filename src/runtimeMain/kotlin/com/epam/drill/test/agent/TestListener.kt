@@ -4,6 +4,7 @@ import com.epam.drill.kni.*
 import com.epam.drill.logger.*
 import com.epam.drill.test.agent.actions.*
 import com.epam.drill.test.agent.config.*
+import com.epam.drill.test.agent.instrumentation.http.selenium.*
 import kotlinx.atomicfu.*
 import kotlinx.collections.immutable.*
 
@@ -14,37 +15,31 @@ actual object TestListener {
 
     private val _testInfo = atomic(persistentHashMapOf<String, PersistentMap<String, Any>?>())
 
-    private fun addTestInfo(testId: String, vararg vals: Pair<String, Any>) {
-        vals.forEach {
-            val (paramName, value) = it
-            if (_testInfo.value[testId] == null) {
-                _testInfo.updateAndGet { testProperties ->
-                    testProperties.put(testId, persistentHashMapOf(paramName to value))
-                }
-            } else {
-                _testInfo.getAndUpdate { testProperties ->
-                    testProperties.put(
-                        testId,
-                        testProperties[testId]?.put(paramName, value)
-                    )
-                }
-            }
-        }
+    private fun addTestInfo(
+        testId: String,
+        vararg vals: Pair<String, Any>
+    ) = _testInfo.update { testProperties ->
+        val currentInfo = testProperties[testId] ?: persistentHashMapOf()
+        testProperties.put(testId, currentInfo + vals)
     }
+
 
     fun testStarted(test: String?) {
         test?.takeIf { it !in _testInfo.value }?.let {
-            logger.trace { "Test: $it STARTED" }
+            logger.info { "Test: $it STARTED" }
             addTestInfo(
                 test,
                 TestInfo::name.name to test,
                 TestInfo::startedAt.name to System.currentTimeMillis()
             )
+            DevToolsClientThreadStorage.getDevTool()?.apply {
+                logger.debug { "Thread id=${Thread.currentThread().id}, devTool instance=${this}, Test = $it" }
+                addHeaders(mapOf(TEST_NAME_HEADER to it, SESSION_ID_HEADER to (ThreadStorage.sessionId() ?: "")))
+            }
             ThreadStorage.startSession(it)
             ThreadStorage.memorizeTestName(it)
         }
     }
-
 
     fun testFinished(test: String?, status: String) {
         if (isNotFinalizeTestState(test)) {

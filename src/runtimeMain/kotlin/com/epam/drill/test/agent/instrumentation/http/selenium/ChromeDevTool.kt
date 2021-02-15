@@ -2,7 +2,6 @@ package com.epam.drill.test.agent.instrumentation.http.selenium
 
 import com.epam.drill.logger.*
 import com.epam.drill.test.agent.config.*
-import com.epam.drill.test.agent.instrumentation.http.selenium.DevToolsClientThreadStorage.crhmT
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 import org.java_websocket.client.*
@@ -16,35 +15,44 @@ private const val DEV_TOOL_PROPERTY_NAME = "webSocketDebuggerUrl"
 
 object DevToolsClientThreadStorage {
     private val logger = Logging.logger(ChromeDevTool::class.java.name)
-    internal var crhmT: InheritableThreadLocal<ChromeDevTool> = InheritableThreadLocal()
+    private val threadLocalChromeDevTool: InheritableThreadLocal<ChromeDevTool> = InheritableThreadLocal()
 
     fun addHeaders(headers: Map<*, *>) {
         try {
             logger.debug { "try to add headers: $headers" }
             @Suppress("UNCHECKED_CAST")
-            crhmT.get()?.addHeaders(headers as Map<String, String>)
-            logger.debug { "Chrome Tool activated: ${crhmT.get() != null}. Headers: $headers" }
+            getDevTool()?.addHeaders(headers as Map<String, String>)
+            logger.debug { "Chrome Tool activated: ${threadLocalChromeDevTool.get() != null}. Headers: $headers" }
 
         } catch (ex: Exception) {
             logger.debug { "exception $ex; try to resend" }
             Thread.sleep(2000)
             @Suppress("UNCHECKED_CAST")
-            crhmT.get()?.addHeaders(headers as Map<String, String>)
+            getDevTool()?.addHeaders(headers as Map<String, String>)
         }
     }
+
+    fun setDevTool(devTool: ChromeDevTool) = threadLocalChromeDevTool.set(devTool).also {
+        logger.debug { "Devtool inited for: Thread id=${Thread.currentThread().id}, Devtool instance=$devTool" }
+    }
+
+    fun getDevTool(): ChromeDevTool? = threadLocalChromeDevTool.get()
+
+    fun isHeadersAdded() = threadLocalChromeDevTool.get()?.isHeadersAdded ?: false
+
 }
 
 class ChromeDevTool {
     private val logger = Logging.logger(ChromeDevTool::class.java.name)
-
     internal var ws: ChromeDevToolWs? = null
+    internal var isHeadersAdded: Boolean = false
 
     fun addHeaders(headers: Map<String, String>) {
         ws?.addHeaders(headers)
     }
 
     init {
-        crhmT.set(this)
+        DevToolsClientThreadStorage.setDevTool(this)
     }
 
     lateinit var url: String
@@ -170,11 +178,16 @@ class ChromeDevToolWs(
     }
 
     private fun send(value: DevToolsRequest) {
-        send(json.encodeToString(DevToolsRequest.serializer(), value))
+        if (isOpen) {
+            send(json.encodeToString(DevToolsRequest.serializer(), value))
+        }
     }
 
     private fun send(value: DevToolsHeaderRequest) {
-        send(json.encodeToString(DevToolsHeaderRequest.serializer(), value))
+        if (isOpen) {
+            send(json.encodeToString(DevToolsHeaderRequest.serializer(), value))
+            chromeDevTool.isHeadersAdded = true
+        }
     }
 
 

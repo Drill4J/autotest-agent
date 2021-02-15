@@ -1,8 +1,8 @@
 package com.epam.drill.test.agent
 
 import com.epam.drill.kni.*
+import com.epam.drill.test.agent.instrumentation.http.selenium.*
 import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 @Kni
 actual object ThreadStorage {
