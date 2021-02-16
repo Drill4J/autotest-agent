@@ -25,23 +25,38 @@ actual object TestListener {
 
 
     fun testStarted(test: String?) {
-        test?.takeIf { it !in _testInfo.value }?.let {
-            logger.info { "Test: $it STARTED" }
-            addTestInfo(
-                test,
-                TestInfo::name.name to test,
-                TestInfo::startedAt.name to System.currentTimeMillis()
-            )
-            DevToolsClientThreadStorage.getDevTool()?.apply {
-                logger.debug { "Thread id=${Thread.currentThread().id}, devTool instance=${this}, Test = $it" }
-                addHeaders(mapOf(TEST_NAME_HEADER to it, SESSION_ID_HEADER to (ThreadStorage.sessionId() ?: "")))
+        test?.let {
+            if (it !in _testInfo.value) {
+                logger.info { "Test: $it STARTED" }
+                addTestInfo(
+                    test,
+                    TestInfo::name.name to test,
+                    TestInfo::startedAt.name to System.currentTimeMillis()
+                )
+                DevToolsClientThreadStorage.getDevTool()?.apply {
+                    logger.debug { "Thread id=${Thread.currentThread().id}, devTool instance=${this}, Test = $it" }
+                    addHeaders(mapOf(TEST_NAME_HEADER to it, SESSION_ID_HEADER to (ThreadStorage.sessionId() ?: "")))
+                }
+                ThreadStorage.startSession(it)
+                ThreadStorage.memorizeTestName(it)
+            } else if (isFinalizeTestState(it)) {
+                val prevDuration = _testInfo.value[it]?.let { testProperties ->
+                    val startedAt = testProperties[TestInfo::startedAt.name] as Long
+                    val finishedAt = testProperties[TestInfo::finishedAt.name] as Long
+                    finishedAt - startedAt
+                } ?: 0L
+                logger.trace { "Test: $it was repeated, prev duration $prevDuration. Change status to UNKNOWN" }
+                addTestInfo(
+                    it,
+                    TestInfo::result.name to TestResult.UNKNOWN,
+                    TestInfo::startedAt.name to System.currentTimeMillis() - prevDuration
+                )
             }
-            ThreadStorage.startSession(it)
-            ThreadStorage.memorizeTestName(it)
         }
     }
 
     fun testFinished(test: String?, status: String) {
+        logger.trace { "Test: $test is finishing with status $status..." }
         if (isNotFinalizeTestState(test)) {
             addTestResult(test, status)
         }
@@ -54,11 +69,13 @@ actual object TestListener {
                 TestInfo::finishedAt.name to System.currentTimeMillis(),
                 TestInfo::result.name to TestResult.getByMapping(status)
             )
-            logger.trace { "Test: $test FINISHED. Result:$status" }
+            logger.info { "Test: $test FINISHED. Result:$status" }
         }
         ThreadStorage.stopSession()
     }
 
+
+    private fun isFinalizeTestState(test: String?): Boolean = !isNotFinalizeTestState(test)
 
     private fun isNotFinalizeTestState(test: String?): Boolean = _testInfo.value[test]?.let { testProperties ->
         testProperties[TestInfo::result.name]?.let { result ->
@@ -79,6 +96,7 @@ actual object TestListener {
     }
 
     actual fun getData(): String {
+        logger.trace { "testInfo: ${_testInfo.value.values}" }
         val map = kotlin.runCatching {
             _testInfo.value.values.filterNotNull().map { testProperties ->
                 TestInfo.serializer().deserialize(PropertyDecoder(testProperties))
