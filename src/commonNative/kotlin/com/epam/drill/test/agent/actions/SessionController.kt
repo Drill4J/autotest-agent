@@ -4,7 +4,9 @@ import com.benasher44.uuid.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.config.*
 import com.epam.drill.test.agent.http.*
+import kotlinx.coroutines.*
 import kotlin.native.concurrent.*
+import kotlin.time.seconds as sec
 
 object SessionController {
     val _agentConfig = AtomicReference(AgentRawConfig().freeze()).freeze()
@@ -18,6 +20,27 @@ object SessionController {
             "/api/agents/${agentConfig.agentId}/plugins/${agentConfig.pluginId}/dispatch-action"
         } else "/api/groups/${agentConfig.groupId}/plugins/${agentConfig.pluginId}/dispatch-action"
 
+    init {
+        GlobalScope.launch {
+            while (true) {
+                delay(3.sec)
+                runCatching {
+                    val testRun = TestRun.serializer() parse TestListener.getData()
+                    if (testRun.tests.any()) {
+                        sendTests(testRun)
+                    }
+                }.onFailure { mainLogger.error(it) { "Can't parse tests. Reason:" } }
+            }
+        }
+    }
+
+    private fun sendTests(tests: TestRun) {
+        val payload = AddTests.serializer() stringify AddTests(
+            payload = AddTestsPayload(ThreadStorage.sessionId() ?: "", tests)
+        )
+        val result = dispatchAction(payload)
+        mainLogger.trace { "Sent tests, received status ${result.code}" }
+    }
 
     fun startSession(
         customSessionId: String?,
@@ -80,5 +103,4 @@ object SessionController {
         if (httpCall.code != 200) error("Can't perform request: $httpCall")
         return httpCall.headers["authorization"] ?: error("No token received during login")
     }
-
 }

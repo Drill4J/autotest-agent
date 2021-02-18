@@ -4,11 +4,15 @@ import kotlinx.serialization.*
 
 enum class Actions {
     START,
-    STOP
+    STOP,
+    ADD_TESTS
 }
 
 @Serializable
 data class StartSession(val type: String = Actions.START.name, val payload: StartSessionPayload = StartSessionPayload())
+
+@Serializable
+data class AddTests(val type: String = Actions.ADD_TESTS.name, val payload: AddTestsPayload)
 
 @Serializable
 data class StartSessionPayload(
@@ -35,6 +39,12 @@ fun stopAction(sessionId: String, testRun: TestRun? = null) = StopSession(
 
 @Serializable
 data class StopSessionPayload(
+    val sessionId: String,
+    val testRun: TestRun? = null
+)
+
+@Serializable
+data class AddTestsPayload(
     val sessionId: String,
     val testRun: TestRun? = null
 )
