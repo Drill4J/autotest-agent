@@ -13,7 +13,7 @@ actual object TestListener {
 
     private val logger = Logging.logger(TestListener::class.java.simpleName)
 
-    private val _testInfo = atomic(persistentHashMapOf<String, PersistentMap<String, Any>?>())
+    private val _testInfo = atomic(persistentHashMapOf<String, PersistentMap<String, Any>>())
 
     private fun addTestInfo(
         testId: String,
@@ -22,7 +22,6 @@ actual object TestListener {
         val currentInfo = testProperties[testId] ?: persistentHashMapOf()
         testProperties.put(testId, currentInfo + vals)
     }
-
 
     fun testStarted(test: String?) {
         test?.let {
@@ -40,16 +39,11 @@ actual object TestListener {
                 ThreadStorage.startSession(it)
                 ThreadStorage.memorizeTestName(it)
             } else if (isFinalizeTestState(it)) {
-                val prevDuration = _testInfo.value[it]?.let { testProperties ->
-                    val startedAt = testProperties[TestInfo::startedAt.name] as Long
-                    val finishedAt = testProperties[TestInfo::finishedAt.name] as Long
-                    finishedAt - startedAt
-                } ?: 0L
-                logger.trace { "Test: $it was repeated, prev duration $prevDuration. Change status to UNKNOWN" }
+                logger.trace { "Test: $it was repeated. Change status to UNKNOWN" }
                 addTestInfo(
                     it,
                     TestInfo::result.name to TestResult.UNKNOWN,
-                    TestInfo::startedAt.name to System.currentTimeMillis() - prevDuration
+                    TestInfo::startedAt.name to System.currentTimeMillis()
                 )
             }
         }
@@ -89,6 +83,8 @@ actual object TestListener {
             addTestInfo(
                 test,
                 TestInfo::name.name to test,
+                TestInfo::startedAt.name to 0L,
+                TestInfo::finishedAt.name to 0L,
                 TestInfo::result.name to TestResult.SKIPPED
             )
             logger.trace { "Test: $test FINISHED. Result:${TestResult.SKIPPED.name}" }
@@ -97,18 +93,20 @@ actual object TestListener {
 
     actual fun getData(): String {
         logger.trace { "testInfo: ${_testInfo.value.values}" }
-        val map = kotlin.runCatching {
-            _testInfo.value.values.filterNotNull().map { testProperties ->
-                TestInfo.serializer().deserialize(PropertyDecoder(testProperties))
+        val finished = runCatching {
+            _testInfo.value.filterKeys { test -> isFinalizeTestState(test) }.values.map { properties ->
+                TestInfo.serializer().deserialize(PropertyDecoder(properties))
             }
-        }.getOrDefault(emptyList())
-
+        }.getOrElse {
+            logger.error(it) { "Can't get tests list. Reason:" }
+            emptyList()
+        }
+        _testInfo.update { tests -> tests - finished.map { it.name } }
 
         return TestRun.serializer() stringify TestRun(
-            "",
-            map.filter { it.startedAt != 0L }.minByOrNull { it.startedAt }?.startedAt ?: 0,
-            map.maxByOrNull { it.finishedAt }?.finishedAt ?: 0,
-            map
+            startedAt = finished.filter { it.startedAt != 0L }.minByOrNull { it.startedAt }?.startedAt ?: 0,
+            finishedAt = finished.maxByOrNull { it.finishedAt }?.finishedAt ?: 0,
+            tests = finished
         )
     }
 

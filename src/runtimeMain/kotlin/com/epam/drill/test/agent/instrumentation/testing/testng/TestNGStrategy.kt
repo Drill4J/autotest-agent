@@ -41,8 +41,7 @@ object TestNGStrategy : AbstractTestStrategy() {
         )
         sequenceOf(
             ctClass.getDeclaredMethod("onTestSuccess") to "PASSED",
-            ctClass.getDeclaredMethod("onTestFailure") to "FAILED",
-            ctClass.getDeclaredMethod("onTestSkipped") to "SKIPPED"
+            ctClass.getDeclaredMethod("onTestFailure") to "FAILED"
         ).forEach { (method, status) ->
             method.insertAfter(
                 """
@@ -50,6 +49,13 @@ object TestNGStrategy : AbstractTestStrategy() {
             """.trimIndent()
             )
         }
+
+        ctClass.getDeclaredMethod("onTestSkipped").insertAfter(
+            """
+                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("[engine:testng]/[class:"+$1.getInstanceName()+"]/[method:"+$1.getName()+getParamsString($1.getParameters())+"]");
+            """.trimIndent()
+        )
+
         ctClass.getDeclaredMethod("onTestStart").insertAfter(
             """
             ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("[engine:testng]/[class:"+$1.getInstanceName()+"]/[method:"+$1.getName()+getParamsString($1.getParameters())+"]");
