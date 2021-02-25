@@ -41,15 +41,12 @@ object TestNGStrategy : AbstractTestStrategy() {
         ctClass.addMethod(
             CtMethod.make(
                 """
-            private static String getParamsString(Object[] parameters) {
-                String paramString = "(";
-                for(int i = 0; i < parameters.length; i++){ 
-                    if(i != 0) {
-                        paramString += ",";
-                    }
-                    paramString += parameters[i].toString();
+            private static String getParamsString(org.testng.ITestResult result) {
+                String paramString = "";
+                if(result.getParameters().length != 0){
+                    paramString += "[" + result.getMethod().getParameterInvocationCount() + "]";
                 }
-                return paramString + ")";
+                return paramString;
             }
         """.trimIndent(), ctClass
             )
@@ -60,20 +57,20 @@ object TestNGStrategy : AbstractTestStrategy() {
         ).forEach { (method, status) ->
             method.insertAfter(
                 """
-                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("[engine:testng]/[class:"+$1.getInstanceName()+"]/[method:"+$1.getName()+getParamsString($1.getParameters())+"]", "$status");
+                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("[engine:testng]/[class:"+$1.getInstanceName()+"]/[method:"+$1.getName()+getParamsString($1)+"]", "$status");
             """.trimIndent()
             )
         }
 
         ctClass.getDeclaredMethod("onTestSkipped").insertAfter(
             """
-                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("[engine:testng]/[class:"+$1.getInstanceName()+"]/[method:"+$1.getName()+getParamsString($1.getParameters())+"]");
+                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("[engine:testng]/[class:"+$1.getInstanceName()+"]/[method:"+$1.getName()+getParamsString($1)+"]");
             """.trimIndent()
         )
 
         ctClass.getDeclaredMethod("onTestStart").insertAfter(
             """
-            ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("[engine:testng]/[class:"+$1.getInstanceName()+"]/[method:"+$1.getName()+getParamsString($1.getParameters())+"]");
+            ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("[engine:testng]/[class:"+$1.getInstanceName()+"]/[method:"+$1.getName()+getParamsString($1)+"]");
         """.trimIndent()
         )
         return ctClass.toBytecode()
