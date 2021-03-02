@@ -72,7 +72,7 @@ actual object TestListener {
     }
 
     private fun addTestResult(test: String?, status: String) {
-        test?.let {
+        test?.takeIf { it in _testInfo.value }?.let {
             addTestInfo(
                 test,
                 TestInfo::finishedAt.name to System.currentTimeMillis(),
