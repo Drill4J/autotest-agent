@@ -15,8 +15,8 @@
  */
 package com.epam.drill.test.agent.instrumentation.testing.cucumber
 
+import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.AbstractTestStrategy
-import com.epam.drill.test.agent.TestListener
 import javassist.*
 import java.security.ProtectionDomain
 
@@ -77,10 +77,12 @@ object CucumberV4 : AbstractTestStrategy() {
                 """
                                 public void send(cucumber.api.event.Event event) {
                                   mainEventBus.send(event);
-                                  if (event instanceof cucumber.api.event.TestStepStarted){
-                                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("[engine:cucumber]/[method:"+((cucumber.api.event.TestStepStarted) event).getTestCase().getName()+"]");
-                                  } else if(event instanceof cucumber.api.event.TestStepFinished){
-                                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}(((cucumber.api.event.TestStepFinished) event).getTestCase().getName(), "PASSED");
+                                  if (${CucumberUtil::class.java.name}.INSTANCE.${CucumberUtil::isNotStartedByRunner.name}()) {
+                                    if (event instanceof cucumber.api.event.TestStepStarted){
+                                        ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("[engine:cucumber]/[method:"+((cucumber.api.event.TestStepStarted) event).getTestCase().getName()+"]");
+                                    } else if(event instanceof cucumber.api.event.TestStepFinished){
+                                        ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}(((cucumber.api.event.TestStepFinished) event).getTestCase().getName(), "PASSED");
+                                    }
                                   }
                                 }
                             """.trimIndent(),

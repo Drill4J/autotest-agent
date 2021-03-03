@@ -76,11 +76,13 @@ object CucumberV5 : AbstractTestStrategy() {
                 """
                                 public void send(io.cucumber.plugin.event.Event event) {
                                   mainEventBus.send(event);
-                                  if (event instanceof io.cucumber.plugin.event.TestStepStarted){
-                                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}(((io.cucumber.plugin.event.TestStepStarted) event).getTestCase().getName());
-                                  } else if(event instanceof io.cucumber.plugin.event.TestStepFinished){
-                                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}(((io.cucumber.plugin.event.TestStepFinished) event).getTestCase().getName(), "PASSED");
-                                  }
+                                  if (${CucumberUtil::class.java.name}.INSTANCE.${CucumberUtil::isNotStartedByRunner.name}()) {
+                                    if (event instanceof io.cucumber.plugin.event.TestStepStarted){
+                                        ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}(((io.cucumber.plugin.event.TestStepStarted) event).getTestCase().getName());
+                                    } else if(event instanceof io.cucumber.plugin.event.TestStepFinished){
+                                        ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}(((io.cucumber.plugin.event.TestStepFinished) event).getTestCase().getName(), "PASSED");
+                                    }
+                                  }  
                                 }
                             """.trimIndent(),
                 cc
