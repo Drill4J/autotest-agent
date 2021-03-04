@@ -13,21 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package abs
+package com.epam.drill.test.agent.util
 
-import io.github.bonigarcia.wdm.*
-import org.junit.jupiter.api.*
-import org.openqa.selenium.chrome.*
+import java.net.*
 
-//TODO FIX CHECK EPMDJ-6835
-@Disabled
-class ChromiumTest : BasedTest(){
-
-    override fun setupDriver(){
-        WebDriverManager.chromiumdriver().setup()
-        val options = ChromeOptions()
-        options.setHeadless(true)
-        driver = ChromeDriver(options)
-    }
-
-}
+fun String.urlEncode(): String = URLEncoder.encode(this, Charsets.UTF_8.name())

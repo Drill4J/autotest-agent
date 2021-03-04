@@ -16,7 +16,7 @@
 package com.epam.drill.test.agent
 
 import com.epam.drill.kni.*
-import java.net.*
+import com.epam.drill.test.agent.util.*
 
 @Kni
 actual object ThreadStorage {
@@ -24,7 +24,7 @@ actual object ThreadStorage {
 
     @Suppress("unused")
     fun memorizeTestName(testName: String?) {
-        val value = URLEncoder.encode(testName, "UTF-8")
+        val value = testName?.urlEncode()
         storage.set(value)
         memorizeTestNameNative(value)
     }
