@@ -19,8 +19,14 @@ import com.epam.drill.test.agent.instrumentation.AbstractTestStrategy
 import com.epam.drill.test.agent.TestListener
 import javassist.*
 import java.security.ProtectionDomain
+
 @Suppress("unused")
 object CucumberV5 : AbstractTestStrategy() {
+    private const val engineSegment = "engine:cucumber5"
+    private const val finishedTest = "finishedTest"
+    private const val testPackage = "io.cucumber.plugin.event"
+    private const val statusPackage = "io.cucumber.plugin.event.Status"
+
     override val id: String
         get() = "cucumber-v5"
 
@@ -40,11 +46,13 @@ object CucumberV5 : AbstractTestStrategy() {
         val cc: CtClass = pool.makeClass(SpockBus)
         cc.interfaces = arrayOf(pool.get("io.cucumber.core.eventbus.EventBus"))
         cc.addField(CtField.make("io.cucumber.core.eventbus.EventBus mainEventBus = null;", cc))
+        cc.addField(CtField.make("String testPackage = \"\";", cc))
         cc.addConstructor(
             CtNewConstructor.make(
                 """
-                                public SpockBus(io.cucumber.core.eventbus.EventBus mainEventBus) {
+                                public SpockBus(io.cucumber.core.eventbus.EventBus mainEventBus, String testPackage) {
                                    this.mainEventBus = mainEventBus;
+                                   this.testPackage = testPackage;
                                 }
                             """.trimMargin(),
                 cc
@@ -71,15 +79,18 @@ object CucumberV5 : AbstractTestStrategy() {
                 cc
             )
         )
+
         cc.addMethod(
             CtMethod.make(
                 """
                                 public void send(io.cucumber.plugin.event.Event event) {
                                   mainEventBus.send(event);
-                                  if (event instanceof io.cucumber.plugin.event.TestStepStarted){
-                                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}(((io.cucumber.plugin.event.TestStepStarted) event).getTestCase().getName());
-                                  } else if(event instanceof io.cucumber.plugin.event.TestStepFinished){
-                                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}(((io.cucumber.plugin.event.TestStepFinished) event).getTestCase().getName(), "PASSED");
+                                  if (event instanceof $testPackage.TestStepStarted) {
+                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("[$engineSegment]/[class:" + testPackage + "]/[method:"+(($testPackage.TestStepStarted) event).getTestCase().getName()+"]");    
+                                  } else if(event instanceof $testPackage.TestStepFinished) {
+                                    $testPackage.TestStepFinished $finishedTest = ($testPackage.TestStepFinished) event;
+                                    $statusPackage status = $getTestStatus
+                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("[$engineSegment]/[class:" + testPackage + "]/[method:" + $finishedTest.getTestCase().getName() + "]", status.name());                                    
                                   }
                                 }
                             """.trimIndent(),
@@ -122,12 +133,43 @@ object CucumberV5 : AbstractTestStrategy() {
             )
         )
         cc.toClass(classLoader, protectionDomain)
+
+        /**
+         *      {@link cucumber.runner.PickleStepDefinitionMatch} is responsible for running tests.
+         *      Using this class, we can get meta information about the test, for example, the class in which test located.
+         *      {@link io.cucumber.core.runner.HookDefinitionMatch} responsible for running the methods that occur
+         *      before and after running the tests .
+         */
         run.insertBefore(
             """
-                        $2 = new $SpockBus($2);
-                        
-                        """.trimIndent()
+                String testPackage = "undefined";
+                try {
+                    if (stepDefinitionMatch instanceof io.cucumber.core.runner.PickleStepDefinitionMatch) {
+                        String testLocation = ((io.cucumber.core.runner.PickleStepDefinitionMatch) stepDefinitionMatch).getStepDefinition().getLocation();
+                        $getTestPackages
+                    } else if (stepDefinitionMatch instanceof io.cucumber.core.runner.HookDefinitionMatch) {
+                        String testLocation =  ((io.cucumber.core.runner.HookDefinitionMatch) stepDefinitionMatch).getCodeLocation();
+                        $getTestPackages
+                    }
+                } catch (Throwable ignored) {}
+                $2 = new $SpockBus($2, testPackage);
+             """.trimIndent()
         )
         return ctClass.toBytecode()
     }
+
+    private const val getTestPackages = """
+         String temp = testLocation.split(" ")[0];
+         int lastIndex = temp.lastIndexOf(".");
+         testPackage = temp.substring(0, lastIndex);
+    """
+
+    private const val getTestStatus = """
+        $finishedTest.getResult().getStatus();
+        if(status != $statusPackage.PASSED && status != $statusPackage.SKIPPED && status != $statusPackage.FAILED ) {
+            status = $statusPackage.FAILED;
+        }
+    """
+
+
 }

@@ -20,6 +20,7 @@ import com.epam.drill.logger.*
 import com.epam.drill.test.agent.actions.*
 import com.epam.drill.test.agent.config.*
 import com.epam.drill.test.agent.instrumentation.http.selenium.*
+import com.epam.drill.test.agent.util.*
 import kotlinx.atomicfu.*
 import kotlinx.collections.immutable.*
 
@@ -49,7 +50,7 @@ actual object TestListener {
                 )
                 DevToolsClientThreadStorage.getDevTool()?.apply {
                     logger.debug { "Thread id=${Thread.currentThread().id}, devTool instance=${this}, Test = $it" }
-                    addHeaders(mapOf(TEST_NAME_HEADER to it, SESSION_ID_HEADER to (ThreadStorage.sessionId() ?: "")))
+                    addHeaders(mapOf(TEST_NAME_HEADER to it.urlEncode(), SESSION_ID_HEADER to (ThreadStorage.sessionId() ?: "")))
                 }
                 ThreadStorage.startSession(it)
                 ThreadStorage.memorizeTestName(it)

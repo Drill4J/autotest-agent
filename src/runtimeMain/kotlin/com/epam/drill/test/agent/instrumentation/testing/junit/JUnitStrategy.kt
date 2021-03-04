@@ -38,7 +38,6 @@ object JUnitStrategy : AbstractTestStrategy() {
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray? {
-
         val cc: CtClass = pool.makeClass("MyList")
         cc.superclass = pool.get("org.junit.runner.notification.RunListener")
         cc.addField(CtField.make("org.junit.runner.notification.RunListener mainRunner = null;", cc))
