@@ -52,6 +52,10 @@ object Agent : JvmtiAgent {
             AddToBootstrapClassLoaderSearch("${config.drillInstallationDir}/drillRuntime.jar")
             callbackRegister()
 
+            config.browserProxyAddress?.takeIf { "/" in it }?.let {
+                mainLogger.warn { "Expected format for a browser proxy is hostname.com:1234" }
+            }
+
             SessionController._agentConfig.value = config
         } catch (ex: Throwable) {
             mainLogger.error(ex) { "Can't load the agent. Reason:" }
