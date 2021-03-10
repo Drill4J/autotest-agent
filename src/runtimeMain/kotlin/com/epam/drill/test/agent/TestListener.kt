@@ -53,6 +53,7 @@ actual object TestListener {
                 }
                 ThreadStorage.startSession(it)
                 ThreadStorage.memorizeTestName(it)
+                WebDriverThreadStorage.addCookies()
             } else if (isFinalizeTestState(it)) {
                 logger.trace { "Test: $it was repeated. Change status to UNKNOWN" }
                 addTestInfo(
@@ -107,7 +108,6 @@ actual object TestListener {
     }
 
     actual fun getData(): String {
-        logger.trace { "testInfo: ${_testInfo.value.values}" }
         val finished = runCatching {
             _testInfo.value.filterKeys { test -> isFinalizeTestState(test) }.values.map { properties ->
                 TestInfo.serializer().deserialize(PropertyDecoder(properties))

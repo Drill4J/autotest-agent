@@ -54,7 +54,7 @@ object SessionController {
             payload = AddTestsPayload(ThreadStorage.sessionId() ?: "", tests)
         )
         val result = dispatchAction(payload)
-        mainLogger.trace { "Sent tests, received status ${result.code}" }
+        mainLogger.trace { "Count of tests sent: ${tests.tests.size}, received status ${result.code}" }
     }
 
     fun startSession(

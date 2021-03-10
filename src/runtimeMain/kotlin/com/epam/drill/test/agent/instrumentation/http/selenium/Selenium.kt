@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- package com.epam.drill.test.agent.instrumentation.http.selenium
+package com.epam.drill.test.agent.instrumentation.http.selenium
 
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.*
@@ -57,8 +57,6 @@ class Selenium : Strategy() {
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray? {
-        ctClass.addField(
-            CtField.make("boolean drillIsGet = false;", ctClass).apply { modifiers = 9 })
         val startSession = ctClass.getDeclaredMethod("startSession")
 
         startSession.insertBefore(
@@ -67,15 +65,11 @@ class Selenium : Strategy() {
                     $DesiredCapabilities dCap = new $DesiredCapabilities();
                     $Proxy dProxy = new $Proxy();
                     dProxy.setHttpProxy(${ThreadStorage::class.java.name}.INSTANCE.${ThreadStorage::proxyUrl.name}());
+                    dProxy.setSslProxy(${ThreadStorage::class.java.name}.INSTANCE.${ThreadStorage::proxyUrl.name}());
+                    ${WebDriverThreadStorage::class.java.name}.INSTANCE.${WebDriverThreadStorage::set.name}(this);
                     dCap.setCapability("proxy", dProxy);
                     $1 = $1.merge(dCap);
                 }
-                if ($IF_CONDITION) {
-                    try {
-                        org.openqa.selenium.remote.Response a = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
-                        org.openqa.selenium.remote.Response b = executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
-                    } catch(Exception e) {}
-                } 
                 """
         )
         startSession.insertAfter(
@@ -89,7 +83,22 @@ class Selenium : Strategy() {
                             this.execute("installExtension", hashMapq).getValue();
                         }
                     } catch (Exception e){}
+            """
+        )
+        ctClass.addMethod(
+            CtMethod.make(
                 """
+                    public void addDrillCookies() {
+                        if ($IF_CONDITION){
+                            try {
+                                executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
+                                executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
+                            } catch(Exception e) { e.printStackTrace();}
+                        }
+                    }
+                """.trimIndent(),
+                ctClass
+            )
         )
         ctClass.getDeclaredMethod("get").insertBefore(
             """
@@ -100,13 +109,14 @@ class Selenium : Strategy() {
                         hashMap.put($TEST_NAME_CALC_LINE);
                         ${DevToolsClientThreadStorage::class.java.name}.INSTANCE.${DevToolsClientThreadStorage::addHeaders.name}(hashMap);
                     } catch(Exception e) { e.printStackTrace();}
+                    addDrillCookies();
                 }
             """.trimIndent()
         )
         ctClass.getDeclaredMethod("quit").insertBefore(
-                """
+            """
                     ${DevToolsClientThreadStorage::class.java.name}.INSTANCE.${DevToolsClientThreadStorage::getDevTool.name}().${ChromeDevTool::close.name}();
-                """.trimIndent()
+            """.trimIndent()
         )
         return ctClass.toBytecode()
     }
