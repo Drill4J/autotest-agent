@@ -42,7 +42,16 @@ object TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
             private static String getParamsString(org.testng.ITestResult result) {
-                String paramString = "";
+                Object[] parameters = result.getParameters();
+                String paramString = "(";
+                for(int i = 0; i < parameters.length; i++){ 
+                    String parameterClassName = parameters[i].getClass().getSimpleName();
+                    if(i != 0) {
+                        paramString += ",";
+                    }
+                    paramString += parameterClassName;
+                }
+                paramString += ")";
                 if(result.getParameters().length != 0){
                     paramString += "[" + result.getMethod().getParameterInvocationCount() + "]";
                 }
