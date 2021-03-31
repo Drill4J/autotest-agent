@@ -74,7 +74,7 @@ class Selenium : Strategy() {
         )
         startSession.insertAfter(
             """
-                    new ${ChromeDevTool::class.java.name}().${ChromeDevTool::connectToDevTools.name}(((java.util.Map)getCapabilities().getCapability("goog:chromeOptions")));
+                   ${connectToDevTools()}
                     try {
                         if (this instanceof org.openqa.selenium.firefox.FirefoxDriver) {
                             java.util.HashMap hashMapq = new java.util.HashMap();
@@ -100,15 +100,37 @@ class Selenium : Strategy() {
                 ctClass
             )
         )
+        ctClass.addMethod(
+            CtMethod.make(
+                """
+                    public void addDrillHeaders() {
+                        if ($IF_CONDITION && !$IS_HEADER_ADDED) {
+                            try {
+                                java.util.HashMap hashMap = new java.util.HashMap();
+                                hashMap.put($SESSION_ID_CALC_LINE);
+                                hashMap.put($TEST_NAME_CALC_LINE);
+                                ${DevToolsClientThreadStorage::class.java.name}.INSTANCE.${DevToolsClientThreadStorage::addHeaders.name}(hashMap);
+                            } catch(Exception e) { e.printStackTrace();}
+                        }
+                    }
+                """.trimIndent(),
+                ctClass
+            )
+        )
         ctClass.getDeclaredMethod("get").insertBefore(
             """
-                if ($IF_CONDITION && !$IS_HEADER_ADDED) {
-                    try {
-                        java.util.HashMap hashMap = new java.util.HashMap();
-                        hashMap.put($SESSION_ID_CALC_LINE);
-                        hashMap.put($TEST_NAME_CALC_LINE);
-                        ${DevToolsClientThreadStorage::class.java.name}.INSTANCE.${DevToolsClientThreadStorage::addHeaders.name}(hashMap);
-                    } catch(Exception e) { e.printStackTrace();}
+                addDrillHeaders();
+                addDrillCookies();
+            """.trimIndent()
+        )
+        ctClass.getMethod(
+            "execute",
+            "(Ljava/lang/String;Ljava/util/Map;)Lorg/openqa/selenium/remote/Response;"
+        ).insertBefore(
+            """
+                if($1.equals(org.openqa.selenium.remote.DriverCommand.SWITCH_TO_WINDOW)){
+                   ${connectToDevTools()}
+                    addDrillHeaders();
                     addDrillCookies();
                 }
             """.trimIndent()
@@ -121,4 +143,7 @@ class Selenium : Strategy() {
         return ctClass.toBytecode()
     }
 
+    private fun connectToDevTools() = run {
+        """ new ${ChromeDevTool::class.java.name}().${ChromeDevTool::connectToDevTools.name}(((java.util.Map)getCapabilities().getCapability("goog:chromeOptions")));"""
+    }
 }
