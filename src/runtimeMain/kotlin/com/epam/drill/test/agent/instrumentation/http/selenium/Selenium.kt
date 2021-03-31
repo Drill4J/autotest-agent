@@ -31,6 +31,7 @@ class Selenium : Strategy() {
     private val Cookie = "org.openqa.selenium.Cookie"
     private val DesiredCapabilities = "org.openqa.selenium.remote.DesiredCapabilities"
     private val Proxy = "org.openqa.selenium.Proxy"
+    private val initPage = "data:,"
 
     init {
         val extension = this::class.java.getResource("/$EXTENSION_NAME")
@@ -89,7 +90,7 @@ class Selenium : Strategy() {
             CtMethod.make(
                 """
                     public void addDrillCookies() {
-                        if ($IF_CONDITION){
+                        if ($IF_CONDITION && !$IS_HEADER_ADDED){
                             try {
                                 executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
                                 executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
@@ -119,6 +120,7 @@ class Selenium : Strategy() {
         )
         ctClass.getDeclaredMethod("get").insertBefore(
             """
+                if(getCurrentUrl().equals("$initPage")){ execute("get", $ImmutableMap.of("url", $1)); }
                 addDrillHeaders();
                 addDrillCookies();
             """.trimIndent()
