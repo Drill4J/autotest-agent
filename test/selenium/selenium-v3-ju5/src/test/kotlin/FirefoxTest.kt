@@ -16,10 +16,8 @@
 package abs
 
 import io.github.bonigarcia.wdm.*
-import org.junit.jupiter.api.*
 import org.openqa.selenium.firefox.*
 
-@Disabled
 class FirefoxTest : BasedTest(){
 
     override fun setupDriver(){

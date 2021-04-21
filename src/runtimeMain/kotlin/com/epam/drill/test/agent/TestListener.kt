@@ -83,6 +83,7 @@ actual object TestListener {
             logger.info { "Test: $test FINISHED. Result:$status" }
         }
         ThreadStorage.stopSession()
+        ThreadStorage.clear()
     }
 
 
