@@ -28,10 +28,11 @@ class Selenium : Strategy() {
     private val extensionFile: String
     private val Command = "org.openqa.selenium.remote.Command"
     private val ImmutableMap = "com.google.common.collect.ImmutableMap"
+    private val ImmutableList = "com.google.common.collect.ImmutableList"
     private val Cookie = "org.openqa.selenium.Cookie"
     private val DesiredCapabilities = "org.openqa.selenium.remote.DesiredCapabilities"
     private val Proxy = "org.openqa.selenium.Proxy"
-    private val initPage = "data:,"
+    private val initPages = """"about:blank", "data:,""""
 
     init {
         val extension = this::class.java.getResource("/$EXTENSION_NAME")
@@ -120,7 +121,8 @@ class Selenium : Strategy() {
         )
         ctClass.getDeclaredMethod("get").insertBefore(
             """
-                if(getCurrentUrl().equals("$initPage")){ execute("get", $ImmutableMap.of("url", $1)); }
+                boolean isInitPage = $ImmutableList.of($initPages).contains(getCurrentUrl());
+                if(isInitPage){ execute("get", $ImmutableMap.of("url", $1)); }
                 addDrillHeaders();
                 addDrillCookies();
             """.trimIndent()

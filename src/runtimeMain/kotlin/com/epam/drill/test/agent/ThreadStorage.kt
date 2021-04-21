@@ -29,6 +29,10 @@ actual object ThreadStorage {
         memorizeTestNameNative(value)
     }
 
+    fun clear(){
+        storage.set(null)
+    }
+
     actual external fun memorizeTestNameNative(testName: String?)
 
     actual external fun sessionId(): String?
