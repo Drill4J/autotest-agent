@@ -7,12 +7,20 @@ on:
 jobs:
   build_and_publish_for_nix:
     name: Publish for nix platforms (macOS, Linux)
-    runs-on: macOS-latest
+    runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+      - id: cache-gradle
+        uses: actions/cache@v1
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
       - name: Publish
-        run: |
-          gradle --no-daemon -si publish
+        uses: eskatos/gradle-command-action@v1
+        with:
+          arguments: --no-daemon -si publish
         env:
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
           BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
@@ -22,10 +30,18 @@ jobs:
     name: Publish for Windows platform (Windows platform)
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+      - id: cache-gradle
+        uses: actions/cache@v1
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
       - name: Publish
-        run: |
-          gradle -si generateNativeClasses publishMingwX64ZipPublicationToMavenRepository
+        uses: eskatos/gradle-command-action@v1
+        with:
+          arguments: -si generateNativeClasses publishMingwX64ZipPublicationToMavenRepository
         env:
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
           BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
