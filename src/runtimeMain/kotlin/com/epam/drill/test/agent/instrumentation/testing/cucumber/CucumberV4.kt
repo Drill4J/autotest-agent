@@ -28,7 +28,7 @@ object CucumberV4 : AbstractTestStrategy() {
     private const val testPackage = "cucumber.api.event"
 
     override val id: String
-        get() = "cucumber-v4"
+        get() = "cucumber"
 
     override fun permit(ctClass: CtClass): Boolean {
         return ctClass.name == /*4.x.x*/"cucumber.runner.TestStep"
@@ -112,9 +112,6 @@ object CucumberV4 : AbstractTestStrategy() {
         /**
          *      {@link cucumber.runner.PickleStepDefinitionMatch} is responsible for running tests.
          *      Using this class, we can get meta information about the test, for example, the class in which test located.
-         *      Since in the implementation of cucumber 4 we can't get the full path to the class ,
-         *      we can't support the use of Before and After annotations
-         *      See {@link cucumber.runner.HookDefinitionMatch} specifically the implementation of the method {@link cucumber.runner.HookDefinitionMatch#getCodeLocation()}
          */
         ctClass.getDeclaredMethod("run").insertBefore(
             """
@@ -132,6 +129,8 @@ object CucumberV4 : AbstractTestStrategy() {
 
     private const val getTestPackages = """
          String temp = testLocation.split(" ")[0];
+         int bracketIndex = temp.lastIndexOf("(");
+         temp = temp.substring(0, bracketIndex);
          int lastIndex = temp.lastIndexOf(".");
          String testPackage = temp.substring(0, lastIndex);
     """
