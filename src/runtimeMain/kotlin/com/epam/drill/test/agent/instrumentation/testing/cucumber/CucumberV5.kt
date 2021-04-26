@@ -28,7 +28,7 @@ object CucumberV5 : AbstractTestStrategy() {
     private const val statusPackage = "io.cucumber.plugin.event.Status"
 
     override val id: String
-        get() = "cucumber-v5"
+        get() = "cucumber"
 
     override fun permit(ctClass: CtClass): Boolean {
         return ctClass.name == /*5.x.x*/"io.cucumber.core.runner.TestStep"
@@ -86,7 +86,7 @@ object CucumberV5 : AbstractTestStrategy() {
                                 public void send(io.cucumber.plugin.event.Event event) {
                                   mainEventBus.send(event);
                                   if (event instanceof $testPackage.TestStepStarted) {
-                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("[$engineSegment]/[class:" + testPackage + "]/[method:"+(($testPackage.TestStepStarted) event).getTestCase().getName()+"]");    
+                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("[$engineSegment]/[class:" + testPackage + "]/[method:"+(($testPackage.TestStepStarted) event).getTestCase().getName() + "]");    
                                   } else if(event instanceof $testPackage.TestStepFinished) {
                                     $testPackage.TestStepFinished $finishedTest = ($testPackage.TestStepFinished) event;
                                     $statusPackage status = $getTestStatus
@@ -114,7 +114,6 @@ object CucumberV5 : AbstractTestStrategy() {
                 """
                                 public void registerHandlerFor(Class aClass, io.cucumber.plugin.event.EventHandler eventHandler) {
                                   mainEventBus.registerHandlerFor(aClass, eventHandler);
-
                                 }
                             """.trimIndent(),
                 cc
@@ -126,7 +125,6 @@ object CucumberV5 : AbstractTestStrategy() {
                 """
                                 public void removeHandlerFor(Class aClass, io.cucumber.plugin.event.EventHandler eventHandler) { 
                                   mainEventBus.removeHandlerFor(aClass, eventHandler);
-
                                 }
                             """.trimIndent(),
                 cc
@@ -137,22 +135,17 @@ object CucumberV5 : AbstractTestStrategy() {
         /**
          *      {@link cucumber.runner.PickleStepDefinitionMatch} is responsible for running tests.
          *      Using this class, we can get meta information about the test, for example, the class in which test located.
-         *      {@link io.cucumber.core.runner.HookDefinitionMatch} responsible for running the methods that occur
-         *      before and after running the tests .
          */
         run.insertBefore(
             """
-                String testPackage = "undefined";
                 try {
                     if (stepDefinitionMatch instanceof io.cucumber.core.runner.PickleStepDefinitionMatch) {
                         String testLocation = ((io.cucumber.core.runner.PickleStepDefinitionMatch) stepDefinitionMatch).getStepDefinition().getLocation();
                         $getTestPackages
-                    } else if (stepDefinitionMatch instanceof io.cucumber.core.runner.HookDefinitionMatch) {
-                        String testLocation =  ((io.cucumber.core.runner.HookDefinitionMatch) stepDefinitionMatch).getCodeLocation();
-                        $getTestPackages
+                        $2 = new $SpockBus($2, testPackage);
                     }
                 } catch (Throwable ignored) {}
-                $2 = new $SpockBus($2, testPackage);
+
              """.trimIndent()
         )
         return ctClass.toBytecode()
@@ -160,8 +153,10 @@ object CucumberV5 : AbstractTestStrategy() {
 
     private const val getTestPackages = """
          String temp = testLocation.split(" ")[0];
+         int bracketIndex = temp.lastIndexOf("(");
+         temp = temp.substring(0, bracketIndex);
          int lastIndex = temp.lastIndexOf(".");
-         testPackage = temp.substring(0, lastIndex);
+         String testPackage = temp.substring(0, lastIndex);
     """
 
     private const val getTestStatus = """

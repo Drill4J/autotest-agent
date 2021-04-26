@@ -5,7 +5,6 @@ plugins {
 }
 val kniVersion: String by rootProject
 
-apply(from = "https://raw.githubusercontent.com/Drill4J/build-scripts/master/git-version.gradle.kts")
 
 repositories {
     mavenCentral()
@@ -26,22 +25,6 @@ val agentShadow by tasks.registering(com.github.jengelman.gradle.plugins.shadow.
     relocate("org.slf4j", "drill.org.slf4j")
 }
 publishing {
-    repositories {
-        maven {
-
-            url = uri("http://oss.jfrog.org/oss-release-local")
-            credentials {
-                username =
-                    if (project.hasProperty("bintrayUser"))
-                        project.property("bintrayUser").toString()
-                    else System.getenv("BINTRAY_USER")
-                password =
-                    if (project.hasProperty("bintrayApiKey"))
-                        project.property("bintrayApiKey").toString()
-                    else System.getenv("BINTRAY_API_KEY")
-            }
-        }
-    }
     publications{
         create<MavenPublication>("maven") {
             artifact(agentShadow.get())

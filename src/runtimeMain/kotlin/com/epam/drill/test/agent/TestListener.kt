@@ -62,6 +62,7 @@ actual object TestListener {
                     TestInfo::result.name to TestResult.UNKNOWN,
                     TestInfo::startedAt.name to System.currentTimeMillis()
                 )
+                ThreadStorage.memorizeTestName(it)
             }
         }
     }

@@ -13,7 +13,12 @@ plugins {
     `maven-publish`
 }
 
-apply(from = "https://raw.githubusercontent.com/Drill4J/build-scripts/master/git-version.gradle.kts")
+val scriptUrl: String by extra
+
+allprojects {
+    apply(from = rootProject.uri("$scriptUrl/git-version.gradle.kts"))
+    apply(from = rootProject.uri("$scriptUrl/maven-repo.gradle.kts"))
+}
 
 repositories {
     mavenLocal()
@@ -39,7 +44,6 @@ val collectionImmutableVersion: String by rootProject
 
 val libName = "autoTestAgent"
 kotlin {
-
     targets {
         crossCompilation {
             common {
@@ -173,22 +177,6 @@ distributions {
 }
 
 publishing {
-    repositories {
-        maven {
-
-            url = uri("http://oss.jfrog.org/oss-release-local")
-            credentials {
-                username =
-                    if (project.hasProperty("bintrayUser"))
-                        project.property("bintrayUser").toString()
-                    else System.getenv("BINTRAY_USER")
-                password =
-                    if (project.hasProperty("bintrayApiKey"))
-                        project.property("bintrayApiKey").toString()
-                    else System.getenv("BINTRAY_API_KEY")
-            }
-        }
-    }
     publications {
         nativeTargets.filter {
             HostManager().isEnabled(it.konanTarget)
