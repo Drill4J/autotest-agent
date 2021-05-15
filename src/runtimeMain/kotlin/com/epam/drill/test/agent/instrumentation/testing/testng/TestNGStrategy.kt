@@ -25,6 +25,8 @@ import java.security.ProtectionDomain
 @Suppress("unused")
 object TestNGStrategy : AbstractTestStrategy() {
 
+    const val engineSegment = "[engine:testng]"
+
     override val id: String
         get() = "testng"
 
@@ -60,26 +62,27 @@ object TestNGStrategy : AbstractTestStrategy() {
         """.trimIndent(), ctClass
             )
         )
+
         sequenceOf(
             ctClass.getDeclaredMethod("onTestSuccess") to "PASSED",
             ctClass.getDeclaredMethod("onTestFailure") to "FAILED"
         ).forEach { (method, status) ->
             method.insertAfter(
                 """
-                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("[engine:testng]/[class:"+$1.getInstanceName()+"]/[method:"+$1.getName()+getParamsString($1)+"]", "$status");
+                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment/[class:"+$1.getInstanceName()+"]/[method:"+$1.getName()+getParamsString($1)+"]", "$status");
             """.trimIndent()
             )
         }
 
         ctClass.getDeclaredMethod("onTestSkipped").insertAfter(
             """
-                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("[engine:testng]/[class:"+$1.getInstanceName()+"]/[method:"+$1.getName()+getParamsString($1)+"]");
+                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment/[class:"+$1.getInstanceName()+"]/[method:"+$1.getName()+getParamsString($1)+"]");
             """.trimIndent()
         )
 
         ctClass.getDeclaredMethod("onTestStart").insertAfter(
             """
-            ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("[engine:testng]/[class:"+$1.getInstanceName()+"]/[method:"+$1.getName()+getParamsString($1)+"]");
+            ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment/[class:"+$1.getInstanceName()+"]/[method:"+$1.getName()+getParamsString($1)+"]");
         """.trimIndent()
         )
         return ctClass.toBytecode()

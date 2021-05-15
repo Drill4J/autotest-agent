@@ -13,10 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import pack.HttpHeadersTest
+import com.epam.drill.*
+import org.junit.*
+import pack.*
+import java.util.*
 import kotlin.test.Ignore
 import kotlin.test.Test
 
+@Suppress("NonAsciiCharacters", "RemoveRedundantBackticks")
 class Test {
 
     @Test
@@ -29,14 +33,31 @@ class Test {
     fun `method with backtick names`() {
         HttpHeadersTest.test(::`method with backtick names`.name)
     }
+
     @Test
     fun `Кириллик леттерс`() {
         HttpHeadersTest.test(::`Кириллик леттерс`.name)
     }
 
-    @Suppress("RemoveRedundantBackticks")
     @Test
     fun `shortBacktick`() {
         HttpHeadersTest.test(::`shortBacktick`.name)
+    }
+
+    companion object {
+
+        private const val sessionId = "testSession"
+
+        @BeforeClass
+        @JvmStatic
+        fun startSession() {
+            SessionProvider.startSession(sessionId)
+        }
+
+        @AfterClass
+        @JvmStatic
+        fun stopSession() {
+            SessionProvider.stopSession(sessionId)
+        }
     }
 }

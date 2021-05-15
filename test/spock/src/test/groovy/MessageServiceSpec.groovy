@@ -13,14 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
+import com.epam.drill.SessionProvider
+import com.epam.drill.plugins.test2code.api.TestInfo
+import com.epam.drill.plugins.test2code.api.TestResult
+import com.epam.drill.test.agent.instrumentation.testing.junit.JUnitStrategy
+import com.epam.drill.test.common.AssertKt
+import com.epam.drill.test.common.ServerDate
+import com.epam.drill.test.common.TestData
+import com.epam.drill.test.common.UtilKt
 import org.junit.experimental.categories.Category
+import spock.lang.Shared
 import spock.lang.Specification
-import com.epam.drill.test.common.*
 
 @Category(UnitTest.class)
 class MessageServiceSpec extends Specification {
 
+    @Shared
+    private Set<TestData> actualTests = new HashSet<>();
+
     def 'Get message'() {
+        actualTests.add new TestData(getTestName(specificationContext.currentIteration.name), TestResult.PASSED)
         URLConnection con = (URLConnection) new URL("http://postman-echo.com/headers").openConnection()
         def bytes = con.inputStream.bytes
         expect: 'Should return the correct message'
@@ -29,15 +43,35 @@ class MessageServiceSpec extends Specification {
     }
 
     def "numbers to the power of two"(int a, int b, int c) {
+        actualTests.add new TestData(getTestName(specificationContext.currentIteration.name), TestResult.PASSED)
         URLConnection con = (URLConnection) new URL("http://postman-echo.com/headers").openConnection()
         def bytes = con.inputStream.bytes
         expect:
         new String(bytes).contains(UtilKt.urlEncode("numbers to the power of two"))
-
         where:
         a | b | c
         1 | 2 | 1
         2 | 2 | 4
         3 | 2 | 9
+    }
+
+
+    @Shared
+    private String sessionId = UUID.randomUUID().toString()
+
+    def setupSpec() {
+        SessionProvider.INSTANCE.startSession(sessionId, "AUTO", false, "", false)
+    }
+
+    def cleanupSpec() {
+        SessionProvider.INSTANCE.stopSession(sessionId)
+        ServerDate serverDate = UtilKt.getAdminData()
+        List<TestInfo> testFromAdmin = serverDate.getTests().get(sessionId)
+        AssertKt.shouldContainsAllTests(testFromAdmin, actualTests)
+        AssertKt.assertTestTime(testFromAdmin)
+    }
+
+    String getTestName(String name) {
+        return JUnitStrategy.engineSegment + "/[class:" + MessageServiceSpec.class.getName() + "]/[method:" + name + "()]"
     }
 }

@@ -15,16 +15,21 @@
  */
 package com.automatedtest.sample.test;
 
-import io.cucumber.core.api.Scenario;
+import com.epam.drill.*;
+import com.epam.drill.plugins.test2code.api.*;
+import com.epam.drill.test.agent.instrumentation.testing.cucumber.CucumberV4;
+import com.epam.drill.test.common.*;
+import io.cucumber.core.api.*;
 import io.cucumber.java.*;
 import io.cucumber.java.en.*;
-import com.epam.drill.test.common.*;
 
+import java.util.*;
 
 
 public class TestSteps {
 
     private final Test test;
+    private final Set<TestData> actualTests = new HashSet<>();
     private String actualTestName;
 
     public TestSteps() {
@@ -44,5 +49,29 @@ public class TestSteps {
     @Before
     public void saveScenarioName(Scenario scenario) {
         actualTestName = UtilKt.urlEncode(scenario.getName());
+        actualTests.add(new TestData(getTestName(scenario.getName()), TestResult.PASSED));
+    }
+
+    private final String sessionId = UUID.randomUUID().toString();
+
+
+    @Before
+    public void startSession() {
+        SessionProvider.INSTANCE.startSession(sessionId, "AUTO", false, "", false);
+    }
+
+    @After
+    public void checkTests() {
+        SessionProvider.INSTANCE.stopSession(sessionId);
+        final ServerDate serverDate = UtilKt.getAdminData();
+        final List<TestInfo> testFromAdmin = serverDate.getTests().get(sessionId);
+        AssertKt.shouldContainsAllTests(testFromAdmin, actualTests);
+        AssertKt.assertTestTime(testFromAdmin);
+    }
+
+    //TODO Will be removed in next commit
+    private String getTestName(String name) {
+        return CucumberV4.engineSegment + "/[class:" + TestSteps.class.getName() + "]/[method:" + name + "]";
     }
 }
+

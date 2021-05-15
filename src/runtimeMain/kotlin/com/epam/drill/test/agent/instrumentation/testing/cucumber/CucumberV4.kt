@@ -22,7 +22,7 @@ import java.security.ProtectionDomain
 
 @Suppress("unused")
 object CucumberV4 : AbstractTestStrategy() {
-    private const val engineSegment = "engine:cucumber4"
+    const val engineSegment = "[engine:cucumber4]"
     private const val finishedTest = "finishedTest"
     private const val statusPackage = "cucumber.api.Result.Type"
     private const val testPackage = "cucumber.api.event"
@@ -84,11 +84,11 @@ object CucumberV4 : AbstractTestStrategy() {
                                 public void send(cucumber.api.event.Event event) {
                                   mainEventBus.send(event);   
                                   if (event instanceof $testPackage.TestStepStarted) {
-                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("[${engineSegment}]/[class:" + testPackage + "]/[method:"+(($testPackage.TestStepStarted) event).getTestCase().getName() + "]");    
+                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("${engineSegment}/[class:" + testPackage + "]/[method:"+(($testPackage.TestStepStarted) event).getTestCase().getName() + "]");    
                                   } else if (event instanceof $testPackage.TestStepFinished) {
                                     $testPackage.TestStepFinished $finishedTest = ($testPackage.TestStepFinished) event;
                                     $statusPackage status = $getTestStatus
-                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("[${engineSegment}]/[class:" + testPackage + "]/[method:" + $finishedTest.getTestCase().getName() + "]", status.name());                                    
+                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("${engineSegment}/[class:" + testPackage + "]/[method:" + $finishedTest.getTestCase().getName() + "]", status.name());                                    
                                   }
                                 }
                             """.trimIndent(),

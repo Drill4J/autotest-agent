@@ -13,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package abs
+package com.epam.drill.test.common
 
-import io.github.bonigarcia.wdm.*
-import org.openqa.selenium.firefox.*
+import com.epam.drill.plugins.test2code.api.*
+import kotlinx.serialization.*
 
-class FirefoxTest : BasedTest(){
+@Serializable
+data class ServerDate(
+    val startedSessions: List<String>,
+    val finishedSessions: List<String>,
+    val tests: Map<String, List<TestInfo>>,
+)
 
-    override fun setupDriver(){
-        WebDriverManager.firefoxdriver().setup()
-        val firefoxProfile = FirefoxProfile()
-        val firefoxOptions = FirefoxOptions()
-        firefoxOptions.setHeadless(true)
-        firefoxOptions.profile = firefoxProfile
-        driver = FirefoxDriver(firefoxOptions)
-    }
-
-}
+data class TestData(
+    val name: String,
+    val testResult: TestResult,
+)

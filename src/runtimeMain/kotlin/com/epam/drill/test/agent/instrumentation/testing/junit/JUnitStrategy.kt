@@ -23,7 +23,7 @@ import java.security.ProtectionDomain
 
 @Suppress("unused")
 object JUnitStrategy : AbstractTestStrategy() {
-    private const val engineSegment = """[engine:junit]"""
+    const val engineSegment = "[engine:junit]"
 
     override val id: String
         get() = "junit"
@@ -160,7 +160,7 @@ ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}
     }
 
     private fun methodSegment(descriptionParamName: String) =
-        """[method:"+$descriptionParamName.getMethodName()+"]"""
+        """[method:"+$descriptionParamName.getMethodName()+"()]"""
 
     private fun classSegment(descriptionParamName: String) = """[class:"+$descriptionParamName.getClassName()+"]"""
 }
