@@ -13,20 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package abs
+package com.epam.drill.test.common
 
-import io.github.bonigarcia.wdm.*
-import org.openqa.selenium.firefox.*
+import com.epam.drill.plugins.test2code.api.*
+import kotlin.test.*
 
-class FirefoxTest : BasedTest(){
-
-    override fun setupDriver(){
-        WebDriverManager.firefoxdriver().setup()
-        val firefoxProfile = FirefoxProfile()
-        val firefoxOptions = FirefoxOptions()
-        firefoxOptions.setHeadless(true)
-        firefoxOptions.profile = firefoxProfile
-        driver = FirefoxDriver(firefoxOptions)
+fun List<TestInfo>.assertTestTime() = forEach {
+    when (it.result) {
+        TestResult.SKIPPED -> assertTrue(it.finishedAt == it.startedAt && it.startedAt == 0L)
+        else -> assertTrue(it.finishedAt >= it.startedAt && it.finishedAt > 0)
     }
+}
 
+infix fun List<TestInfo>.shouldContainsAllTests(expected: Collection<TestData>) {
+    val actual = map { it.toTestData() }
+    assertEquals(expected.size, actual.size)
+    assertTrue(expected.containsAll(actual))
 }

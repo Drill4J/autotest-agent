@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import pack.HttpHeadersTest
-import kotlin.test.Ignore
+import com.epam.drill.*
+import org.junit.jupiter.api.*
+import pack.*
+import kotlin.test.*
 import kotlin.test.Test
 
 class TestJU5 {
@@ -34,5 +36,22 @@ class TestJU5 {
     @Ignore
     fun `shortBacktick`() {
         HttpHeadersTest.test(::`shortBacktick`.name)
+    }
+
+    companion object {
+
+        private const val sessionId = "testSession"
+
+        @BeforeAll
+        @JvmStatic
+        fun startSession() {
+            SessionProvider.startSession(sessionId)
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun stopSession() {
+            SessionProvider.stopSession(sessionId)
+        }
     }
 }

@@ -15,6 +15,50 @@
  */
 package com.epam.drill.test.common
 
+import com.epam.drill.plugins.test2code.api.*
+import kotlinx.serialization.json.*
+import org.apache.http.client.methods.*
+import org.apache.http.impl.client.*
+import java.lang.reflect.*
 import java.net.*
+import kotlin.reflect.*
+import kotlin.reflect.jvm.*
 
 fun String.urlEncode(): String = URLEncoder.encode(this, Charsets.UTF_8.name())
+
+val json = Json {
+    encodeDefaults = true
+}
+
+fun parseAction(
+    rawAction: String,
+): Action = json.decodeFromString(Action.serializer(), rawAction)
+
+fun ServerDate.encode() = json.encodeToString(ServerDate.serializer(), this)
+
+fun String.decodeServerDate() = json.decodeFromString(ServerDate.serializer(), this)
+
+fun getAdminData() = run {
+    val host = System.getenv("host")
+    val port = System.getenv("port")
+    HttpClients.createDefault().execute(
+        HttpGet("http://$host:$port/status")
+    ).entity.content.reader().readText().decodeServerDate()
+}
+
+fun Method.toTestData(
+    engine: String,
+    testResult: TestResult,
+    supportParam: Boolean = false,
+): TestData = TestData(name = "$engine/[class:${declaringClass.name}]/[method:$name(" +
+        "${if (supportParam) parameters.joinToString(",") else ""})]",
+    testResult = testResult)
+
+fun KFunction<*>.toTestData(
+    engine: String,
+    testResult: TestResult,
+    supportParam: Boolean = false,
+): TestData = javaMethod!!.toTestData(engine, testResult, supportParam)
+
+
+fun TestInfo.toTestData() = TestData(name, result)

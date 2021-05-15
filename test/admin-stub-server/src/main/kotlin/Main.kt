@@ -13,20 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package abs
 
-import io.github.bonigarcia.wdm.*
-import org.openqa.selenium.firefox.*
-
-class FirefoxTest : BasedTest(){
-
-    override fun setupDriver(){
-        WebDriverManager.firefoxdriver().setup()
-        val firefoxProfile = FirefoxProfile()
-        val firefoxOptions = FirefoxOptions()
-        firefoxOptions.setHeadless(true)
-        firefoxOptions.profile = firefoxProfile
-        driver = FirefoxDriver(firefoxOptions)
-    }
-
+fun main(args: Array<String>) {
+    AdminStub(args[0], args[1]).startServer()
 }
+

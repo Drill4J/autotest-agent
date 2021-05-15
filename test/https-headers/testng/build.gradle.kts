@@ -1,5 +1,3 @@
-
-
 dependencies {
     testImplementation(project(":test:https-headers"))
     testImplementation(kotlin("test"))
@@ -7,8 +5,5 @@ dependencies {
 }
 
 tasks.named<Test>("test") {
-    useTestNG {
-        parallel = "methods"
-        threadCount = 2
-    }
+    useTestNG()
 }
