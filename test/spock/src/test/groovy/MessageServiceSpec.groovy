@@ -13,9 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
+import com.epam.drill.SessionProvider
+import com.epam.drill.plugins.test2code.api.TestInfo
+import com.epam.drill.plugins.test2code.api.TestResult
+import com.epam.drill.test.common.AssertKt
+import com.epam.drill.test.common.ServerDate
+import com.epam.drill.test.common.TestData
+import com.epam.drill.test.common.UtilKt
 import org.junit.experimental.categories.Category
+import spock.lang.Shared
 import spock.lang.Specification
-import com.epam.drill.test.common.*
+
+import java.util.stream.Collectors
 
 @Category(UnitTest.class)
 class MessageServiceSpec extends Specification {
@@ -39,5 +50,30 @@ class MessageServiceSpec extends Specification {
         1 | 2 | 1
         2 | 2 | 4
         3 | 2 | 9
+    }
+
+
+    @Shared
+    private String sessionId = UUID.randomUUID().toString()
+
+    @Shared
+    private String engine = "junit"
+
+    def setupSpec() {
+        SessionProvider.INSTANCE.startSession(sessionId, "AUTO", false, "", false)
+    }
+
+    def cleanupSpec() {
+        MessageServiceSpec.class
+        SessionProvider.INSTANCE.stopSession(sessionId)
+        List<TestData> actualTests = ["Get message", "numbers to the power of two"].stream().map { new TestData(getTestName(it), TestResult.PASSED) }.collect(Collectors.toList())
+        ServerDate serverDate = UtilKt.getAdminData()
+        List<TestInfo> testFromAdmin = serverDate.getTests().get(sessionId)
+        AssertKt.shouldContainsAllTests(testFromAdmin, actualTests)
+        AssertKt.assertTestTime(testFromAdmin)
+    }
+
+    String getTestName(String name) {
+        return "[engine:" + engine + "]/[class:" + MessageServiceSpec.class.getName() + "]/[method:" + name + "()]"
     }
 }

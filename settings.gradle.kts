@@ -13,10 +13,13 @@ include(":test:rest-assure-ju5")
 include(":test:spock")
 include(":test:cucumber:cucumber-v4")
 include(":test:cucumber:cucumber-v5")
+
+include(":test:admin-stub-server")
 pluginManagement {
     repositories {
         mavenLocal()
         maven(url = "http://oss.jfrog.org/oss-release-local")
+        maven(url = "https://drill4j.jfrog.io/artifactory/drill")
         gradlePluginPortal()
     }
     val kotlinVersion: String by extra

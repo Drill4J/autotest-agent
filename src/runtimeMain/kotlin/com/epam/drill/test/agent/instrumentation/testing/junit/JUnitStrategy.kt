@@ -160,7 +160,7 @@ ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}
     }
 
     private fun methodSegment(descriptionParamName: String) =
-        """[method:"+$descriptionParamName.getMethodName()+"]"""
+        """[method:"+$descriptionParamName.getMethodName()+"()]"""
 
     private fun classSegment(descriptionParamName: String) = """[class:"+$descriptionParamName.getClassName()+"]"""
 }

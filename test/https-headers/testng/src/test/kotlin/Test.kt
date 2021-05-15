@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import pack.HttpHeadersTest
+import com.epam.drill.*
+import org.testng.annotations.*
+import pack.*
+import kotlin.test.*
 import kotlin.test.Test
 
 class TestTestNG {
@@ -32,5 +35,22 @@ class TestTestNG {
     @Test
     fun `shortBacktick`() {
         HttpHeadersTest.test(::`shortBacktick`.name)
+    }
+
+    companion object {
+
+        private const val sessionId = "testSession"
+
+        @BeforeClass
+        @JvmStatic
+        fun startSession() {
+            SessionProvider.startSession(sessionId)
+        }
+
+        @AfterClass
+        @JvmStatic
+        fun stopSession() {
+            SessionProvider.stopSession(sessionId)
+        }
     }
 }

@@ -29,7 +29,6 @@ class Junit5Selenium4Test {
         private var httpServer: HttpServer = HttpServer.create(InetSocketAddress(0), 0)
         var port: Int
         val testNames = mutableSetOf<String>()
-
         init {
             httpServer.createContext("/1") { t ->
                 val response = "OK"
