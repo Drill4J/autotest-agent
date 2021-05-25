@@ -38,7 +38,7 @@ object CucumberV4 : AbstractTestStrategy() {
         ctClass: CtClass,
         pool: ClassPool,
         classLoader: ClassLoader?,
-        protectionDomain: ProtectionDomain?
+        protectionDomain: ProtectionDomain?,
     ): ByteArray? {
         val SpockBus = "SpockBus"
         val cc: CtClass = pool.makeClass(SpockBus)
@@ -84,11 +84,11 @@ object CucumberV4 : AbstractTestStrategy() {
                                 public void send(cucumber.api.event.Event event) {
                                   mainEventBus.send(event);   
                                   if (event instanceof $testPackage.TestStepStarted) {
-                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("[${engineSegment}]/[class:" + testPackage + "]/[method:"+(($testPackage.TestStepStarted) event).getTestCase().getName() + "]");    
+                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("[${engineSegment}]/[feature:" + testPackage + "]/[scenario:"+(($testPackage.TestStepStarted) event).getTestCase().getName() + "]");    
                                   } else if (event instanceof $testPackage.TestStepFinished) {
                                     $testPackage.TestStepFinished $finishedTest = ($testPackage.TestStepFinished) event;
                                     $statusPackage status = $getTestStatus
-                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("[${engineSegment}]/[class:" + testPackage + "]/[method:" + $finishedTest.getTestCase().getName() + "]", status.name());                                    
+                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("[${engineSegment}]/[feature:" + testPackage + "]/[scenario:" + $finishedTest.getTestCase().getName() + "]", status.name());                                    
                                   }
                                 }
                             """.trimIndent(),
@@ -110,16 +110,19 @@ object CucumberV4 : AbstractTestStrategy() {
         cc.toClass(classLoader, protectionDomain)
 
         /**
-         *      {@link cucumber.runner.PickleStepDefinitionMatch} is responsible for running tests.
-         *      Using this class, we can get meta information about the test, for example, the class in which test located.
+         *      {@link cucumber.runner.PickleStepDefinitionMatch} is represent a step of scenario.
+         *      Check for PickleStepDefinitionMatch is needed to determine what we are currently performing,
+         *      a step from a scenario or before or after action.
+         *      Instead of the class name, we use the path to the feature file.
+         *      If the file is in the same repository as the tests, then we take the relative path,
+         *      otherwise we take the absolute path without specifying the disk name
          */
         ctClass.getDeclaredMethod("run").insertBefore(
             """
                 try {
                     if (stepDefinitionMatch instanceof cucumber.runner.PickleStepDefinitionMatch) {
-                        String testLocation = ((cucumber.runner.PickleStepDefinitionMatch) stepDefinitionMatch).getStepDefinition().getLocation(true);
-                        $getTestPackages
-                        $2 = new SpockBus($2, testPackage);
+                        $getFeaturePath
+                        $2 = new SpockBus($2, featurePath);
                     }
                 } catch (Throwable ignored) {}
             """.trimIndent()
@@ -127,14 +130,15 @@ object CucumberV4 : AbstractTestStrategy() {
         return ctClass.toBytecode()
     }
 
-    private const val getTestPackages = """
-         String temp = testLocation.split(" ")[0];
-         int bracketIndex = temp.lastIndexOf("(");
-         temp = temp.substring(0, bracketIndex);
-         int lastIndex = temp.lastIndexOf(".");
-         String testPackage = temp.substring(0, lastIndex);
-    """
 
+    private const val getFeaturePath = """
+         String[] paths = new java.io.File(".").toURI().resolve($1.getUri()).toString().split(":");
+         int index = paths.length - 1;
+         String featurePath = paths[index];
+         if (featurePath.startsWith("/")) {
+            featurePath = featurePath.replaceFirst("/", "");
+         }
+    """
     private const val getTestStatus = """
         $finishedTest.result.getStatus();
         if(status != $statusPackage.PASSED && status != $statusPackage.SKIPPED && status != $statusPackage.FAILED ) {

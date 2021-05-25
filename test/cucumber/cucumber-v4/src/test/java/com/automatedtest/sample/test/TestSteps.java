@@ -72,7 +72,7 @@ public class TestSteps {
     }
 
     private String getTestName(String name) {
-        return "[engine:" + engine + "]/[class:" + TestSteps.class.getName() + "]/[method:" + name + "]";
+        return "[engine:" + engine + "]/[feature:src/test/resources/com/automatedtest/sample/test_name.feature]/[scenario:" + name + "]";
     }
 }
 
