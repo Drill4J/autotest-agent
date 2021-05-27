@@ -27,6 +27,7 @@ import org.junit.experimental.categories.Category
 import spock.lang.Shared
 import spock.lang.Specification
 
+
 @Category(UnitTest.class)
 class MessageServiceSpec extends Specification {
 

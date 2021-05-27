@@ -49,7 +49,12 @@ public class TestSteps {
     @Before
     public void saveScenarioName(Scenario scenario) {
         actualTestName = UtilKt.urlEncode(scenario.getName());
-        actualTests.add(new TestData(getTestName(scenario.getName()), TestResult.PASSED));
+        actualTests.add(UtilKt.cucumberTestToTestData(
+                scenario.getName(),
+                CucumberV4.engineSegment,
+                "src/test/resources/com/automatedtest/sample/test_name.feature",
+                TestResult.PASSED)
+        );
     }
 
     private final String sessionId = UUID.randomUUID().toString();
@@ -69,9 +74,5 @@ public class TestSteps {
         AssertKt.assertTestTime(testFromAdmin);
     }
 
-    //TODO Will be removed in next commit
-    private String getTestName(String name) {
-        return CucumberV4.engineSegment + "/[class:" + TestSteps.class.getName() + "]/[method:" + name + "]";
-    }
 }
 
