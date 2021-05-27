@@ -137,7 +137,7 @@ object CucumberV4 : AbstractTestStrategy() {
 
     private const val getTestStatus = """
         $finishedTest.result.getStatus();
-        if(status != $statusPackage.PASSED && status != $statusPackage.SKIPPED && status != $statusPackage.FAILED ) {
+        if (status != $statusPackage.PASSED) {
             status = $statusPackage.FAILED;
         }
     """
