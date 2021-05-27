@@ -38,7 +38,7 @@ object CucumberV5 : AbstractTestStrategy() {
         ctClass: CtClass,
         pool: ClassPool,
         classLoader: ClassLoader?,
-        protectionDomain: ProtectionDomain?
+        protectionDomain: ProtectionDomain?,
     ): ByteArray? {
 
         val run = ctClass.getDeclaredMethod("run")
@@ -46,15 +46,15 @@ object CucumberV5 : AbstractTestStrategy() {
         val cc: CtClass = pool.makeClass(SpockBus)
         cc.interfaces = arrayOf(pool.get("io.cucumber.core.eventbus.EventBus"))
         cc.addField(CtField.make("io.cucumber.core.eventbus.EventBus mainEventBus = null;", cc))
-        cc.addField(CtField.make("String testPackage = \"\";", cc))
+        cc.addField(CtField.make("String featurePath = \"\";", cc))
         cc.addConstructor(
             CtNewConstructor.make(
                 """
-                                public SpockBus(io.cucumber.core.eventbus.EventBus mainEventBus, String testPackage) {
-                                   this.mainEventBus = mainEventBus;
-                                   this.testPackage = testPackage;
-                                }
-                            """.trimMargin(),
+                    public SpockBus(io.cucumber.core.eventbus.EventBus mainEventBus, String featurePath) {
+                        this.mainEventBus = mainEventBus;
+                        this.featurePath= featurePath;
+                    }
+                """.trimMargin(),
                 cc
             )
         )
@@ -62,49 +62,20 @@ object CucumberV5 : AbstractTestStrategy() {
         cc.addMethod(
             CtMethod.make(
                 """
-                                public java.time.Instant getInstant() {
-                                  return mainEventBus.getInstant();
-                                }
-                            """.trimIndent(),
+                    public java.time.Instant getInstant() {
+                        return mainEventBus.getInstant();
+                    }
+                """.trimIndent(),
                 cc
             )
         )
         cc.addMethod(
             CtMethod.make(
                 """
-                                public java.util.UUID generateId() {
-                                  return mainEventBus.generateId();
-                                }
-                            """.trimIndent(),
-                cc
-            )
-        )
-
-        cc.addMethod(
-            CtMethod.make(
-                """
-                                public void send(io.cucumber.plugin.event.Event event) {
-                                  mainEventBus.send(event);
-                                  if (event instanceof $testPackage.TestStepStarted) {
-                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment/[class:" + testPackage + "]/[method:"+(($testPackage.TestStepStarted) event).getTestCase().getName() + "]");    
-                                  } else if(event instanceof $testPackage.TestStepFinished) {
-                                    $testPackage.TestStepFinished $finishedTest = ($testPackage.TestStepFinished) event;
-                                    $statusPackage status = $getTestStatus
-                                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment/[class:" + testPackage + "]/[method:" + $finishedTest.getTestCase().getName() + "]", status.name());                                    
-                                  }
-                                }
-                            """.trimIndent(),
-                cc
-            )
-        )
-        cc.addMethod(
-            CtMethod.make(
-                """
-                                public void sendAll(Iterable queue) {
-                                  mainEventBus.sendAll(queue);
-
-                                }
-                            """.trimIndent(),
+                    public java.util.UUID generateId() {
+                        return mainEventBus.generateId();
+                    }
+                """.trimIndent(),
                 cc
             )
         )
@@ -112,10 +83,29 @@ object CucumberV5 : AbstractTestStrategy() {
         cc.addMethod(
             CtMethod.make(
                 """
-                                public void registerHandlerFor(Class aClass, io.cucumber.plugin.event.EventHandler eventHandler) {
-                                  mainEventBus.registerHandlerFor(aClass, eventHandler);
-                                }
-                            """.trimIndent(),
+                    public void send(io.cucumber.plugin.event.Event event) {
+                        mainEventBus.send(event);
+                        if (event instanceof $testPackage.TestStepStarted) {
+                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment/[feature:" + featurePath + "]/[scenario:"+(($testPackage.TestStepStarted) event).getTestCase().getName() + "]");    
+                        } else {
+                            if(event instanceof $testPackage.TestStepFinished) {
+                                $testPackage.TestStepFinished $finishedTest = ($testPackage.TestStepFinished) event;
+                                $statusPackage status = $getTestStatus
+                                ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment/[feature:" + featurePath + "]/[scenario:" + $finishedTest.getTestCase().getName() + "]", status.name());                                    
+                            }
+                        }
+                    }
+                """.trimIndent(),
+                cc
+            )
+        )
+        cc.addMethod(
+            CtMethod.make(
+                """
+                    public void sendAll(Iterable queue) {
+                        mainEventBus.sendAll(queue);
+                    }
+                """.trimIndent(),
                 cc
             )
         )
@@ -123,26 +113,40 @@ object CucumberV5 : AbstractTestStrategy() {
         cc.addMethod(
             CtMethod.make(
                 """
-                                public void removeHandlerFor(Class aClass, io.cucumber.plugin.event.EventHandler eventHandler) { 
-                                  mainEventBus.removeHandlerFor(aClass, eventHandler);
-                                }
-                            """.trimIndent(),
+                    public void registerHandlerFor(Class aClass, io.cucumber.plugin.event.EventHandler eventHandler) {
+                        mainEventBus.registerHandlerFor(aClass, eventHandler);
+                    }
+                """.trimIndent(),
+                cc
+            )
+        )
+
+        cc.addMethod(
+            CtMethod.make(
+                """
+                    public void removeHandlerFor(Class aClass, io.cucumber.plugin.event.EventHandler eventHandler) { 
+                        mainEventBus.removeHandlerFor(aClass, eventHandler);
+                    }
+                """.trimIndent(),
                 cc
             )
         )
         cc.toClass(classLoader, protectionDomain)
 
         /**
-         *      {@link cucumber.runner.PickleStepDefinitionMatch} is responsible for running tests.
-         *      Using this class, we can get meta information about the test, for example, the class in which test located.
+         *      {@link cucumber.runner.PickleStepDefinitionMatch} is represent a step of scenario.
+         *      Check for PickleStepDefinitionMatch is needed to determine what we are currently performing,
+         *      a step from a scenario or before or after action.
+         *      Instead of the class name, we use the path to the feature file.
+         *      If the file is in the same repository as the tests, then we take the relative path,
+         *      otherwise we take the absolute path without specifying the disk name
          */
         run.insertBefore(
             """
                 try {
                     if (stepDefinitionMatch instanceof io.cucumber.core.runner.PickleStepDefinitionMatch) {
-                        String testLocation = ((io.cucumber.core.runner.PickleStepDefinitionMatch) stepDefinitionMatch).getStepDefinition().getLocation();
-                        $getTestPackages
-                        $2 = new $SpockBus($2, testPackage);
+                        $getFeaturePath
+                        $2 = new $SpockBus($2, featurePath);
                     }
                 } catch (Throwable ignored) {}
 
@@ -151,12 +155,13 @@ object CucumberV5 : AbstractTestStrategy() {
         return ctClass.toBytecode()
     }
 
-    private const val getTestPackages = """
-         String temp = testLocation.split(" ")[0];
-         int bracketIndex = temp.lastIndexOf("(");
-         temp = temp.substring(0, bracketIndex);
-         int lastIndex = temp.lastIndexOf(".");
-         String testPackage = temp.substring(0, lastIndex);
+    private const val getFeaturePath = """
+         String[] paths = new java.io.File(".").toURI().relativize($1.getUri()).toString().split(":");
+         int index = paths.length - 1;
+         String featurePath = paths[index];
+         if (featurePath.startsWith("/")) {
+            featurePath = featurePath.replaceFirst("/", "");
+         }
     """
 
     private const val getTestStatus = """

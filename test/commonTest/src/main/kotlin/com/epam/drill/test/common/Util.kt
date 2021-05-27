@@ -60,5 +60,10 @@ fun KFunction<*>.toTestData(
     supportParam: Boolean = false,
 ): TestData = javaMethod!!.toTestData(engine, testResult, supportParam)
 
+fun String.cucumberTestToTestData(
+    engine: String,
+    featurePath: String,
+    testResult: TestResult,
+) = TestData("$engine/[feature:$featurePath]/[scenario:$this]", testResult)
 
 fun TestInfo.toTestData() = TestData(name, result)

@@ -38,7 +38,12 @@ public class TestSteps {
     @Before
     public void saveScenarioName(Scenario scenario) {
         actualTestName = UtilKt.urlEncode(scenario.getName());
-        actualTests.add(new TestData(getTestName(scenario.getName()), TestResult.PASSED));
+        actualTests.add(UtilKt.cucumberTestToTestData(
+                scenario.getName(),
+                CucumberV5.engineSegment,
+                "src/test/resources/com/automatedtest/sample/test_name.feature",
+                TestResult.PASSED)
+        );
     }
 
     @Given("^A user navigates to HomePage$")
@@ -66,11 +71,6 @@ public class TestSteps {
         final List<TestInfo> testFromAdmin = serverDate.getTests().get(sessionId);
         AssertKt.shouldContainsAllTests(testFromAdmin, actualTests);
         AssertKt.assertTestTime(testFromAdmin);
-    }
-
-    //TODO Will be removed in next commit
-    private String getTestName(String name) {
-        return CucumberV5.engineSegment + "/[class:" + TestSteps.class.getName() + "]/[method:" + name + "]";
     }
 
 }
