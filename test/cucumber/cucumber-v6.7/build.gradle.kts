@@ -1,4 +1,4 @@
-val cucumberVersion = "4.8.0"
+val cucumberVersion = "6.7.0"
 
 dependencies {
     testImplementation("io.cucumber:cucumber-testng:$cucumberVersion")

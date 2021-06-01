@@ -13,6 +13,8 @@ include(":test:rest-assure-ju5")
 include(":test:spock")
 include(":test:cucumber:cucumber-v4")
 include(":test:cucumber:cucumber-v5")
+include(":test:cucumber:cucumber-v6")
+include(":test:cucumber:cucumber-v6.7")
 
 include(":test:admin-stub-server")
 pluginManagement {
