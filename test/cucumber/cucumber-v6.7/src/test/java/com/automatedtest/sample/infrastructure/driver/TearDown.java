@@ -15,28 +15,28 @@
  */
 package com.automatedtest.sample.infrastructure.driver;
 
+import io.cucumber.java.*;
 import org.openqa.selenium.*;
-import org.openqa.selenium.support.ui.*;
 
-import java.time.*;
-
-public class Wait {
+public class TearDown {
 
     private final WebDriver driver;
 
-    public Wait(WebDriver driver) {
-        this.driver = driver;
+    public TearDown() {
+        this.driver = Setup.driver;
     }
 
-    private void waitUntilCondition(ExpectedCondition<Object> condition, String timeoutMessage, int timeout) {
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(timeout));
-        wait.withMessage(timeoutMessage);
-        wait.until(condition);
+    @After
+    public void quitDriver(Scenario scenario) {
+        if (scenario.isFailed()) {
+            saveScreenshotsForScenario(scenario);
+        }
+        this.driver.quit();
     }
 
-    public void forLoading(int timeout) {
-        ExpectedCondition<Object> condition = ExpectedConditions.jsReturnsValue("return document.readyState==\"complete\";");
-        String timeoutMessage = "Page didn't load after " + timeout + " seconds.";
-        waitUntilCondition(condition, timeoutMessage, timeout);
+    private void saveScreenshotsForScenario(final Scenario scenario) {
+        final byte[] screenshot = ((TakesScreenshot) driver)
+                .getScreenshotAs(OutputType.BYTES);
+        scenario.attach(screenshot, "image/png", "failed_scenario");
     }
 }

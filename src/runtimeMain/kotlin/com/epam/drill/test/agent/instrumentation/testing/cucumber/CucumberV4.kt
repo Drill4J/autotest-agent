@@ -15,10 +15,10 @@
  */
 package com.epam.drill.test.agent.instrumentation.testing.cucumber
 
-import com.epam.drill.test.agent.instrumentation.AbstractTestStrategy
-import com.epam.drill.test.agent.TestListener
+import com.epam.drill.test.agent.*
+import com.epam.drill.test.agent.instrumentation.*
 import javassist.*
-import java.security.ProtectionDomain
+import java.security.*
 
 @Suppress("unused")
 object CucumberV4 : AbstractTestStrategy() {
@@ -26,6 +26,7 @@ object CucumberV4 : AbstractTestStrategy() {
     private const val finishedTest = "finishedTest"
     private const val statusPackage = "cucumber.api.Result.Type"
     private const val testPackage = "cucumber.api.event"
+    private const val eventBusProxy = "EventBusProxy"
 
     override val id: String
         get() = "cucumber"
@@ -40,15 +41,14 @@ object CucumberV4 : AbstractTestStrategy() {
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?,
     ): ByteArray? {
-        val SpockBus = "SpockBus"
-        val cc: CtClass = pool.makeClass(SpockBus)
+        val cc: CtClass = pool.makeClass(eventBusProxy)
         cc.interfaces = arrayOf(pool.get("cucumber.runner.EventBus"))
         cc.addField(CtField.make("cucumber.runner.EventBus mainEventBus = null;", cc))
         cc.addField(CtField.make("String featurePath = \"\";", cc))
         cc.addConstructor(
             CtNewConstructor.make(
                 """
-                    public $SpockBus(cucumber.runner.EventBus mainEventBus, String featurePath) { 
+                    public $eventBusProxy(cucumber.runner.EventBus mainEventBus, String featurePath) { 
                         this.mainEventBus = mainEventBus;
                         this.featurePath = featurePath;
                     }
@@ -122,7 +122,7 @@ object CucumberV4 : AbstractTestStrategy() {
                 try {
                     if (stepDefinitionMatch instanceof cucumber.runner.PickleStepDefinitionMatch) {
                         $getFeaturePath
-                        $2 = new SpockBus($2, featurePath);
+                        $2 = new $eventBusProxy($2, featurePath);
                     }
                 } catch (Throwable ignored) {}
             """.trimIndent()
