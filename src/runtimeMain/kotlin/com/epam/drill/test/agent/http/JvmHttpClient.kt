@@ -16,12 +16,14 @@
 package com.epam.drill.test.agent.http
 
 import com.epam.drill.kni.Kni
+import com.epam.drill.logger.*
 import com.epam.drill.test.agent.config.parse
 import com.epam.drill.test.agent.config.stringify
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
+import java.net.*
 import java.security.SecureRandom
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
@@ -30,6 +32,7 @@ import javax.net.ssl.*
 
 @Kni
 actual object JvmHttpClient {
+    private val logger = Logging.logger(JvmHttpClient::class.java.name)
 
     private fun getUnsafeOkHttpClient(): OkHttpClient {
         return try {
@@ -86,6 +89,10 @@ actual object JvmHttpClient {
                 response.body()!!.byteStream().reader().readText()
             )
             HttpResponse.serializer() stringify httpResponse
-        }.onFailure { it.printStackTrace() }.getOrDefault(HttpResponse.serializer() stringify HttpResponse(500))
+        }.onFailure {
+            if (it is SocketTimeoutException) {
+                logger.warn { "Can't get response to request: $request. Read time out" }
+            } else logger.error(it) { "Can't get response. Reason:" }
+        }.getOrDefault(HttpResponse.serializer() stringify HttpResponse(500))
     }
 }

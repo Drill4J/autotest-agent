@@ -29,6 +29,7 @@ object SessionController {
         get() = _agentConfig.value
     val testName = AtomicReference("undefined")
     val sessionId = AtomicReference("")
+    private val token = AtomicReference("")
 
     private val dispatchActionPath: String
         get() = if (agentConfig.groupId.isBlank()) {
@@ -95,7 +96,9 @@ object SessionController {
     }.getOrNull().also { TestListener.reset() }
 
     private fun dispatchAction(payload: String): HttpResponse {
-        val token = getToken()
+        val token = token.value.takeIf { it.isNotBlank() } ?: getToken().also {
+            token.value = it
+        }
         mainLogger.debug { "Auth token: $token" }
         mainLogger.debug {
             """Dispatch action: 
