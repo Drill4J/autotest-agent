@@ -39,11 +39,6 @@ class Test {
         HttpHeadersTest.test(::`Кириллик леттерс`.name)
     }
 
-    @Test
-    fun `shortBacktick`() {
-        HttpHeadersTest.test(::`shortBacktick`.name)
-    }
-
     companion object {
 
         private const val sessionId = "testSession"

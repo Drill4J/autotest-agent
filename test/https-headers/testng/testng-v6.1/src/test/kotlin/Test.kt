@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 import com.epam.drill.*
-import org.junit.jupiter.api.*
+import org.testng.annotations.*
 import pack.*
-import kotlin.test.*
-import kotlin.test.Test
 
-class TestJU5 {
+
+class TestTestNG {
 
     @Test
     fun simpleTestMethodName() {
@@ -35,13 +34,13 @@ class TestJU5 {
 
         private const val sessionId = "testSession"
 
-        @BeforeAll
+        @BeforeClass
         @JvmStatic
         fun startSession() {
             SessionProvider.startSession(sessionId)
         }
 
-        @AfterAll
+        @AfterClass
         @JvmStatic
         fun stopSession() {
             SessionProvider.stopSession(sessionId)

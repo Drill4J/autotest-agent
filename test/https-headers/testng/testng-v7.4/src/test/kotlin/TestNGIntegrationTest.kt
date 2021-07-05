@@ -18,10 +18,10 @@ import com.epam.drill.*
 import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.instrumentation.testing.testng.*
 import com.epam.drill.test.common.*
+import org.testng.Assert.*
 import org.testng.annotations.*
 import java.util.*
-import kotlin.test.*
-import kotlin.test.Test
+
 
 @Suppress("NonAsciiCharacters", "RemoveRedundantBackticks")
 class TestNGIntegrationTest {
@@ -41,12 +41,6 @@ class TestNGIntegrationTest {
     @Test
     fun `Кириллик леттерс`() {
         expectedTests.add(::`Кириллик леттерс`.toTestData(TestNGStrategy.engineSegment, TestResult.PASSED))
-        assertTrue(true)
-    }
-
-    @Test
-    fun `shortBacktick`() {
-        expectedTests.add(::`shortBacktick`.toTestData(TestNGStrategy.engineSegment, TestResult.PASSED))
         assertTrue(true)
     }
 
