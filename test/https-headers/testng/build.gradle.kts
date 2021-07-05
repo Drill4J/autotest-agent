@@ -1,9 +1,6 @@
-dependencies {
-    testImplementation(project(":test:https-headers"))
-    testImplementation(kotlin("test"))
-    testImplementation(kotlin("test-testng"))
+subprojects {
+    tasks.named<Test>("test") {
+        useTestNG()
+    }
 }
 
-tasks.named<Test>("test") {
-    useTestNG()
-}

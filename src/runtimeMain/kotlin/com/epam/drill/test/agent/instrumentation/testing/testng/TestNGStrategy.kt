@@ -26,65 +26,126 @@ import java.security.ProtectionDomain
 object TestNGStrategy : AbstractTestStrategy() {
 
     const val engineSegment = "[engine:testng]"
-
+    private const val drillListener = "DrillTestNGTestListener"
+    private const val packagePath = "org.testng"
     override val id: String
         get() = "testng"
 
     override fun permit(ctClass: CtClass): Boolean {
-        return ctClass.name == "org.testng.TestListenerAdapter"
+        return ctClass.name == "$packagePath.TestRunner"
     }
 
     override fun instrument(
         ctClass: CtClass,
         pool: ClassPool,
         classLoader: ClassLoader?,
-        protectionDomain: ProtectionDomain?
+        protectionDomain: ProtectionDomain?,
     ): ByteArray? {
-        ctClass.addMethod(
+        createTestListener(pool, classLoader, protectionDomain)
+        ctClass.constructors.forEach { it.insertAfter("addTestListener(new $drillListener());") }
+        return ctClass.toBytecode()
+    }
+
+    private fun createTestListener(
+        pool: ClassPool,
+        classLoader: ClassLoader?,
+        protectionDomain: ProtectionDomain?,
+    ) {
+        val testListener = pool.makeClass(drillListener)
+        testListener.interfaces = arrayOf(pool.get("$packagePath.ITestListener"))
+        testListener.addMethod(
             CtMethod.make(
                 """
-            private static String getParamsString(org.testng.ITestResult result) {
-                Object[] parameters = result.getParameters();
-                String paramString = "(";
-                for(int i = 0; i < parameters.length; i++){ 
-                    String parameterClassName = parameters[i].getClass().getSimpleName();
-                    if(i != 0) {
-                        paramString += ",";
+                private String getParamsString($packagePath.ITestResult result) {
+                    Object[] parameters = result.getParameters();
+                    String paramString = "(";
+                    for(int i = 0; i < parameters.length; i++){ 
+                        String parameterClassName = parameters[i].getClass().getSimpleName();
+                        if(i != 0) {
+                            paramString += ",";
+                        }
+                        paramString += parameterClassName;
                     }
-                    paramString += parameterClassName;
+                    paramString += ")";
+                    if(result.getParameters().length != 0){
+                        paramString += "[" + result.getMethod().getParameterInvocationCount() + "]";
+                    }
+                    return paramString;
                 }
-                paramString += ")";
-                if(result.getParameters().length != 0){
-                    paramString += "[" + result.getMethod().getParameterInvocationCount() + "]";
-                }
-                return paramString;
-            }
-        """.trimIndent(), ctClass
+            """.trimIndent(), testListener
             )
         )
-
-        sequenceOf(
-            ctClass.getDeclaredMethod("onTestSuccess") to "PASSED",
-            ctClass.getDeclaredMethod("onTestFailure") to "FAILED"
-        ).forEach { (method, status) ->
-            method.insertAfter(
+        testListener.addMethod(
+            CtMethod.make(
                 """
-                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment/[class:"+$1.getInstanceName()+"]/[method:"+$1.getName()+getParamsString($1)+"]", "$status");
-            """.trimIndent()
+                        public void onTestStart($packagePath.ITestResult result) {
+                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("${engineSegment}/[class:" + result.getInstanceName() + "]/[method:" + result.getName() + getParamsString(result) + "]");
+                        }
+                    """.trimIndent(),
+                testListener
             )
-        }
-
-        ctClass.getDeclaredMethod("onTestSkipped").insertAfter(
-            """
-                   ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment/[class:"+$1.getInstanceName()+"]/[method:"+$1.getName()+getParamsString($1)+"]");
-            """.trimIndent()
+        )
+        testListener.addMethod(
+            CtMethod.make(
+                """
+                       public void onTestSuccess($packagePath.ITestResult result) {
+                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("${engineSegment}/[class:" + result.getInstanceName() + "]/[method:" + result.getName() + getParamsString(result) + "]", "PASSED");
+                       }
+                    """.trimIndent(),
+                testListener
+            )
+        )
+        testListener.addMethod(
+            CtMethod.make(
+                """
+                        public void onTestFailure($packagePath.ITestResult result) {
+                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("${engineSegment}/[class:" + result.getInstanceName() + "]/[method:" + result.getName() + getParamsString(result) + "]", "FAILED");      
+                        }
+                    """.trimIndent(),
+                testListener
+            )
+        )
+        testListener.addMethod(
+            CtMethod.make(
+                """
+                        public void onTestSkipped($packagePath.ITestResult result) {
+                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("${engineSegment}/[class:" + result.getInstanceName() + "]/[method:" + result.getName() + getParamsString(result) + "]");     
+                        }
+                    """.trimIndent(),
+                testListener
+            )
+        )
+        testListener.addMethod(
+            CtMethod.make(
+                """
+                        public void onTestFailedButWithinSuccessPercentage($packagePath.ITestResult result) {
+                            return; 
+                        }
+                    """.trimIndent(),
+                testListener
+            )
+        )
+        testListener.addMethod(
+            CtMethod.make(
+                """
+                        public void onStart($packagePath.ITestContext result) {
+                            return; 
+                        }
+                    """.trimIndent(),
+                testListener
+            )
+        )
+        testListener.addMethod(
+            CtMethod.make(
+                """
+                        public void onFinish($packagePath.ITestContext result) {
+                            return;            
+                        }
+                    """.trimIndent(),
+                testListener
+            )
         )
 
-        ctClass.getDeclaredMethod("onTestStart").insertAfter(
-            """
-            ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment/[class:"+$1.getInstanceName()+"]/[method:"+$1.getName()+getParamsString($1)+"]");
-        """.trimIndent()
-        )
-        return ctClass.toBytecode()
+        testListener.toClass(classLoader, protectionDomain)
     }
 }

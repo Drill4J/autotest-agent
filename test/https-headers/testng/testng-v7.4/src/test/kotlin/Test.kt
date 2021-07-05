@@ -16,8 +16,7 @@
 import com.epam.drill.*
 import org.testng.annotations.*
 import pack.*
-import kotlin.test.*
-import kotlin.test.Test
+
 
 class TestTestNG {
 
@@ -31,11 +30,6 @@ class TestTestNG {
         HttpHeadersTest.test(::`method with backtick names`.name)
     }
 
-    @Suppress("RemoveRedundantBackticks")
-    @Test
-    fun `shortBacktick`() {
-        HttpHeadersTest.test(::`shortBacktick`.name)
-    }
 
     companion object {
 

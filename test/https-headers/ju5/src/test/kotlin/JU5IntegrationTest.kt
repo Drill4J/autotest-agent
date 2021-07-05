@@ -42,12 +42,6 @@ class JU5IntegrationTest {
         assertTrue(true)
     }
 
-    @Test
-    fun `shortBacktick`() {
-        expectedTests.add(::`shortBacktick`.toTestData(engine, TestResult.PASSED))
-        assertTrue(true)
-    }
-
     @Ignore
     @Test
     fun testSkipped() {

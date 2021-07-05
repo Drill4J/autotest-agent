@@ -6,6 +6,8 @@ include(":test:https-headers")
 include(":test:https-headers:ju5")
 include(":test:https-headers:ju4")
 include(":test:https-headers:testng")
+include(":test:https-headers:testng:testng-v6.1")
+include(":test:https-headers:testng:testng-v7.4")
 include(":test:selenium:selenium-v3-ju5")
 include(":test:selenium:selenium-v4-ju5")
 include(":test:rest-assure-ju5")
@@ -20,7 +22,7 @@ include(":test:admin-stub-server")
 pluginManagement {
     repositories {
         mavenLocal()
-        maven(url = "http://oss.jfrog.org/oss-release-local")
+        maven(url = "https://oss.jfrog.org/oss-release-local")
         maven(url = "https://drill4j.jfrog.io/artifactory/drill")
         gradlePluginPortal()
     }
