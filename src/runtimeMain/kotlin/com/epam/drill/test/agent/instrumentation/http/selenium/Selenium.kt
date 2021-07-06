@@ -17,6 +17,7 @@ package com.epam.drill.test.agent.instrumentation.http.selenium
 
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.*
+import com.epam.drill.test.agent.js.*
 import javassist.*
 import java.io.*
 import java.security.*
@@ -63,11 +64,11 @@ class Selenium : Strategy() {
 
         startSession.insertBefore(
             """
-                if (${ThreadStorage::class.java.name}.INSTANCE.${ThreadStorage::proxyUrl.name}() != null) {
+                if (${AgentConfig::class.java.name}.INSTANCE.${AgentConfig::proxyUrl.name}() != null) {
                     $DesiredCapabilities dCap = new $DesiredCapabilities();
                     $Proxy dProxy = new $Proxy();
-                    dProxy.setHttpProxy(${ThreadStorage::class.java.name}.INSTANCE.${ThreadStorage::proxyUrl.name}());
-                    dProxy.setSslProxy(${ThreadStorage::class.java.name}.INSTANCE.${ThreadStorage::proxyUrl.name}());
+                    dProxy.setHttpProxy(${AgentConfig::class.java.name}.INSTANCE.${AgentConfig::proxyUrl.name}());
+                    dProxy.setSslProxy(${AgentConfig::class.java.name}.INSTANCE.${AgentConfig::proxyUrl.name}());
                     ${WebDriverThreadStorage::class.java.name}.INSTANCE.${WebDriverThreadStorage::set.name}(this);
                     dCap.setCapability("proxy", dProxy);
                     $1 = $1.merge(dCap);
@@ -76,7 +77,9 @@ class Selenium : Strategy() {
         )
         startSession.insertAfter(
             """
-                   ${connectToDevTools()}
+                    ${ExtensionDispatcher::class.java.name}.INSTANCE.${ExtensionDispatcher::await.name}();
+                    ${closeTab()}
+                    ${connectToDevTools()}
                     try {
                         if (this instanceof org.openqa.selenium.firefox.FirefoxDriver) {
                             java.util.HashMap hashMapq = new java.util.HashMap();
@@ -145,6 +148,22 @@ class Selenium : Strategy() {
             """.trimIndent()
         )
         return ctClass.toBytecode()
+    }
+
+    private fun closeTab(): String {
+        return """
+                    String targetTab = this.getWindowHandle();
+                    Object[] openedTabs = this.getWindowHandles().toArray();
+                    for(int i = 0; i < openedTabs.length - 1; i++){
+                        this.switchTo().window(openedTabs[i].toString());
+                        String curUrl = this.getCurrentUrl();
+                        if(curUrl.contains("$CHROME_TAB_WITH_PARAMS")){
+                            this.close();
+                            this.switchTo().window(targetTab);
+                            break;
+                        }
+                    }
+               """.trimIndent()
     }
 
     private fun connectToDevTools() = run {

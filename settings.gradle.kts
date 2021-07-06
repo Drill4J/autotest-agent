@@ -20,7 +20,7 @@ include(":test:admin-stub-server")
 pluginManagement {
     repositories {
         mavenLocal()
-        maven(url = "http://oss.jfrog.org/oss-release-local")
+        maven(url = "https://oss.jfrog.org/oss-release-local")
         maven(url = "https://drill4j.jfrog.io/artifactory/drill")
         gradlePluginPortal()
     }

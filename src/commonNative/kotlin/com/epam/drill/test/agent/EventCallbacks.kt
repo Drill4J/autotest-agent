@@ -58,7 +58,7 @@ private const val isHttpHookEnabled = false // based on args
 fun jvmtiEventVMInitEvent(env: CPointer<jvmtiEnvVar>?, jniEnv: CPointer<JNIEnvVar>?, thread: jthread?) {
     mainLogger.debug { "Init event" }
     initRuntimeIfNeeded()
-    val agentConfig = SessionController.agentConfig
+    val agentConfig = AgentConfig.config
     if (!agentConfig.isManuallyControlled && !agentConfig.sessionForEachTest)
         SessionController.startSession(agentConfig.sessionId)
     agentConfig.run {
@@ -74,7 +74,7 @@ fun configureHooks() {
     mainLogger.debug { "Interceptor configured" }
     injectedHeaders.value = {
         mainLogger.debug { "Injecting headers" }
-        val lastTestName = SessionController.testName.value
+        val lastTestName = ThreadStorage.testName() ?: "undefined"
         val sessionId = SessionController.sessionId.value
         mainLogger.debug { "Adding headers: $lastTestName to $sessionId" }
         mapOf(

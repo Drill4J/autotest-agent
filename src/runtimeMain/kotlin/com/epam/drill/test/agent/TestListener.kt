@@ -19,6 +19,7 @@ import com.epam.drill.kni.*
 import com.epam.drill.logger.*
 import com.epam.drill.test.agent.actions.*
 import com.epam.drill.test.agent.config.*
+import com.epam.drill.test.agent.js.*
 import com.epam.drill.test.agent.instrumentation.http.selenium.*
 import com.epam.drill.test.agent.util.*
 import kotlinx.atomicfu.*
@@ -55,6 +56,7 @@ actual object TestListener {
                 ThreadStorage.startSession(it)
                 ThreadStorage.memorizeTestName(it)
                 WebDriverThreadStorage.addCookies()
+                ExtensionDispatcher.send(EventType.START_TEST)
             } else if (isFinalizeTestState(it)) {
                 logger.trace { "Test: $it was repeated. Change status to UNKNOWN" }
                 addTestInfo(
@@ -82,11 +84,11 @@ actual object TestListener {
                 TestInfo::result.name to TestResult.getByMapping(status)
             )
             logger.info { "Test: $test FINISHED. Result:$status" }
+            ExtensionDispatcher.send(EventType.FINISH_TEST)
         }
         ThreadStorage.stopSession()
         ThreadStorage.clear()
     }
-
 
     private fun isFinalizeTestState(test: String?): Boolean = !isNotFinalizeTestState(test)
 
