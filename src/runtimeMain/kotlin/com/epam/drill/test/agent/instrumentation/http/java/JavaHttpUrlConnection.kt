@@ -24,7 +24,7 @@ import java.security.ProtectionDomain
 class JavaHttpUrlConnection : Strategy() {
 
     override fun permit(ctClass: CtClass): Boolean {
-        val parentClassName = ctClass.superclass.name
+        val parentClassName = runCatching { ctClass.superclass.name }.getOrDefault("")
         return parentClassName == "java.net.HttpURLConnection" ||
                 parentClassName == "javax.net.ssl.HttpsURLConnection"
     }
@@ -35,7 +35,7 @@ class JavaHttpUrlConnection : Strategy() {
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray {
-        val sendRequestHeader = kotlin.runCatching { ctClass.constructors }.onFailure {
+        val sendRequestHeader = runCatching { ctClass.constructors }.onFailure {
             logger.error(it) { "Error while instrumenting the class ${ctClass.name}" }
         }
         sendRequestHeader.getOrNull()?.forEach {
