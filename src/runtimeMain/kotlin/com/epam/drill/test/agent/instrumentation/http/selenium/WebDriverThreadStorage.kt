@@ -8,8 +8,8 @@ object WebDriverThreadStorage {
     fun addCookies() {
         runCatching {
             remoteWebDriver.get()?.let {
-                it.javaClass.getDeclaredMethod("addDrillCookies").invoke(it)
+                it.javaClass.getMethod("addDrillCookies").invoke(it)
             }
-        }.getOrNull()
+        }.onFailure { println("Can't get method") }
     }
 }

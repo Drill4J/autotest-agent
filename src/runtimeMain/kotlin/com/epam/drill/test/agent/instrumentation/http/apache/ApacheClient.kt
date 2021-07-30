@@ -41,8 +41,12 @@ class ApacheClient : Strategy() {
             """
                     if($IF_CONDITION) {
                         ${Log::class.java.name}.INSTANCE.${Log::injectHeaderLog.name}($TEST_NAME_VALUE_CALC_LINE, $SESSION_ID_VALUE_CALC_LINE);
-                        ${'$'}1.setHeader($TEST_NAME_CALC_LINE);
-                        ${'$'}1.setHeader($SESSION_ID_CALC_LINE);
+                        try{
+                            $1.setHeader($TEST_NAME_CALC_LINE);
+                            $1.setHeader($SESSION_ID_CALC_LINE);
+                        }catch( Exception e){
+                            e.printStackTrace();
+                        }
                     }
                 """
         )

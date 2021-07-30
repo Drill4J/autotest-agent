@@ -123,7 +123,6 @@ class Selenium : Strategy() {
             """
                 boolean isInitPage = $ImmutableList.of($initPages).contains(getCurrentUrl());
                 if(isInitPage){ execute("get", $ImmutableMap.of("url", $1)); }
-                addDrillHeaders();
                 addDrillCookies();
             """.trimIndent()
         )
@@ -134,7 +133,6 @@ class Selenium : Strategy() {
             """
                 if($1.equals(org.openqa.selenium.remote.DriverCommand.SWITCH_TO_WINDOW)){
                    ${connectToDevTools()}
-                    addDrillHeaders();
                     addDrillCookies();
                 }
             """.trimIndent()
