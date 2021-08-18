@@ -35,7 +35,7 @@ data class StartSessionPayload(
     val testType: String = "AUTO",
     val testName: String? = null,
     val isRealtime: Boolean = false,
-    val isGlobal: Boolean = false
+    val isGlobal: Boolean = false,
 )
 
 @Serializable
@@ -55,13 +55,13 @@ fun stopAction(sessionId: String, testRun: TestRun? = null) = StopSession(
 @Serializable
 data class StopSessionPayload(
     val sessionId: String,
-    val testRun: TestRun? = null
+    val testRun: TestRun? = null,
 )
 
 @Serializable
 data class AddTestsPayload(
     val sessionId: String,
-    val testRun: TestRun? = null
+    val testRun: TestRun? = null,
 )
 
 @Serializable
@@ -69,7 +69,7 @@ data class TestRun(
     val name: String = "",
     val startedAt: Long,
     val finishedAt: Long,
-    val tests: List<TestInfo>
+    val tests: List<TestInfo>,
 )
 
 @Serializable
@@ -77,8 +77,19 @@ data class TestInfo(
     val name: String,
     val result: TestResult = TestResult.UNKNOWN,
     val startedAt: Long = 0,
-    val finishedAt: Long = 0
+    val finishedAt: Long = 0,
+    val metadata: TestMetadata = TestMetadata.emptyMetadata,
 )
+
+@Serializable
+data class TestMetadata(
+    val hash: String = "",
+    val data: Map<String, String> = emptyMap(),
+) {
+    companion object {
+        val emptyMetadata = TestMetadata()
+    }
+}
 
 enum class TestResult {
     PASSED,

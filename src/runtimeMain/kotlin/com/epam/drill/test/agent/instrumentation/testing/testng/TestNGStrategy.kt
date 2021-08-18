@@ -31,8 +31,12 @@ object TestNGStrategy : AbstractTestStrategy() {
     override val id: String
         get() = "testng"
 
+    private fun CtClass.isTestRunner() = name == "$packagePath.TestRunner"
+    private fun CtClass.isSuiteRunner() = interfaces.any { it.name == "$packagePath.ISuite" }
+    private fun CtClass.isAnnotationHelper() = name == "$packagePath.internal.annotations.AnnotationHelper"
+
     override fun permit(ctClass: CtClass): Boolean {
-        return ctClass.name == "$packagePath.TestRunner"
+        return ctClass.isTestRunner() || ctClass.isSuiteRunner() || ctClass.isAnnotationHelper()
     }
 
     override fun instrument(
@@ -41,8 +45,17 @@ object TestNGStrategy : AbstractTestStrategy() {
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?,
     ): ByteArray? {
-        createTestListener(pool, classLoader, protectionDomain)
-        ctClass.constructors.forEach { it.insertAfter("addTestListener(new $drillListener());") }
+        if (ctClass.isTestRunner()) {
+            createTestListener(pool, classLoader, protectionDomain)
+            ctClass.constructors.forEach { it.insertAfter("addTestListener(new $drillListener());") }
+        }
+        if (ctClass.isSuiteRunner()) {
+            ctClass.disabledTestsSupport()
+        }
+        // Only for testng 7.4.0
+        if (ctClass.isAnnotationHelper() && pool.getOrNull("$packagePath.annotations.IIgnoreAnnotation") != null) {
+            ctClass.ignoredTestSupport()
+        }
         return ctClass.toBytecode()
     }
 
@@ -79,7 +92,7 @@ object TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                         public void onTestStart($packagePath.ITestResult result) {
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("${engineSegment}/[class:" + result.getInstanceName() + "]/[method:" + result.getName() + getParamsString(result) + "]");
+                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment/[class:" + result.getInstanceName() + "]/[method:" + result.getName() + getParamsString(result) + "]");
                         }
                     """.trimIndent(),
                 testListener
@@ -89,7 +102,7 @@ object TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                        public void onTestSuccess($packagePath.ITestResult result) {
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("${engineSegment}/[class:" + result.getInstanceName() + "]/[method:" + result.getName() + getParamsString(result) + "]", "PASSED");
+                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment/[class:" + result.getInstanceName() + "]/[method:" + result.getName() + getParamsString(result) + "]", "PASSED");
                        }
                     """.trimIndent(),
                 testListener
@@ -99,7 +112,7 @@ object TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                         public void onTestFailure($packagePath.ITestResult result) {
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("${engineSegment}/[class:" + result.getInstanceName() + "]/[method:" + result.getName() + getParamsString(result) + "]", "FAILED");      
+                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment/[class:" + result.getInstanceName() + "]/[method:" + result.getName() + getParamsString(result) + "]", "FAILED");      
                         }
                     """.trimIndent(),
                 testListener
@@ -109,7 +122,7 @@ object TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                         public void onTestSkipped($packagePath.ITestResult result) {
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("${engineSegment}/[class:" + result.getInstanceName() + "]/[method:" + result.getName() + getParamsString(result) + "]");     
+                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment/[class:" + result.getInstanceName() + "]/[method:" + result.getName() + getParamsString(result) + "]");     
                         }
                     """.trimIndent(),
                 testListener
@@ -145,7 +158,35 @@ object TestNGStrategy : AbstractTestStrategy() {
                 testListener
             )
         )
-
         testListener.toClass(classLoader, protectionDomain)
     }
+
+    /**
+     * Support for tests, disabled by changing flag in @Test(enabled = false) annotation
+     * When engine version is lower then 7.4.0 also support @Ignore annotation
+     */
+    private fun CtClass.disabledTestsSupport() = getDeclaredMethod("run").insertAfter(
+            """
+                java.util.Iterator disabledTests = getExcludedMethods().iterator();
+                while(disabledTests.hasNext()) {
+                    $packagePath.ITestNGMethod test = ($packagePath.ITestNGMethod) disabledTests.next();
+                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment/[class:" + test.getTestClass().getName() + "]/[method:" + test.getMethodName() + "]");     
+                }
+            """.trimIndent()
+    )
+
+    /**
+     * Support 7.4.0 testng @Ignore annotation
+     */
+    private fun CtClass.ignoredTestSupport() = getMethod(
+        "isAnnotationPresent",
+        "(Lorg/testng/internal/annotations/IAnnotationFinder;Ljava/lang/reflect/Method;Ljava/lang/Class;)Z"
+    ).insertAfter(
+        """ 
+            if ($3 == $packagePath.annotations.IIgnoreAnnotation.class && ${'$'}_) {
+                ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment/[class:" + $2.getDeclaringClass().getName() + "]/[method:" + $2.getName() + "]");
+            }
+        """.trimIndent())
 }
+
+

@@ -18,9 +18,11 @@ import com.epam.drill.*
 import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.instrumentation.testing.testng.*
 import com.epam.drill.test.common.*
+import com.epam.drill.test.common.TestData
 import org.testng.Assert.*
 import org.testng.annotations.*
 import java.util.*
+import kotlin.reflect.jvm.*
 
 
 @Suppress("NonAsciiCharacters", "RemoveRedundantBackticks")
@@ -44,9 +46,9 @@ class TestNGIntegrationTest {
         assertTrue(true)
     }
 
-    // TODO Figure out why the skipped test doesn't detected
+//    TODO EPMDJ-8321 Due to the fact that we may get skipped tests before or after the start of the suite, the test is temporarily disabled
 //    @Ignore
-//    @Test(enabled = false)
+//    @Test()
 //    fun testSkipped() {
 //        assertTrue(false)
 //    }
