@@ -20,6 +20,7 @@ import javassist.ClassPool
 import javassist.CtClass
 import java.security.ProtectionDomain
 
+//TODO EPMDJ-8319 Rework the choice of strategies
 abstract class Strategy {
     val logger = Logging.logger { this::class.java.name }
 
