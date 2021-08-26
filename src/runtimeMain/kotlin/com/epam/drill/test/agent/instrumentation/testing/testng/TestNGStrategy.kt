@@ -26,17 +26,16 @@ import java.security.ProtectionDomain
 object TestNGStrategy : AbstractTestStrategy() {
 
     const val engineSegment = "[engine:testng]"
-    private const val drillListener = "DrillTestNGTestListener"
-    private const val packagePath = "org.testng"
+    private const val DrillTestNGTestListner = "DrillTestNGTestListener"
+    private const val ITestNGMethod = "org.testng.ITestNGMethod"
+    private const val ITestResult = "org.testng.ITestResult"
+    private const val ITestContext = "org.testng.ITestContext"
     override val id: String
         get() = "testng"
 
-    private fun CtClass.isTestRunner() = name == "$packagePath.TestRunner"
-    private fun CtClass.isSuiteRunner() = interfaces.any { it.name == "$packagePath.ISuite" }
-    private fun CtClass.isAnnotationHelper() = name == "$packagePath.internal.annotations.AnnotationHelper"
 
     override fun permit(ctClass: CtClass): Boolean {
-        return ctClass.isTestRunner() || ctClass.isSuiteRunner() || ctClass.isAnnotationHelper()
+        return ctClass.name == "org.testng.TestRunner"
     }
 
     override fun instrument(
@@ -45,31 +44,32 @@ object TestNGStrategy : AbstractTestStrategy() {
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?,
     ): ByteArray? {
-        if (ctClass.isTestRunner()) {
-            createTestListener(pool, classLoader, protectionDomain)
-            ctClass.constructors.forEach { it.insertAfter("addTestListener(new $drillListener());") }
-        }
-        if (ctClass.isSuiteRunner()) {
-            ctClass.disabledTestsSupport()
-        }
-        // Only for testng 7.4.0
-        if (ctClass.isAnnotationHelper() && pool.getOrNull("$packagePath.annotations.IIgnoreAnnotation") != null) {
-            ctClass.ignoredTestSupport()
-        }
+        createTestListener(pool, classLoader, protectionDomain)
+        ctClass.constructors.forEach { it.insertAfter("addTestListener(new $DrillTestNGTestListner());") }
+        ctClass.getDeclaredMethod("run").insertAfter(
+            """
+                java.util.Iterator disabledTests = getExcludedMethods().iterator();
+                while(disabledTests.hasNext()) {
+                    $ITestNGMethod test = ($ITestNGMethod) disabledTests.next();
+                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment/[class:" + test.getTestClass().getName() + "]/[method:" + test.getMethodName() + "]");     
+                }
+            """.trimIndent()
+        )
         return ctClass.toBytecode()
     }
+
 
     private fun createTestListener(
         pool: ClassPool,
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?,
     ) {
-        val testListener = pool.makeClass(drillListener)
-        testListener.interfaces = arrayOf(pool.get("$packagePath.ITestListener"))
+        val testListener = pool.makeClass(DrillTestNGTestListner)
+        testListener.interfaces = arrayOf(pool.get("org.testng.ITestListener"))
         testListener.addMethod(
             CtMethod.make(
                 """
-                private String getParamsString($packagePath.ITestResult result) {
+                private String getParamsString($ITestResult result) {
                     Object[] parameters = result.getParameters();
                     String paramString = "(";
                     for(int i = 0; i < parameters.length; i++){ 
@@ -91,7 +91,7 @@ object TestNGStrategy : AbstractTestStrategy() {
         testListener.addMethod(
             CtMethod.make(
                 """
-                        public void onTestStart($packagePath.ITestResult result) {
+                        public void onTestStart($ITestResult result) {
                             ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment/[class:" + result.getInstanceName() + "]/[method:" + result.getName() + getParamsString(result) + "]");
                         }
                     """.trimIndent(),
@@ -101,7 +101,7 @@ object TestNGStrategy : AbstractTestStrategy() {
         testListener.addMethod(
             CtMethod.make(
                 """
-                       public void onTestSuccess($packagePath.ITestResult result) {
+                       public void onTestSuccess($ITestResult result) {
                             ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment/[class:" + result.getInstanceName() + "]/[method:" + result.getName() + getParamsString(result) + "]", "PASSED");
                        }
                     """.trimIndent(),
@@ -111,7 +111,7 @@ object TestNGStrategy : AbstractTestStrategy() {
         testListener.addMethod(
             CtMethod.make(
                 """
-                        public void onTestFailure($packagePath.ITestResult result) {
+                        public void onTestFailure($ITestResult result) {
                             ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment/[class:" + result.getInstanceName() + "]/[method:" + result.getName() + getParamsString(result) + "]", "FAILED");      
                         }
                     """.trimIndent(),
@@ -121,7 +121,7 @@ object TestNGStrategy : AbstractTestStrategy() {
         testListener.addMethod(
             CtMethod.make(
                 """
-                        public void onTestSkipped($packagePath.ITestResult result) {
+                        public void onTestSkipped($ITestResult result) {
                             ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment/[class:" + result.getInstanceName() + "]/[method:" + result.getName() + getParamsString(result) + "]");     
                         }
                     """.trimIndent(),
@@ -131,7 +131,7 @@ object TestNGStrategy : AbstractTestStrategy() {
         testListener.addMethod(
             CtMethod.make(
                 """
-                        public void onTestFailedButWithinSuccessPercentage($packagePath.ITestResult result) {
+                        public void onTestFailedButWithinSuccessPercentage($ITestResult result) {
                             return; 
                         }
                     """.trimIndent(),
@@ -141,7 +141,7 @@ object TestNGStrategy : AbstractTestStrategy() {
         testListener.addMethod(
             CtMethod.make(
                 """
-                        public void onStart($packagePath.ITestContext result) {
+                        public void onStart($ITestContext result) {
                             return; 
                         }
                     """.trimIndent(),
@@ -151,7 +151,7 @@ object TestNGStrategy : AbstractTestStrategy() {
         testListener.addMethod(
             CtMethod.make(
                 """
-                        public void onFinish($packagePath.ITestContext result) {
+                        public void onFinish($ITestContext result) {
                             return;            
                         }
                     """.trimIndent(),
@@ -160,33 +160,4 @@ object TestNGStrategy : AbstractTestStrategy() {
         )
         testListener.toClass(classLoader, protectionDomain)
     }
-
-    /**
-     * Support for tests, disabled by changing flag in @Test(enabled = false) annotation
-     * When engine version is lower then 7.4.0 also support @Ignore annotation
-     */
-    private fun CtClass.disabledTestsSupport() = getDeclaredMethod("run").insertAfter(
-            """
-                java.util.Iterator disabledTests = getExcludedMethods().iterator();
-                while(disabledTests.hasNext()) {
-                    $packagePath.ITestNGMethod test = ($packagePath.ITestNGMethod) disabledTests.next();
-                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment/[class:" + test.getTestClass().getName() + "]/[method:" + test.getMethodName() + "]");     
-                }
-            """.trimIndent()
-    )
-
-    /**
-     * Support 7.4.0 testng @Ignore annotation
-     */
-    private fun CtClass.ignoredTestSupport() = getMethod(
-        "isAnnotationPresent",
-        "(Lorg/testng/internal/annotations/IAnnotationFinder;Ljava/lang/reflect/Method;Ljava/lang/Class;)Z"
-    ).insertAfter(
-        """ 
-            if ($3 == $packagePath.annotations.IIgnoreAnnotation.class && ${'$'}_) {
-                ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment/[class:" + $2.getDeclaringClass().getName() + "]/[method:" + $2.getName() + "]");
-            }
-        """.trimIndent())
 }
-
-

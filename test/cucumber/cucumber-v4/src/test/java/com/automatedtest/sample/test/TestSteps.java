@@ -52,7 +52,7 @@ public class TestSteps {
         actualTestName = UtilKt.urlEncode(scenario.getName());
         actualTests.add(UtilKt.cucumberTestToTestData(
                 scenario.getName(),
-                CucumberV4.engineSegment,
+                CucumberV4.INSTANCE.getEngineSegment(),
                 "src/test/resources/com/automatedtest/sample/test_name.feature",
                 TestResult.PASSED)
         );
