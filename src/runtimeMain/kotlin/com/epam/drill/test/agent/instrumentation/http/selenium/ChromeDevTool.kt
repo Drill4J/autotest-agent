@@ -17,11 +17,17 @@ package com.epam.drill.test.agent.instrumentation.http.selenium
 
 import com.epam.drill.logger.*
 import com.epam.drill.test.agent.config.*
+import com.github.kklisura.cdt.services.*
+import com.github.kklisura.cdt.services.config.*
+import com.github.kklisura.cdt.services.impl.*
+import com.github.kklisura.cdt.services.invocation.*
+import com.github.kklisura.cdt.services.utils.*
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 import org.java_websocket.client.*
 import org.java_websocket.framing.CloseFrame.*
 import org.java_websocket.handshake.*
+import java.lang.reflect.*
 import java.net.*
 import java.util.concurrent.*
 
@@ -61,9 +67,14 @@ class ChromeDevTool {
     private val logger = Logging.logger(ChromeDevTool::class.java.name)
     internal var ws: ChromeDevToolWs? = null
     internal var isHeadersAdded: Boolean = false
+    private var selenoidDevtools: ChromeDevToolsService? = null
 
     fun addHeaders(headers: Map<String, String>) {
         ws?.addHeaders(headers)
+        selenoidDevtools?.network?.let {
+            it.setExtraHTTPHeaders(headers)
+            it.enable()
+        }
     }
 
     init {
@@ -72,7 +83,16 @@ class ChromeDevTool {
 
     lateinit var url: String
 
-    fun connectToDevTools(capabilities: Map<*, *>?) = kotlin.runCatching {
+    /**
+     * connect to remote Selenoid or local webDriver
+     */
+    fun connect(capabilities: Map<*, *>?, sessionId: String?, remoteHost: String?) = kotlin.runCatching {
+        logger.debug { "starting connectToDevTools with cap='$capabilities' sessionId='$sessionId' remote='$remoteHost'..." }
+        remoteHost?.connectToSelenoid(sessionId)
+        connectToLocal(capabilities)
+    }.getOrNull()
+
+    private fun connectToLocal(capabilities: Map<*, *>?) {
         capabilities?.let { cap ->
             val debuggerURL = cap[CAPABILITY_NAME].toString()
             val con = doDevToolsRequest(debuggerURL)
@@ -84,20 +104,41 @@ class ChromeDevTool {
                 val chromeInfo = Json.parseToJsonElement(response) as JsonObject
                 chromeInfo[DEV_TOOL_PROPERTY_NAME]?.jsonPrimitive?.contentOrNull?.let { url ->
                     this.url = url
-                    connect()
+                    connectWs()
                 } ?: logger.warn { "Can't get DevTools URL" }
             } else {
                 logger.warn { "Can't get chrome info: code=$responseCode" }
             }
         }
-    }.getOrNull()
+    }
+
+    private fun String.connectToSelenoid(sessionId: String?) {
+        logger.debug { "connect to selenoid by ws..." }
+        val webSocketService = WebSocketServiceImpl.create(URI("ws://$this/devtools/$sessionId/page"))
+        val commandInvocationHandler = CommandInvocationHandler()
+        val commandsCache: MutableMap<Method, Any> = ConcurrentHashMap()
+        selenoidDevtools = ProxyUtils.createProxyFromAbstract(
+            ChromeDevToolsServiceImpl::class.java,
+            arrayOf<Class<*>>(
+                WebSocketService::class.java,
+                ChromeDevToolsServiceConfiguration::class.java
+            ),
+            arrayOf(webSocketService, ChromeDevToolsServiceConfiguration())
+        ) { _, method: Method, _ ->
+            commandsCache.computeIfAbsent(method) {
+                ProxyUtils.createProxy(method.returnType, commandInvocationHandler)
+            }
+        }
+        commandInvocationHandler.setChromeDevToolsService(selenoidDevtools)
+    }
 
     fun close() {
         logger.debug { "${this.url} closing..." }
         ws?.close()
+        selenoidDevtools?.close()
     }
 
-    internal fun connect(): Boolean {
+    internal fun connectWs(): Boolean {
         logger.debug { "DevTools URL: ${this.url}" }
         val cdl = CountDownLatch(4)
         ws = ChromeDevToolWs(URI(this.url), cdl, this)
@@ -210,7 +251,7 @@ class ChromeDevToolWs(
         NORMAL -> logger.debug { "socket closed. Code: $code, reason: $reason, remote: $remote" }
         else -> {
             Thread.sleep(1000)
-            logger.debug { "try reconnect to ${this.url}" }.also { chromeDevTool.connect() }
+            logger.debug { "try reconnect to ${this.url}" }.also { chromeDevTool.connectWs() }
         }
     }
 

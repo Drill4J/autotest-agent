@@ -36,17 +36,11 @@ class Selenium : Strategy() {
 
     init {
         val extension = this::class.java.getResource("/$EXTENSION_NAME")
-//        val extensionInstallationDir = defineInstallationDir(extension.file)
         File(System.getProperty("java.io.tmpdir")).resolve(EXTENSION_NAME).apply {
             extensionFile = absolutePath
             writeBytes(extension.readBytes())
         }
 
-    }
-
-    private fun defineInstallationDir(rawPath: String): String {
-        return rawPath.removePrefix("file:")
-            .removeSuffix("drillRuntime.jar!/$EXTENSION_NAME")
     }
 
     override fun permit(ctClass: CtClass): Boolean {
@@ -59,8 +53,18 @@ class Selenium : Strategy() {
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?
     ): ByteArray? {
+        logger.debug { "starting instrument ${ctClass.name}..." }
+        ctClass.addField(CtField.make("java.lang.String drillRemoteAddress;", ctClass))
+        ctClass.getConstructor("(Ljava/net/URL;Lorg/openqa/selenium/Capabilities;)V")
+            .insertBefore(
+                """
+                drillRemoteAddress = $1.getAuthority();
+            """.trimIndent()
+            )
+
         val startSession = ctClass.getDeclaredMethod("startSession")
 
+        //todo remove proxy - EPMDJ-8435
         startSession.insertBefore(
             """
                 if (${ThreadStorage::class.java.name}.INSTANCE.${ThreadStorage::proxyUrl.name}() != null) {
@@ -148,6 +152,13 @@ class Selenium : Strategy() {
     }
 
     private fun connectToDevTools() = run {
-        """ new ${ChromeDevTool::class.java.name}().${ChromeDevTool::connectToDevTools.name}(((java.util.Map)getCapabilities().getCapability("goog:chromeOptions")));"""
+        """
+            new ${ChromeDevTool::class.java.name}().${ChromeDevTool::connect.name}(
+                ((java.util.Map)getCapabilities().getCapability("goog:chromeOptions")),
+                sessionId.toString(),
+                drillRemoteAddress
+             );
+            
+        """.trimIndent()
     }
 }

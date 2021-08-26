@@ -40,6 +40,7 @@ val kniVersion: String by rootProject
 val uuidVersion: String by rootProject
 val atomicFuVersion: String by rootProject
 val collectionImmutableVersion: String by rootProject
+val cdtJavaClient: String by rootProject
 
 
 val libName = "autoTestAgent"
@@ -107,6 +108,7 @@ kotlin {
                     implementation("com.squareup.okhttp3:okhttp:3.13.1")
                     implementation("org.jetbrains.kotlinx:atomicfu:$atomicFuVersion")
                     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:$collectionImmutableVersion")
+                    implementation("com.github.kklisura.cdt:cdt-java-client:$cdtJavaClient")
                     implementation(project(":runtime"))
                 }
             }
