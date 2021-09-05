@@ -17,6 +17,7 @@ package com.epam.drill.test.agent.instrumentation.kafka
 
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.*
+import com.epam.drill.test.agent.instrumentation.http.*
 import javassist.*
 import java.security.*
 
@@ -37,6 +38,7 @@ class Kafka : Strategy() {
         ctClass.getDeclaredMethods("send").forEach {
             it.insertBefore("""
                 if ($IF_CONDITION) {
+                    ${Log::class.java.name}.INSTANCE.${Log::injectHeaderLog.name}($TEST_NAME_VALUE_CALC_LINE,$SESSION_ID_VALUE_CALC_LINE);
                     $1.headers().add("$SESSION_ID_HEADER", $SESSION_ID_VALUE_CALC_LINE.getBytes());
                     $1.headers().add("$TEST_NAME_HEADER", $TEST_NAME_VALUE_CALC_LINE.getBytes());
                 }
