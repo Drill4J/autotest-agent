@@ -33,6 +33,7 @@ import java.util.concurrent.*
 
 private const val CAPABILITY_NAME = "debuggerAddress"
 private const val DEV_TOOL_PROPERTY_NAME = "webSocketDebuggerUrl"
+private const val SELENOID_WS_TIMEOUT_SEC: Long = 2
 
 object DevToolsClientThreadStorage {
     private val logger = Logging.logger(ChromeDevTool::class.java.name)
@@ -117,13 +118,15 @@ class ChromeDevTool {
         val webSocketService = WebSocketServiceImpl.create(URI("ws://$this/devtools/$sessionId/page"))
         val commandInvocationHandler = CommandInvocationHandler()
         val commandsCache: MutableMap<Method, Any> = ConcurrentHashMap()
+        val configuration = ChromeDevToolsServiceConfiguration()
+        configuration.readTimeout = SELENOID_WS_TIMEOUT_SEC
         selenoidDevtools = ProxyUtils.createProxyFromAbstract(
             ChromeDevToolsServiceImpl::class.java,
             arrayOf<Class<*>>(
                 WebSocketService::class.java,
                 ChromeDevToolsServiceConfiguration::class.java
             ),
-            arrayOf(webSocketService, ChromeDevToolsServiceConfiguration())
+            arrayOf(webSocketService, configuration)
         ) { _, method: Method, _ ->
             commandsCache.computeIfAbsent(method) {
                 ProxyUtils.createProxy(method.returnType, commandInvocationHandler)
@@ -133,9 +136,14 @@ class ChromeDevTool {
     }
 
     fun close() {
-        logger.debug { "${this.url} closing..." }
-        ws?.close()
-        selenoidDevtools?.close()
+        ws?.let {
+            logger.debug { "${this.url} closing..." }
+            it.close()
+        }
+        selenoidDevtools?.let {
+            logger.debug {"closing Selenoid ws..."}
+            it.close()
+        }
     }
 
     internal fun connectWs(): Boolean {
