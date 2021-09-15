@@ -27,7 +27,7 @@ object TestNGStrategy : AbstractTestStrategy() {
 
     const val engineSegment = "[engine:testng]"
     private const val DrillTestNGTestListner = "DrillTestNGTestListener"
-    private const val ITestNGMethod = "org.testng.ITestNGMethod"
+    private const val TestNGMethod = "org.testng.internal.TestNGMethod"
     private const val ITestResult = "org.testng.ITestResult"
     private const val ITestContext = "org.testng.ITestContext"
     override val id: String
@@ -50,8 +50,11 @@ object TestNGStrategy : AbstractTestStrategy() {
             """
                 java.util.Iterator disabledTests = getExcludedMethods().iterator();
                 while(disabledTests.hasNext()) {
-                    $ITestNGMethod test = ($ITestNGMethod) disabledTests.next();
-                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment/[class:" + test.getTestClass().getName() + "]/[method:" + test.getMethodName() + "]");     
+                    java.lang.Object baseMethod = disabledTests.next();
+                    if (baseMethod instanceof $TestNGMethod) {
+                        $TestNGMethod test = ($TestNGMethod) baseMethod;
+                        ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment/[class:" + test.getTestClass().getName() + "]/[method:" + test.getMethodName() + "()]");     
+                    }
                 }
             """.trimIndent()
         )

@@ -13,24 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import com.epam.drill.plugins.test2code.api.*
-import com.epam.drill.test.agent.instrumentation.testing.testng.*
+import com.epam.drill.*
 import com.epam.drill.test.common.*
 import org.testng.annotations.*
-import pack.*
 
+abstract class BaseTest {
+    private val sessionId = "testSession"
 
-class TestTestNG : BaseTest() {
-
-    @Test
-    fun simpleTestMethodName() {
-        HttpHeadersTest.test(::simpleTestMethodName.name)
-        expectedTests.add(::simpleTestMethodName.toTestData(TestNGStrategy.engineSegment, TestResult.PASSED))
+    companion object {
+        val expectedTests = mutableSetOf<TestData>()
     }
 
-    @Test
-    fun `method with backtick names`() {
-        HttpHeadersTest.test(::`method with backtick names`.name)
-        expectedTests.add(::`method with backtick names`.toTestData(TestNGStrategy.engineSegment, TestResult.PASSED))
+    @BeforeSuite
+    fun beforeSuite() {
+        getAdminData()
+        SessionProvider.startSession(sessionId)
+    }
+
+    @AfterSuite
+    fun checkTests() {
+        SessionProvider.stopSession(sessionId)
+        val serverDate: ServerDate = getAdminData()
+        val testFromAdmin = serverDate.tests[sessionId] ?: emptyList()
+        testFromAdmin shouldContainsAllTests expectedTests
+        testFromAdmin.assertTestTime()
     }
 }

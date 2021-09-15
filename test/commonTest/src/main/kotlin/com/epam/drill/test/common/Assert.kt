@@ -29,4 +29,5 @@ infix fun List<TestInfo>.shouldContainsAllTests(expected: Collection<TestData>) 
     val actual = map { it.toTestData() }
     assertEquals(expected.size, actual.size)
     assertTrue(expected.containsAll(actual))
+    assertEquals(expected.count { it.testResult == TestResult.SKIPPED }, count { it.result == TestResult.SKIPPED })
 }

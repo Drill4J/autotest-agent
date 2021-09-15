@@ -13,38 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import com.epam.drill.*
+import com.epam.drill.plugins.test2code.api.*
+import com.epam.drill.test.agent.instrumentation.testing.testng.*
+import com.epam.drill.test.common.*
 import org.testng.annotations.*
 import pack.*
 
-
-class TestTestNG {
+class TestTestNG : BaseTest() {
 
     @Test
     fun simpleTestMethodName() {
         HttpHeadersTest.test(::simpleTestMethodName.name)
+        expectedTests.add(::simpleTestMethodName.toTestData(TestNGStrategy.engineSegment, TestResult.PASSED))
     }
 
     @Test
     fun `method with backtick names`() {
         HttpHeadersTest.test(::`method with backtick names`.name)
-    }
-
-
-    companion object {
-
-        private const val sessionId = "testSession"
-
-        @BeforeClass
-        @JvmStatic
-        fun startSession() {
-            SessionProvider.startSession(sessionId)
-        }
-
-        @AfterClass
-        @JvmStatic
-        fun stopSession() {
-            SessionProvider.stopSession(sessionId)
-        }
+        expectedTests.add(::`method with backtick names`.toTestData(TestNGStrategy.engineSegment, TestResult.PASSED))
     }
 }

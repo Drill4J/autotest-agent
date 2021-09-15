@@ -17,6 +17,7 @@ import com.epam.drill.*
 import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.instrumentation.testing.junit.*
 import com.epam.drill.test.common.*
+import com.epam.drill.test.common.TestData
 import org.junit.*
 import org.junit.Ignore
 import org.junit.Test

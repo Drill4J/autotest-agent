@@ -36,6 +36,7 @@ class AdminStubStorage {
                 }
             }
             is StopSession -> {
+                startedSessions.remove(action.payload.sessionId)
                 finishedSessions.add(action.payload.sessionId)
                 action.payload.testRun?.let {
                     val testsInfo = tests[action.payload.sessionId] ?: listOf()
@@ -45,7 +46,7 @@ class AdminStubStorage {
         }
     }
 
-    fun dump() = ServerDate(startedSessions, finishedSessions, tests).encode()
-
-
+    fun dump() = ServerDate(startedSessions, finishedSessions, tests).encode().also {
+        tests.clear()
+    }
 }
