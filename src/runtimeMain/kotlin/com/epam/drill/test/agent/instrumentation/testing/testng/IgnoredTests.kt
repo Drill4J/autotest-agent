@@ -47,7 +47,7 @@ object IgnoredTests : AbstractTestStrategy() {
             ).insertAfter(
                 """ 
             if ($3 == $IIgnoreAnnotation.class && ${'$'}_) {
-                ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("${TestNGStrategy.engineSegment}/[class:" + $2.getDeclaringClass().getName() + "]/[method:" + $2.getName() + "]");
+                ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("${TestNGStrategy.engineSegment}/[class:" + $2.getDeclaringClass().getName() + "]/[method:" + $2.getName() + "()]");
             }
         """.trimIndent()
             )

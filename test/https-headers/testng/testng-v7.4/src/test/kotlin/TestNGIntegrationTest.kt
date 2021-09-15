@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-import com.epam.drill.*
 import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.instrumentation.testing.testng.*
 import com.epam.drill.test.common.*
-import com.epam.drill.test.common.TestData
 import org.testng.Assert.*
 import org.testng.annotations.*
-import java.util.*
-import kotlin.reflect.jvm.*
-
 
 @Suppress("NonAsciiCharacters", "RemoveRedundantBackticks")
-class TestNGIntegrationTest {
+class TestNGIntegrationTest : BaseTest() {
 
     @Test
     fun simpleTestMethodName() {
@@ -58,32 +53,4 @@ class TestNGIntegrationTest {
 //    fun testFailed() {
 //        assertTrue(false)
 //    }
-
-    companion object {
-        
-        private val sessionId = "${UUID.randomUUID()}"
-        private val expectedTests = mutableListOf<TestData>(
-            //TestNGIntegrationTest::testSkipped.javaMethod!!.toTestData(TestNGStrategy.engineSegment, TestResult.SKIPPED),
-        )
-
-
-        @BeforeClass
-        @JvmStatic
-        fun startSession() {
-            getAdminData()
-            SessionProvider.startSession(sessionId)
-        }
-
-        @AfterClass
-        @JvmStatic
-        fun checkTests() {
-            SessionProvider.stopSession(sessionId)
-            val serverDate: ServerDate = getAdminData()
-            val testFromAdmin = serverDate.tests[sessionId] ?: emptyList()
-            testFromAdmin shouldContainsAllTests expectedTests
-            testFromAdmin.assertTestTime()
-        }
-
-    }
-
 }
