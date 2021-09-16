@@ -6,9 +6,13 @@ plugins {
     kotlin("jvm")
     id("com.epam.drill.agent.runner.autotest") version "0.2.3" apply false
 }
-val jupiterVersion = "5.6.2"
-val gsonVersion = "2.8.5"
-val restAssuredVersion = "4.0.0"
+val jupiterVersion: String by rootProject
+val gsonVersion: String by rootProject
+val restAssuredVersion: String by rootProject
+val unirestVersion: String by rootProject
+val okHttpVersion: String by rootProject
+val slf4jVersion: String by rootProject
+
 allprojects {
     repositories {
         mavenLocal()
@@ -25,8 +29,9 @@ subprojects {
     dependencies {
         implementation("io.rest-assured:rest-assured:$restAssuredVersion")
         implementation("com.google.code.gson:gson:$gsonVersion")
-        implementation("com.mashape.unirest:unirest-java:1.4.9")
-        implementation("com.squareup.okhttp3:okhttp:3.12.0")
+        implementation("com.mashape.unirest:unirest-java:$unirestVersion")
+        implementation("com.squareup.okhttp3:okhttp:$okHttpVersion")
+        implementation("org.slf4j:slf4j-simple:$slf4jVersion")
         implementation(kotlin("reflect"))
         implementation(project(":runtime"))
     }

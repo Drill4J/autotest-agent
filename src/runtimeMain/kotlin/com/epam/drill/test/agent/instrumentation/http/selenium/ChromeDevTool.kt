@@ -17,6 +17,7 @@ package com.epam.drill.test.agent.instrumentation.http.selenium
 
 import com.epam.drill.logger.*
 import com.epam.drill.test.agent.config.*
+import com.epam.drill.test.agent.util.*
 import com.github.kklisura.cdt.services.*
 import com.github.kklisura.cdt.services.config.*
 import com.github.kklisura.cdt.services.impl.*
@@ -71,10 +72,12 @@ class ChromeDevTool {
     private var selenoidDevtools: ChromeDevToolsService? = null
 
     fun addHeaders(headers: Map<String, String>) {
-        ws?.addHeaders(headers)
-        selenoidDevtools?.network?.let {
-            it.setExtraHTTPHeaders(headers)
-            it.enable()
+        trackTime("send headers") {
+            ws?.addHeaders(headers)
+            selenoidDevtools?.network?.let {
+                it.setExtraHTTPHeaders(headers)
+                it.enable()
+            }
         }
     }
 
@@ -89,8 +92,14 @@ class ChromeDevTool {
      */
     fun connect(capabilities: Map<*, *>?, sessionId: String?, remoteHost: String?) = kotlin.runCatching {
         logger.debug { "starting connectToDevTools with cap='$capabilities' sessionId='$sessionId' remote='$remoteHost'..." }
-        remoteHost?.connectToSelenoid(sessionId)
-        connectToLocal(capabilities)
+        trackTime("connect to selenoid") {
+            remoteHost?.connectToSelenoid(sessionId)
+        }
+        if (selenoidDevtools == null || selenoidDevtools?.isClosed == true) {
+            trackTime("connect to local") {
+                connectToLocal(capabilities)
+            }
+        }
     }.getOrNull()
 
     private fun connectToLocal(capabilities: Map<*, *>?) {
@@ -141,7 +150,7 @@ class ChromeDevTool {
             it.close()
         }
         selenoidDevtools?.let {
-            logger.debug {"closing Selenoid ws..."}
+            logger.debug { "closing Selenoid ws..." }
             it.close()
         }
     }
