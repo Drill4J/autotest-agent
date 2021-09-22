@@ -17,6 +17,7 @@
 
 package com.epam.drill.test.agent
 
+import com.epam.drill.jvmapi.*
 import com.epam.drill.jvmapi.gen.AddCapabilities
 import com.epam.drill.jvmapi.gen.AddToBootstrapClassLoaderSearch
 import com.epam.drill.jvmapi.gen.JNI_OK
@@ -41,6 +42,7 @@ object Agent : JvmtiAgent {
     override fun agentOnLoad(options: String): Int = memScoped {
         try {
             val config = options.toAgentParams().freeze()
+            loggerCallback = { Logging.logger(it) }
             setUnhandledExceptionHook({ thr: Throwable ->
                 mainLogger.error(thr) { "Unhandled event $thr" }
             }.freeze())

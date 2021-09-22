@@ -8,7 +8,6 @@ val kniVersion: String by rootProject
 
 repositories {
     mavenCentral()
-    jcenter()
     maven(url = "https://oss.jfrog.org/artifactory/list/oss-release-local")
 }
 dependencies {

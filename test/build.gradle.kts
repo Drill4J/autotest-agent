@@ -13,7 +13,6 @@ allprojects {
     repositories {
         mavenLocal()
         mavenCentral()
-        jcenter()
     }
 }
 val presetName = HostManager.host.presetName

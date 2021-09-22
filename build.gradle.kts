@@ -23,7 +23,6 @@ allprojects {
 repositories {
     mavenLocal()
     mavenCentral()
-    jcenter()
     maven(url = "https://dl.bintray.com/kotlin/kotlinx/")
     maven(url = "https://oss.jfrog.org/artifactory/list/oss-release-local")
 }
@@ -35,7 +34,6 @@ val drillLoggerVersion: String by rootProject
 val drillHttpInterceptorVersion: String by rootProject
 val websocketVersion: String by rootProject
 val javassistVersion: String by rootProject
-val klockVersion: String by rootProject
 val kniVersion: String by rootProject
 val uuidVersion: String by rootProject
 val atomicFuVersion: String by rootProject
@@ -103,7 +101,6 @@ kotlin {
                     implementation("org.java-websocket:Java-WebSocket:$websocketVersion")
                     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$serializationRuntimeVersion")
                     implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
-                    implementation("com.soywiz.korlibs.klock:klock:$klockVersion")
                     implementation("com.epam.drill.kni:runtime:$kniVersion")
                     implementation("com.squareup.okhttp3:okhttp:3.13.1")
                     implementation("org.jetbrains.kotlinx:atomicfu:$atomicFuVersion")
