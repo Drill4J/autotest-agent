@@ -7,4 +7,7 @@ build/
 .kotlintest/
 test-1.txt
 src/kni/kotlin
+src/*/kotlin/kni/
+src/*/kotlin/gen/
 target/
+kni-meta-info

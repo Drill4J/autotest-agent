@@ -20,8 +20,7 @@ allprojects {
     }
 }
 val presetName = HostManager.host.presetName
-val host = "127.0.0.1"
-val port = ServerSocket(0).use { it.localPort }
+val (host, port) = ServerSocket(0).use { "127.0.0.1" to it.localPort }
 
 subprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
@@ -43,17 +42,17 @@ subprojects {
             testImplementation("org.junit.jupiter:junit-jupiter:$jupiterVersion")
         }
         this.tasks.withType<Test> {
-            useJUnitPlatform()
+            processServer {
+                useJUnitPlatform()
+            }
         }
     }
 
     tasks.withType<Test> {
-        dependsOn(":test:admin-stub-server:startServer")
-        environment("host" to host)
-        environment("port" to port)
-        dependsOn(project(":").tasks.getByPath("linkAutoTestAgentDebugShared${presetName.capitalize()}"))
-        dependsOn(project(":").tasks.getByPath("install${presetName.capitalize()}Dist"))
-        finalizedBy(":test:admin-stub-server:killProcess")
+        processServer {
+            dependsOn(project(":").tasks.getByPath("linkAutoTestAgentDebugShared${presetName.capitalize()}"))
+            dependsOn(project(":").tasks.getByPath("install${presetName.capitalize()}Dist"))
+        }
     }
 
     project.extra["adminHost"] = host
@@ -79,4 +78,12 @@ subprojects {
     }
 
 
+}
+
+fun Test.processServer(block: Task.() -> Unit) {
+    environment("host" to host)
+    environment("port" to port)
+    dependsOn(":test:admin-stub-server:startServer")
+    block()
+    finalizedBy(":test:admin-stub-server:stopServer")
 }

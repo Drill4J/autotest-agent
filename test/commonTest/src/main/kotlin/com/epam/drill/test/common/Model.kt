@@ -16,9 +16,7 @@
 package com.epam.drill.test.common
 
 import com.epam.drill.plugins.test2code.api.*
-import kotlinx.serialization.*
 
-@Serializable
 data class ServerDate(
     val startedSessions: List<String>,
     val finishedSessions: List<String>,

@@ -24,10 +24,10 @@ inline fun <T> trackTime(tag: String = "", debug: Boolean = false, block: () -> 
     measureTimedValue { block() }.apply {
         val message = "[$tag] took: $duration"
         when {
-            duration.inSeconds > 1 -> {
+            duration.toDouble(DurationUnit.SECONDS) > 1 -> {
                 logger.warn { message }
             }
-            duration.inSeconds > 30 -> {
+            duration.toDouble(DurationUnit.SECONDS) > 30 -> {
                 logger.error { message }
             }
             else -> if (debug) logger.debug { message } else logger.trace { message }

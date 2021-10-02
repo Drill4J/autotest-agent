@@ -8,13 +8,18 @@ val kniVersion: String by rootProject
 
 repositories {
     mavenCentral()
-    maven(url = "https://oss.jfrog.org/artifactory/list/oss-release-local")
+    mavenLocal()
+    maven(url = "https://drill4j.jfrog.io/artifactory/drill")
 }
 dependencies {
     implementation("com.epam.drill.kni:runtime:$kniVersion")
 }
 
-val jar:org.gradle.jvm.tasks.Jar by tasks
+val jar: org.gradle.jvm.tasks.Jar by tasks
+
+//TODO https://youtrack.jetbrains.com/issue/KT-46165
+jar.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
 val agentShadow by tasks.registering(com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar::class) {
     from(jar)
     archiveFileName.set("drillRuntime.jar")
@@ -24,7 +29,7 @@ val agentShadow by tasks.registering(com.github.jengelman.gradle.plugins.shadow.
     relocate("org.slf4j", "drill.org.slf4j")
 }
 publishing {
-    publications{
+    publications {
         create<MavenPublication>("maven") {
             artifact(agentShadow.get())
         }
