@@ -23,7 +23,7 @@ import com.epam.drill.test.agent.http.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.builtins.*
 import kotlin.native.concurrent.*
-import kotlin.time.seconds as sec
+import kotlin.time.*
 
 object SessionController {
     val _agentConfig = AtomicReference(AgentRawConfig().freeze()).freeze()
@@ -41,7 +41,7 @@ object SessionController {
     init {
         GlobalScope.launch {
             while (true) {
-                delay(3.sec)
+                delay(Duration.seconds(3))
                 runCatching {
                     val tests = runCatching {
                         ListSerializer(TestInfo.serializer()) parse TestListener.getData()

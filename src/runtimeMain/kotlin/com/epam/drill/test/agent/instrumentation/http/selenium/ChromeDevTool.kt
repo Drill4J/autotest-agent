@@ -30,6 +30,7 @@ import org.java_websocket.framing.CloseFrame.*
 import org.java_websocket.handshake.*
 import java.lang.reflect.*
 import java.net.*
+import java.util.*
 import java.util.concurrent.*
 
 private const val CAPABILITY_NAME = "debuggerAddress"
@@ -244,7 +245,7 @@ class ChromeDevToolWs(
         .filter { it.type == "page" }
         .map { it.targetId }
         .first()
-        .toUpperCase()
+        .uppercase(Locale.getDefault())
 
 
     override fun onError(ex: java.lang.Exception?) {

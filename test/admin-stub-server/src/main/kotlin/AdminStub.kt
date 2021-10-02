@@ -29,7 +29,8 @@ class AdminStub(private val host: String, private val port: String) {
         val storage = AdminStubStorage()
         val httpServer = HttpServer.create(InetSocketAddress(host, port.toInt()), 0)
         httpServer.createContext("/status") { httpExchange ->
-            val response = storage.dump().toByteArray()
+            val dump = storage.dump()
+            val response = dump.toByteArray()
             httpExchange.sendResponseHeaders(200, response.size.toLong())
             httpExchange.responseBody.use {
                 it.write(response)

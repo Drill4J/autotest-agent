@@ -25,8 +25,10 @@ import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.http.selenium.*
 import com.epam.drill.test.agent.instrumentation.kafka.*
 import com.epam.drill.test.agent.instrumentation.runners.*
+import javassist.*
 import org.objectweb.asm.*
 import java.io.*
+import java.security.*
 import java.util.jar.*
 
 @Kni
@@ -38,26 +40,20 @@ actual object StrategyManager {
     private var systemStrategies: MutableSet<TransformStrategy> = HashSet()
 
     init {
-        systemStrategies.add(
-            //TODO EPMDJ-8916 Use default realisation
-            object : OkHttpClient() {
-                override fun permit(classReader: ClassReader): Boolean {
-                    return classReader.interfaces.any { "drill/$it" == "okhttp3/internal/http/HttpCodec" }
-                }
-            })
-        systemStrategies.add(ApacheClient())
-        systemStrategies.add(JavaHttpUrlConnection())
+        systemStrategies.add(OkHttpClientStub)
+        systemStrategies.add(ApacheClient)
+        systemStrategies.add(JavaHttpUrlConnection)
         systemStrategies.add(Selenium())
         systemStrategies.add(Kafka())
         ClientsCallback.initRequestCallback {
-            val headers = mutableMapOf<String, String>()
-            ThreadStorage.sessionId()?.let {
-                headers.put(SESSION_ID_HEADER, it)
+            mutableMapOf<String, String>().apply {
+                ThreadStorage.sessionId()?.let {
+                    put(SESSION_ID_HEADER, it)
+                }
+                ThreadStorage.storage.get()?.let {
+                    put(TEST_NAME_HEADER, it)
+                }
             }
-            ThreadStorage.storage.get()?.let {
-                headers.put(TEST_NAME_HEADER, it)
-            }
-            headers
         }
 
         ClientsCallback.initSendConditionCallback {
@@ -112,4 +108,16 @@ actual object StrategyManager {
         }
         return transformedClassBytes.firstOrNull { it != null }
     }
+}
+//TODO EPMDJ-8916 Replace with [com.epam.drill.agent.instrument.http.ok.OkHttpClient]
+object OkHttpClientStub : TransformStrategy() {
+    override fun permit(classReader: ClassReader): Boolean {
+        return classReader.interfaces.any { "drill/$it" == "okhttp3/internal/http/HttpCodec" }
+    }
+    override fun instrument(
+        ctClass: CtClass,
+        pool: ClassPool,
+        classLoader: ClassLoader?,
+        protectionDomain: ProtectionDomain?,
+    ): ByteArray? = OkHttpClient.instrument(ctClass, pool, classLoader, protectionDomain)
 }

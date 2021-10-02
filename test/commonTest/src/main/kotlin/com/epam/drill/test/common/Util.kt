@@ -37,7 +37,7 @@ fun parseAction(
     rawAction: String,
 ): Action = json.decodeFromString(Action.serializer(), rawAction)
 
-fun ServerDate.encode() = json.encodeToString(ServerDate.serializer(), this)
+fun ServerDate.encode() = Gson().toJson(this)
 
 //TODO Exception: $$serializer cannot be cast to kotlinx.serialization.KSerializer due to relocate("kotlin", "kruntime")
 fun String.decodeServerDate(): ServerDate = Gson().fromJson(this, ServerDate::class.java)
