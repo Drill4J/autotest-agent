@@ -33,7 +33,7 @@ actual object TestListener {
 
     private fun addTestInfo(
         testId: String,
-        vararg vals: Pair<String, Any>
+        vararg vals: Pair<String, Any>,
     ) = _testInfo.update { testProperties ->
         val currentInfo = testProperties[testId] ?: persistentHashMapOf()
         testProperties.put(testId, currentInfo + vals)
@@ -48,10 +48,9 @@ actual object TestListener {
                     TestInfo::name.name to test,
                     TestInfo::startedAt.name to System.currentTimeMillis()
                 )
-                DevToolsClientThreadStorage.getDevTool()?.apply {
-                    logger.debug { "Thread id=${Thread.currentThread().id}, devTool instance=${this}, Test = $it" }
-                    addHeaders(mapOf(TEST_NAME_HEADER to it.urlEncode(), SESSION_ID_HEADER to (ThreadStorage.sessionId() ?: "")))
-                }
+                DevToolsClientThreadStorage.addHeaders(
+                    mapOf(TEST_NAME_HEADER to it.urlEncode(), SESSION_ID_HEADER to (ThreadStorage.sessionId() ?: ""))
+                )
                 ThreadStorage.startSession(it)
                 ThreadStorage.memorizeTestName(it)
                 WebDriverThreadStorage.addCookies()
