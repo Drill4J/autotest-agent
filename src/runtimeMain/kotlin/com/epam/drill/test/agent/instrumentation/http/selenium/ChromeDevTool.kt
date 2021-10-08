@@ -55,8 +55,10 @@ object DevToolsClientThreadStorage {
         }
     }
 
-    fun setDevTool(devTool: ChromeDevTool) = threadLocalChromeDevTool.set(devTool).also {
-        logger.debug { "Devtool inited for: Thread id=${Thread.currentThread().id}, Devtool instance=$devTool" }
+    fun setDevTool(devTool: ChromeDevTool) {
+        getDevTool()?.close()
+        threadLocalChromeDevTool.set(devTool)
+        logger.debug { "DevTool inited for: Thread id=${Thread.currentThread().id}, DevTool instance=$devTool" }
     }
 
     fun getDevTool(): ChromeDevTool? = threadLocalChromeDevTool.get()
@@ -108,7 +110,6 @@ class ChromeDevTool {
             val con = doDevToolsRequest(debuggerURL)
             val responseCode = con.responseCode
             if (responseCode == HttpURLConnection.HTTP_OK) {
-
                 val response = con.inputStream.reader().readText()
                 logger.debug { "Chrome info: $response" }
                 val chromeInfo = Json.parseToJsonElement(response) as JsonObject
@@ -296,7 +297,7 @@ data class Target(
     val title: String,
     val url: String,
     val attached: Boolean,
-    val browserContextId: String
+    val browserContextId: String,
 )
 
 @Serializable
@@ -304,7 +305,7 @@ data class DevToolsRequest(
     val id: Int,
     val method: String,
     val params: Map<String, JsonElement> = emptyMap(),
-    val sessionId: String? = null
+    val sessionId: String? = null,
 )
 
 @Serializable
@@ -312,5 +313,5 @@ data class DevToolsHeaderRequest(
     val id: Int,
     val method: String,
     val params: Map<String, Map<String, String>> = emptyMap(),
-    val sessionId: String? = null
+    val sessionId: String? = null,
 )

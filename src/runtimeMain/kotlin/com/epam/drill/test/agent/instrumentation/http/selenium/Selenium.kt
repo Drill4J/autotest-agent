@@ -40,7 +40,6 @@ class Selenium : Strategy() {
             extensionFile = absolutePath
             writeBytes(extension.readBytes())
         }
-
     }
 
     override fun permit(ctClass: CtClass): Boolean {
@@ -51,7 +50,7 @@ class Selenium : Strategy() {
         ctClass: CtClass,
         pool: ClassPool,
         classLoader: ClassLoader?,
-        protectionDomain: ProtectionDomain?
+        protectionDomain: ProtectionDomain?,
     ): ByteArray? {
         logger.debug { "starting instrument ${ctClass.name}..." }
         ctClass.addField(CtField.make("java.lang.String drillRemoteAddress;", ctClass))
@@ -126,7 +125,7 @@ class Selenium : Strategy() {
         ctClass.getDeclaredMethod("get").insertBefore(
             """
                 boolean isInitPage = $ImmutableList.of($initPages).contains(getCurrentUrl());
-                if(isInitPage){ execute("get", $ImmutableMap.of("url", $1)); }
+                if (isInitPage) { execute("get", $ImmutableMap.of("url", $1)); }
                 addDrillHeaders();
                 addDrillCookies();
             """.trimIndent()
