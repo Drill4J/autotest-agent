@@ -63,6 +63,7 @@ object DevToolsClientThreadStorage {
 
     fun isHeadersAdded() = threadLocalChromeDevTool.get()?.isHeadersAdded ?: false
 
+    fun resetHeaders() =  getDevTool()?.addHeaders(emptyMap())
 }
 
 class ChromeDevTool {
@@ -175,7 +176,7 @@ class ChromeDevTool {
 class ChromeDevToolWs(
     val url: URI,
     private val cdl: CountDownLatch,
-    val chromeDevTool: ChromeDevTool
+    val chromeDevTool: ChromeDevTool,
 ) : WebSocketClient(url) {
 
     private val json = Json { ignoreUnknownKeys = true }
