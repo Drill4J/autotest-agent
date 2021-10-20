@@ -49,16 +49,18 @@ fun getAdminData() = run {
 fun Method.toTestData(
     engine: String,
     testResult: TestResult,
-    supportParam: Boolean = false,
-): TestData = TestData(name = "$engine/[class:${declaringClass.name}]/[method:$name(" +
-        "${if (supportParam) parameters.joinToString(",") else ""})]",
+    paramNumber: String,
+): TestData = TestData(name = "$engine/[class:${declaringClass.name}]/[method:$name" +
+        (paramNumber.takeIf { it.isNotBlank() }?.let {
+            parameters.joinToString(",", "(", ")") { it.type.simpleName } + "[$paramNumber]"
+        } ?: "()") + "]",
     testResult = testResult)
 
 fun KFunction<*>.toTestData(
     engine: String,
     testResult: TestResult,
-    supportParam: Boolean = false,
-): TestData = javaMethod!!.toTestData(engine, testResult, supportParam)
+    paramNumber: String = ""
+): TestData = javaMethod!!.toTestData(engine, testResult, paramNumber)
 
 fun String.cucumberTestToTestData(
     engine: String,

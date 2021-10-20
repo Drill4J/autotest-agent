@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import com.epam.drill.plugins.test2code.api.TestResult;
 import com.epam.drill.test.agent.instrumentation.testing.testng.TestNGStrategy;
 import com.epam.drill.test.common.TestData;
@@ -26,15 +27,17 @@ import java.util.List;
 
 public class FactoryTest extends BaseTest {
     private Integer param;
+    private String value;
 
     @Factory(dataProvider = "dataMethod")
-    public FactoryTest(int param) {
+    public FactoryTest(int param, String value) {
         this.param = param;
+        this.value = value;
     }
 
     @DataProvider
     public static Object[][] dataMethod() {
-        return new Object[][]{{0}, {1}};
+        return new Object[][]{{0, "first"}, {1, "second"}};
     }
 
     @Test
@@ -53,7 +56,10 @@ public class FactoryTest extends BaseTest {
 
     TestData toData(String method) {
         return new TestData(
-                TestNGStrategy.engineSegment + "/[class:" + getClass().getSimpleName() + "(" + param.getClass().getSimpleName() + ")[" + param + "]" + "]/[method:" + method + "()" + "]",
+                TestNGStrategy.engineSegment + "/[class:"
+                        + getClass().getSimpleName() +
+                        "(" + param.getClass().getSimpleName() + "," + value.getClass().getSimpleName() + ")[" + param + "]"
+                        + "]/[method:" + method + "()" + "]",
                 TestResult.PASSED
         );
     }

@@ -20,6 +20,7 @@ import com.epam.drill.test.agent.TestListener
 import javassist.ClassPool
 import javassist.CtClass
 import javassist.CtMethod
+import java.lang.reflect.*
 import java.security.ProtectionDomain
 
 abstract class TestNGStrategy : AbstractTestStrategy() {
@@ -141,15 +142,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
     private fun getParamsString(): String = """
         private String getParamsString($ITestResult result) {
             Object[] parameters = result.getParameters();
-            String paramString = "(";
-            for (int i = 0; i < parameters.length; i++){ 
-                String parameterClassName = parameters[i].getClass().getSimpleName();
-                if (i != 0) {
-                    paramString += ",";
-                }
-                paramString += parameterClassName;
-            }
-            paramString += ")";
+            String paramString = ${this::class.java.name}.INSTANCE.${this::paramTypes.name}(parameters);
             if (result.getParameters().length != 0){
                 paramString += "[" + result.getMethod().getParameterInvocationCount() + "]";
             }
@@ -158,5 +151,12 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
     """.trimIndent()
 
     abstract fun getFactoryParams(): String
-    abstract fun getIgnoredTests(ctClass: CtClass, pool: ClassPool)
+    open fun getIgnoredTests(ctClass: CtClass, pool: ClassPool) {}
+
+    fun paramTypes(objects: Array<Any>): String = objects.joinToString(",", "(", ")") {
+        when (it) {
+            is Field -> it.type.simpleName
+            else -> it.javaClass.simpleName
+        }
+    }
 }
