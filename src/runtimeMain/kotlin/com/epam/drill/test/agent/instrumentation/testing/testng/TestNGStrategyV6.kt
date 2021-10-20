@@ -17,6 +17,7 @@ package com.epam.drill.test.agent.instrumentation.testing.testng
 
 import com.epam.drill.test.agent.*
 import javassist.*
+import java.lang.reflect.*
 
 @Suppress("unused")
 object TestNGStrategyV6 : TestNGStrategy() {
@@ -42,24 +43,17 @@ object TestNGStrategyV6 : TestNGStrategy() {
             Object[] instances = result.getTestClass().getInstances(false);
             String params = "";
             if (instances.length > 1){
-                params += "(";
                 Object instance = result.getInstance();
                 java.lang.reflect.Field[] fields = instance.getClass().getDeclaredFields();
-                for (int i = 0; i < fields.length; i++) {
-                    java.lang.reflect.Field field = fields[i];
-                    String classname = field.getType().getSimpleName();
-                    params += classname;
-                    if (fields.length > 1) params += " ,";
-                }
-                params += ")";
-                int i = 0;
-                while (i < instances.length) {
-                    if (instances[i] == instance) break;
-                    i++;
-                }
-                params += ("[" + i + "]");
+                params += ${this::class.java.name}.INSTANCE.${this::paramTypes.name}(fields);
+                params += ${this::class.java.name}.INSTANCE.${this::paramNumber.name}(instance, instances);
             }
             return params;
         }
     """.trimIndent()
+
+    fun paramNumber(
+        instance: Any,
+        instances: Array<Any>
+    ): String = "[${instances.indexOf(instance)}]"
 }

@@ -23,6 +23,9 @@ import org.testng.annotations.*
 @Suppress("NonAsciiCharacters", "RemoveRedundantBackticks")
 class TestNGIntegrationTest : BaseTest() {
 
+    @DataProvider
+    fun dataProvider() = arrayOf(arrayOf(1, "first"), arrayOf(2, "second"))
+
     @Test
     fun simpleTestMethodName() {
         expectedTests.add(::simpleTestMethodName.toTestData(TestNGStrategy.engineSegment, TestResult.PASSED))
@@ -38,6 +41,21 @@ class TestNGIntegrationTest : BaseTest() {
     @Test
     fun `Кириллик леттерс`() {
         expectedTests.add(::`Кириллик леттерс`.toTestData(TestNGStrategy.engineSegment, TestResult.PASSED))
+        assertTrue(true)
+    }
+
+    @Test(dataProvider = "dataProvider")
+    fun parametrizedTest(int: Integer, string: String) {
+        val paramNumber = dataProvider().indexOfFirst {
+            it.contentEquals(arrayOf(int, string))
+        }
+        expectedTests.add(
+            ::parametrizedTest.toTestData(
+                TestNGStrategy.engineSegment,
+                TestResult.PASSED,
+                "$paramNumber"
+            )
+        )
         assertTrue(true)
     }
 
