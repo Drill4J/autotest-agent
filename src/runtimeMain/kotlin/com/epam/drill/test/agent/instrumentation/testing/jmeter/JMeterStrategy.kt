@@ -15,20 +15,19 @@
  */
 package com.epam.drill.test.agent.instrumentation.testing.jmeter
 
-import com.epam.drill.test.agent.AgentClassTransformer
-import com.epam.drill.test.agent.instrumentation.AbstractTestStrategy
-import javassist.ClassPool
-import javassist.CtClass
-import java.security.ProtectionDomain
+import com.epam.drill.test.agent.*
+import com.epam.drill.test.agent.instrumentation.*
+import javassist.*
+import org.objectweb.asm.*
+import java.security.*
 
 @Suppress("unused")
 object JMeterStrategy : AbstractTestStrategy() {
-    private val testNameSourceClass = "org.apache.jmeter.protocol.http.sampler.HTTPHC4Impl"
     override val id: String
         get() = "jmeter"
 
-    override fun permit(ctClass: CtClass): Boolean {
-        return ctClass.name == testNameSourceClass
+    override fun permit(classReader: ClassReader): Boolean {
+        return classReader.className == "org/apache/jmeter/protocol/http/sampler/HTTPHC4Impl"
     }
 
     override fun instrument(

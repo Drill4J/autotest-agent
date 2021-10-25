@@ -15,19 +15,21 @@
  */
 package com.epam.drill.test.agent.instrumentation.kafka
 
+import com.epam.drill.agent.instrument.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.*
 import com.epam.drill.test.agent.instrumentation.http.*
 import javassist.*
+import org.objectweb.asm.*
 import java.security.*
 
-class Kafka : Strategy() {
+class Kafka : TransformStrategy() {
 
     companion object {
-        private const val KAFKA_PRODUCER_INTERFACE = "org.apache.kafka.clients.producer.Producer"
+        private const val KAFKA_PRODUCER_INTERFACE = "org/apache/kafka/clients/producer/Producer"
     }
 
-    override fun permit(ctClass: CtClass): Boolean = ctClass.interfaces.any { it.name == KAFKA_PRODUCER_INTERFACE }
+    override fun permit(classReader: ClassReader) = classReader.interfaces.any { it == KAFKA_PRODUCER_INTERFACE }
 
     override fun instrument(
         ctClass: CtClass,

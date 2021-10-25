@@ -75,6 +75,7 @@ subprojects {
         adminHost = host
         adminPort = port
         logLevel = TRACE
+        jvmArgs = jvmArgs + "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006"
     }
 
 

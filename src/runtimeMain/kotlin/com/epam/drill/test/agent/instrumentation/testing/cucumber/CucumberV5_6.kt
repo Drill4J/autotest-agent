@@ -16,6 +16,8 @@
 package com.epam.drill.test.agent.instrumentation.testing.cucumber
 
 import javassist.*
+import org.objectweb.asm.*
+import java.security.*
 
 
 abstract class CucumberV5_6 : CucumberStrategy() {
@@ -29,8 +31,8 @@ abstract class CucumberV5_6 : CucumberStrategy() {
     /**
      * From cucumber 5 TestStep class location doesn't change
      */
-    override fun permit(ctClass: CtClass): Boolean {
-        return ctClass.name == "io.cucumber.core.runner.TestStep" && "${ctClass.url}".contains(versionPattern)
+    override fun permit(classReader: ClassReader): Boolean {
+        return classReader.className == "io/cucumber/core/runner/TestStep"
     }
 
     override fun getFeaturePath(): String = """
@@ -72,10 +74,36 @@ abstract class CucumberV5_6 : CucumberStrategy() {
 object CucumberV6 : CucumberV5_6() {
     override val versionPattern: Regex = "6\\.[0-9]+\\.[0-9]+".toRegex()
     override val Event: String = "java.lang.Object"
+
+    override fun instrument(
+        ctClass: CtClass,
+        pool: ClassPool,
+        classLoader: ClassLoader?,
+        protectionDomain: ProtectionDomain?,
+    ): ByteArray? {
+        return if ("${ctClass.url}".contains(versionPattern)) {
+             super.instrument(ctClass, pool, classLoader, protectionDomain)
+        } else {
+            null
+        }
+    }
 }
 
 @Suppress("unused")
 object CucumberV5 : CucumberV5_6() {
     override val versionPattern: Regex = "5\\.[0-9]+\\.[0-9]+".toRegex()
     override val Event: String = "io.cucumber.plugin.event.Event"
+
+    override fun instrument(
+        ctClass: CtClass,
+        pool: ClassPool,
+        classLoader: ClassLoader?,
+        protectionDomain: ProtectionDomain?,
+    ): ByteArray? {
+        return if ("${ctClass.url}".contains(versionPattern)) {
+            super.instrument(ctClass, pool, classLoader, protectionDomain)
+        } else {
+            null
+        }
+    }
 }

@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-import com.epam.drill.plugins.test2code.api.TestResult;
-import com.epam.drill.test.agent.instrumentation.testing.testng.TestNGStrategy;
+import com.epam.drill.plugins.test2code.api.*;
+import com.epam.drill.test.agent.instrumentation.testing.testng.*;
 import com.epam.drill.test.common.TestData;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Factory;
-import org.testng.annotations.Test;
-
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import org.testng.annotations.*;
 
 public class FactoryTest extends BaseTest {
     private Integer param;
@@ -43,14 +37,14 @@ public class FactoryTest extends BaseTest {
     @Test
     public void testMethodOne() {
         String opValue = param + "1";
-        System.out.println("Test method one output: " + opValue);
+        logger.info("Test method one output: " + opValue);
         Companion.getExpectedTests().add(toData("testMethodOne"));
     }
 
     @Test
     public void testMethodTwo() {
         String opValue = param + "2";
-        System.out.println("Test method two output: " + opValue);
+        logger.info("Test method two output: " + opValue);
         Companion.getExpectedTests().add(toData("testMethodTwo"));
     }
 

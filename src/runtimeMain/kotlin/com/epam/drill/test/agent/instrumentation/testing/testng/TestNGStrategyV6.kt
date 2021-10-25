@@ -17,11 +17,24 @@ package com.epam.drill.test.agent.instrumentation.testing.testng
 
 import com.epam.drill.test.agent.*
 import javassist.*
-import java.lang.reflect.*
+import java.security.*
 
 @Suppress("unused")
 object TestNGStrategyV6 : TestNGStrategy() {
     override val versionRegex: Regex = "6\\.[0-9]+(\\.[0-9]+)*".toRegex()
+
+    override fun instrument(
+        ctClass: CtClass,
+        pool: ClassPool,
+        classLoader: ClassLoader?,
+        protectionDomain: ProtectionDomain?,
+    ): ByteArray? {
+        return if ("${ctClass.url}".contains(versionRegex)) {
+            super.instrument(ctClass, pool, classLoader, protectionDomain)
+        } else {
+            null
+        }
+    }
 
     override fun getIgnoredTests(ctClass: CtClass, pool: ClassPool) {
         ctClass.getDeclaredMethod("run").insertAfter(

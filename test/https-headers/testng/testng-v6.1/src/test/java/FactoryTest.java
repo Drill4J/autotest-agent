@@ -39,14 +39,14 @@ public class FactoryTest extends BaseTest {
     @Test
     public void testMethodOne() {
         String opValue = param + "1";
-        System.out.println("Test method one output: " + opValue);
+        logger.info("Test method one output: " + opValue);
         Companion.getExpectedTests().add(toData("testMethodOne"));
     }
 
     @Test
     public void testMethodTwo() {
         String opValue = param + "2";
-        System.out.println("Test method two output: " + opValue);
+        logger.info("Test method two output: " + opValue);
         Companion.getExpectedTests().add(toData("testMethodTwo"));
     }
 

@@ -15,16 +15,18 @@
  */
 package com.epam.drill.test.agent.instrumentation.http.selenium
 
+import com.epam.drill.agent.instrument.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.*
 import javassist.*
+import org.objectweb.asm.*
 import java.io.*
 import java.security.*
 
 const val EXTENSION_NAME = "header-transmitter.xpi"
 
 @Suppress("PrivatePropertyName")
-class Selenium : Strategy() {
+class Selenium : TransformStrategy() {
     private val extensionFile: String
     private val Command = "org.openqa.selenium.remote.Command"
     private val ImmutableMap = "com.google.common.collect.ImmutableMap"
@@ -42,8 +44,8 @@ class Selenium : Strategy() {
         }
     }
 
-    override fun permit(ctClass: CtClass): Boolean {
-        return ctClass.name == "org.openqa.selenium.remote.RemoteWebDriver"
+    override fun permit(classReader: ClassReader): Boolean {
+        return classReader.className == "org/openqa/selenium/remote/RemoteWebDriver"
     }
 
     override fun instrument(

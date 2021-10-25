@@ -18,7 +18,8 @@ package com.epam.drill.test.agent.instrumentation.testing.spock
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.*
 import javassist.*
-import java.security.ProtectionDomain
+import org.objectweb.asm.*
+import java.security.*
 
 @Suppress("unused")
 object Spock : AbstractTestStrategy() {
@@ -28,7 +29,7 @@ object Spock : AbstractTestStrategy() {
     private val baseRunner = "org.spockframework.runtime.BaseSpecRunner"
     private val platformRunner = "org.spockframework.runtime.PlatformSpecRunner"
 
-    override fun permit(ctClass: CtClass): Boolean {
+    override fun permit(classReader: ClassReader): Boolean {
 //        return ctClass.name == baseRunner || ctClass.name == platformRunner
         return false
     }

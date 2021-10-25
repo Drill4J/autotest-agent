@@ -15,18 +15,19 @@
  */
 package com.epam.drill.test.agent.instrumentation.testing.junit
 
-import com.epam.drill.test.agent.instrumentation.AbstractTestStrategy
-import com.epam.drill.test.agent.TestListener
+import com.epam.drill.test.agent.*
+import com.epam.drill.test.agent.instrumentation.*
 import javassist.*
-import java.security.ProtectionDomain
+import org.objectweb.asm.*
+import java.security.*
 
 @Suppress("unused")
 object JUnit5Strategy : AbstractTestStrategy() {
     override val id: String
         get() = "junit"
 
-    override fun permit(ctClass: CtClass): Boolean {
-        return ctClass.name == "org.junit.platform.engine.support.hierarchical.NodeTestTaskContext"
+    override fun permit(classReader: ClassReader): Boolean {
+        return classReader.className == "org/junit/platform/engine/support/hierarchical/NodeTestTaskContext"
     }
 
     override fun instrument(

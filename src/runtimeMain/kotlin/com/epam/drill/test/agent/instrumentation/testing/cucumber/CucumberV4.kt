@@ -16,6 +16,8 @@
 package com.epam.drill.test.agent.instrumentation.testing.cucumber
 
 import javassist.*
+import org.objectweb.asm.*
+
 
 @Suppress("unused")
 object CucumberV4 : CucumberStrategy() {
@@ -26,8 +28,8 @@ object CucumberV4 : CucumberStrategy() {
     override val Event = "cucumber.api.event.Event"
     override val PickleStepDefinitionMatch = "cucumber.runner.PickleStepDefinitionMatch"
 
-    override fun permit(ctClass: CtClass): Boolean {
-        return ctClass.name == /*4.x.x*/"cucumber.runner.TestStep"
+    override fun permit(classReader: ClassReader): Boolean {
+        return classReader.className == /*4.x.x*/"cucumber/runner/TestStep"
     }
 
     override fun getFeaturePath(): String = """

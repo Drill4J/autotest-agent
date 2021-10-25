@@ -33,12 +33,14 @@ val serializationRuntimeVersion: String by rootProject
 val drillLoggerVersion: String by rootProject
 val drillHttpInterceptorVersion: String by rootProject
 val websocketVersion: String by rootProject
-val javassistVersion: String by rootProject
 val kniVersion: String by rootProject
 val uuidVersion: String by rootProject
 val atomicFuVersion: String by rootProject
 val collectionImmutableVersion: String by rootProject
 val cdtJavaClient: String by rootProject
+val javassistVersion: String by rootProject
+val knasmVersion: String by rootProject
+val httpClientInstrumentVersion: String by rootProject
 
 
 val libName = "autoTestAgent"
@@ -106,6 +108,8 @@ kotlin {
                     implementation("org.jetbrains.kotlinx:atomicfu:$atomicFuVersion")
                     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:$collectionImmutableVersion")
                     implementation("com.github.kklisura.cdt:cdt-java-client:$cdtJavaClient")
+                    implementation("com.epam.drill:http-clients-instrumentation:$httpClientInstrumentVersion")
+                    implementation("com.epam.drill.knasm:knasm:$knasmVersion")
                     implementation(project(":runtime"))
                 }
             }
