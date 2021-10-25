@@ -15,11 +15,12 @@
  */
 package com.epam.drill.test.agent.instrumentation.testing.junit
 
-import com.epam.drill.test.agent.instrumentation.AbstractTestStrategy
-import com.epam.drill.test.agent.TestListener
-import com.epam.drill.test.agent.actions.TestResult
+import com.epam.drill.test.agent.*
+import com.epam.drill.test.agent.actions.*
+import com.epam.drill.test.agent.instrumentation.*
 import javassist.*
-import java.security.ProtectionDomain
+import org.objectweb.asm.*
+import java.security.*
 
 @Suppress("unused")
 object JUnitStrategy : AbstractTestStrategy() {
@@ -28,8 +29,8 @@ object JUnitStrategy : AbstractTestStrategy() {
     override val id: String
         get() = "junit"
 
-    override fun permit(ctClass: CtClass): Boolean {
-        return ctClass.name == "org.junit.runner.notification.RunNotifier"
+    override fun permit(classReader: ClassReader): Boolean {
+        return classReader.className == "org/junit/runner/notification/RunNotifier"
     }
 
     override fun instrument(

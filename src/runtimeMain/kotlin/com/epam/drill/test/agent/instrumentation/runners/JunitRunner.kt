@@ -15,21 +15,23 @@
  */
 package com.epam.drill.test.agent.instrumentation.runners
 
+import com.epam.drill.agent.instrument.*
 import com.epam.drill.test.agent.instrumentation.*
 import javassist.*
+import org.objectweb.asm.*
 import java.security.*
 import java.util.*
 
-class JunitRunner : Strategy() {
-    override fun permit(ctClass: CtClass): Boolean {
-        return ctClass.name == "org.junit.runner.JUnitCore"
+class JunitRunner : TransformStrategy() {
+    override fun permit(classReader: ClassReader): Boolean {
+        return classReader.className == "org/junit/runner/JUnitCore"
     }
 
     override fun instrument(
         ctClass: CtClass,
         pool: ClassPool,
         classLoader: ClassLoader?,
-        protectionDomain: ProtectionDomain?
+        protectionDomain: ProtectionDomain?,
     ): ByteArray? {
         val sessionId = UUID.randomUUID()
         val method = ctClass.getMethod("run", "(Lorg/junit/runner/Runner;)Lorg/junit/runner/Result;")

@@ -17,7 +17,9 @@
 
 package com.epam.drill.test.agent.instrumentation
 
-abstract class AbstractTestStrategy : Strategy() {
+import com.epam.drill.agent.instrument.*
+
+abstract class AbstractTestStrategy : TransformStrategy() {
     init {
         StrategyManager.allStrategies[id] =
             (StrategyManager.allStrategies[id] ?: mutableSetOf()).apply { add(this@AbstractTestStrategy) }

@@ -72,7 +72,7 @@ actual object JvmHttpClient {
             throw RuntimeException(e)
         }
     }
-
+    //TODO EPMDJ-8916 Remove okhttp
     actual fun httpCall(endpoint: String, request: String): String {
         val httpRequest = HttpRequest.serializer() parse request
         return kotlin.runCatching {

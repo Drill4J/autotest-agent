@@ -15,34 +15,50 @@
  */
 package com.epam.drill.test.agent.instrumentation
 
+import com.epam.drill.agent.instrument.*
+import com.epam.drill.agent.instrument.http.apache.*
+import com.epam.drill.agent.instrument.http.java.*
+import com.epam.drill.agent.instrument.http.ok.*
 import com.epam.drill.kni.*
 import com.epam.drill.logger.*
-import com.epam.drill.test.agent.instrumentation.http.apache.*
-import com.epam.drill.test.agent.instrumentation.http.java.*
-import com.epam.drill.test.agent.instrumentation.http.ok.*
+import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.http.selenium.*
 import com.epam.drill.test.agent.instrumentation.kafka.*
 import com.epam.drill.test.agent.instrumentation.runners.*
-import javassist.*
+import org.objectweb.asm.*
 import java.io.*
-import java.security.*
-import java.util.*
 import java.util.jar.*
 
 @Kni
 actual object StrategyManager {
     private val logger = Logging.logger(StrategyManager::class.java.name)
 
-    internal var allStrategies: MutableMap<String, MutableSet<Strategy>> = mutableMapOf()
-    private var strategies: MutableSet<Strategy> = HashSet()
-    private var systemStrategies: MutableSet<Strategy> = HashSet()
+    internal var allStrategies: MutableMap<String, MutableSet<TransformStrategy>> = mutableMapOf()
+    private var strategies: MutableSet<TransformStrategy> = HashSet()
+    private var systemStrategies: MutableSet<TransformStrategy> = HashSet()
 
     init {
-        systemStrategies.add(OkHttpClient())
+        systemStrategies.add(
+            //TODO EPMDJ-8916 Use default realisation
+            object : OkHttpClient() {
+                override fun permit(classReader: ClassReader): Boolean {
+                    return classReader.interfaces.any { "drill/$it" == "okhttp3/internal/http/HttpCodec" }
+                }
+            })
         systemStrategies.add(ApacheClient())
         systemStrategies.add(JavaHttpUrlConnection())
         systemStrategies.add(Selenium())
         systemStrategies.add(Kafka())
+        ClientsCallback.initRequestCallback {
+            val headers = mutableMapOf<String, String>()
+            ThreadStorage.sessionId()?.let {
+                headers.put(SESSION_ID_HEADER, it)
+            }
+            ThreadStorage.storage.get()?.let {
+                headers.put(TEST_NAME_HEADER, it)
+            }
+            headers
+        }
     }
 
     actual fun initialize(rawFrameworkPlugins: String, isManuallyControlled: Boolean) {
@@ -76,14 +92,18 @@ actual object StrategyManager {
     }
 
     internal fun process(
-        ctClass: CtClass,
-        pool: ClassPool,
-        classLoader: ClassLoader?,
-        protectionDomain: ProtectionDomain?
+        className: String,
+        classBytes: ByteArray,
+        loader: Any?,
+        protectionDomain: Any?,
     ): ByteArray? {
+        val transformedClassBytes = mutableListOf<ByteArray?>()
+        val classReader = ClassReader(classBytes)
         for (strategy in strategies) {
-            if (strategy.permit(ctClass)) return strategy.instrument(ctClass, pool, classLoader, protectionDomain)
+            if (strategy.permit(classReader)) {
+                transformedClassBytes.add(strategy.transform(className, classBytes, loader, protectionDomain))
+            }
         }
-        return null
+        return transformedClassBytes.firstOrNull { it != null }
     }
 }

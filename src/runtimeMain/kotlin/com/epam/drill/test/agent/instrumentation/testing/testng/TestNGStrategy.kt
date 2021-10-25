@@ -15,13 +15,12 @@
  */
 package com.epam.drill.test.agent.instrumentation.testing.testng
 
-import com.epam.drill.test.agent.instrumentation.AbstractTestStrategy
-import com.epam.drill.test.agent.TestListener
-import javassist.ClassPool
-import javassist.CtClass
-import javassist.CtMethod
+import com.epam.drill.test.agent.*
+import com.epam.drill.test.agent.instrumentation.*
+import javassist.*
+import org.objectweb.asm.*
 import java.lang.reflect.*
-import java.security.ProtectionDomain
+import java.security.*
 
 abstract class TestNGStrategy : AbstractTestStrategy() {
     companion object {
@@ -37,8 +36,8 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
     override val id: String
         get() = "testng"
 
-    override fun permit(ctClass: CtClass): Boolean {
-        return ctClass.name == "org.testng.TestRunner" && "${ctClass.url}".contains(versionRegex)
+    override fun permit(classReader: ClassReader): Boolean {
+        return classReader.className == "org/testng/TestRunner" //&& "${classReader.url}".contains(versionRegex)
     }
 
     override fun instrument(

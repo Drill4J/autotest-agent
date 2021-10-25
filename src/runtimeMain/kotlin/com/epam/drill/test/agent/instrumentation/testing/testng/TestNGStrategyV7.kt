@@ -15,10 +15,43 @@
  */
 package com.epam.drill.test.agent.instrumentation.testing.testng
 
+import com.epam.drill.test.agent.*
+import javassist.*
+import java.security.*
+
 @Suppress("unused")
 object TestNGStrategyV7 : TestNGStrategy() {
     private const val IIgnoreAnnotation = "org.testng.annotations.IIgnoreAnnotation"
     override val versionRegex: Regex = "7\\.[0-9]+(\\.[0-9]+)*".toRegex()
+
+    override fun instrument(
+        ctClass: CtClass,
+        pool: ClassPool,
+        classLoader: ClassLoader?,
+        protectionDomain: ProtectionDomain?,
+    ): ByteArray? {
+        return if ("${ctClass.url}".contains(versionRegex)) {
+            super.instrument(ctClass, pool, classLoader, protectionDomain)
+        } else {
+            null
+        }
+    }
+
+    override fun getIgnoredTests(ctClass: CtClass, pool: ClassPool) {
+        val annotationHelper = pool.getOrNull("org.testng.internal.annotations.AnnotationHelper")
+        pool.getOrNull(IIgnoreAnnotation)?.also {
+            annotationHelper?.getMethod(
+                "isAnnotationPresent",
+                "(Lorg/testng/internal/annotations/IAnnotationFinder;Ljava/lang/reflect/Method;Ljava/lang/Class;)Z"
+            )?.insertAfter(
+                """ 
+                    if ($3 == ${IIgnoreAnnotation}.class && ${'$'}_) {
+                        ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("${engineSegment}/[class:" + $2.getDeclaringClass().getName() + "]/[method:" + $2.getName() + "()]");
+                    }
+                """.trimIndent()
+            )
+        }
+    }
 
     override fun getFactoryParams(): String = """
         private String getFactoryParams($ITestResult result){

@@ -15,10 +15,14 @@
  */
 import com.epam.drill.*
 import com.epam.drill.test.common.*
+import org.slf4j.*
 import org.testng.annotations.*
 
 abstract class BaseTest {
     private val sessionId = "testSession"
+
+    @JvmField
+    protected var logger: Logger = LoggerFactory.getLogger("Testng-7.4-logger")
 
     companion object {
         val expectedTests = mutableSetOf<TestData>()

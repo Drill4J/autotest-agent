@@ -18,6 +18,7 @@ package com.epam.drill.test.agent.instrumentation.testing.testng
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.*
 import javassist.*
+import org.objectweb.asm.*
 import java.security.*
 
 // Only for testng 7.4.0
@@ -27,8 +28,8 @@ object IgnoredTests : AbstractTestStrategy() {
         get() = "testng"
     private const val IIgnoreAnnotation = "org.testng.annotations.IIgnoreAnnotation"
 
-    override fun permit(ctClass: CtClass): Boolean {
-        return ctClass.name == "org.testng.internal.annotations.AnnotationHelper"
+    override fun permit(classReader: ClassReader): Boolean {
+        return classReader.className == "org.testng.internal.annotations.AnnotationHelper"
     }
 
     /**
