@@ -7,7 +7,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
     id("com.epam.drill.cross-compilation")
     id("com.epam.drill.gradle.plugin.kni")
-    id("com.github.johnrengelman.shadow") version "5.1.0"
+    id("com.github.johnrengelman.shadow")
     id("com.github.hierynomus.license")
     distribution
     `maven-publish`
@@ -41,6 +41,8 @@ val cdtJavaClient: String by rootProject
 val javassistVersion: String by rootProject
 val knasmVersion: String by rootProject
 val httpClientInstrumentVersion: String by rootProject
+val test2codeApiVersion: String by rootProject
+val coroutinesVersion: String by rootProject
 
 
 val libName = "autoTestAgent"
@@ -58,6 +60,7 @@ kotlin {
                         implementation("org.jetbrains.kotlinx:kotlinx-serialization-properties:$serializationRuntimeVersion")
                         implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:$serializationRuntimeVersion")
                         implementation("com.epam.drill.kni:runtime:$kniVersion")
+                        implementation("com.epam.drill.plugins.test2code:api:$test2codeApiVersion")
                         implementation("com.benasher44:uuid:$uuidVersion")
                     }
                 }
@@ -93,6 +96,10 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationRuntimeVersion")
                 implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
                 implementation("com.epam.drill.kni:runtime:$kniVersion")
+                implementation("com.epam.drill.plugins.test2code:api:$test2codeApiVersion")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core") {
+                    version { strictly("$coroutinesVersion-native-mt") }
+                }
             }
         }
 
@@ -110,6 +117,7 @@ kotlin {
                     implementation("com.github.kklisura.cdt:cdt-java-client:$cdtJavaClient")
                     implementation("com.epam.drill:http-clients-instrumentation:$httpClientInstrumentVersion")
                     implementation("com.epam.drill.knasm:knasm:$knasmVersion")
+                    implementation("com.epam.drill.plugins.test2code:api:$test2codeApiVersion")
                     implementation(project(":runtime"))
                 }
             }

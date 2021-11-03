@@ -39,7 +39,7 @@ object IgnoredTests : AbstractTestStrategy() {
         ctClass: CtClass,
         pool: ClassPool,
         classLoader: ClassLoader?,
-        protectionDomain: ProtectionDomain?
+        protectionDomain: ProtectionDomain?,
     ): ByteArray? {
         pool.getOrNull(IIgnoreAnnotation)?.also {
             ctClass.getMethod(
@@ -48,7 +48,7 @@ object IgnoredTests : AbstractTestStrategy() {
             ).insertAfter(
                 """ 
             if ($3 == $IIgnoreAnnotation.class && ${'$'}_) {
-                ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("${TestNGStrategy.engineSegment}/[class:" + $2.getDeclaringClass().getName() + "]/[method:" + $2.getName() + "()]");
+                ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("${TestNGStrategy.engineSegment}", $2.getDeclaringClass().getName(), $2.getName());
             }
         """.trimIndent()
             )

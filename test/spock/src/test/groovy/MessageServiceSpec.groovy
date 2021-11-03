@@ -17,6 +17,7 @@
 
 import com.epam.drill.SessionProvider
 import com.epam.drill.plugins.test2code.api.TestInfo
+import com.epam.drill.plugins.test2code.api.TestName
 import com.epam.drill.plugins.test2code.api.TestResult
 import com.epam.drill.test.agent.instrumentation.testing.junit.JUnitStrategy
 import com.epam.drill.test.common.AssertKt
@@ -73,6 +74,6 @@ class MessageServiceSpec extends Specification {
     }
 
     String getTestName(String name) {
-        return JUnitStrategy.engineSegment + "/[class:" + MessageServiceSpec.class.getName() + "]/[method:" + name + "()]"
+        return new TestName(JUnitStrategy.engineSegment, MessageServiceSpec.class.getName(), name, "", "()").fullName
     }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import com.epam.drill.plugins.test2code.api.TestResult;
+import com.epam.drill.plugins.test2code.api.*;
 import com.epam.drill.test.agent.instrumentation.testing.testng.TestNGStrategy;
 import com.epam.drill.test.common.TestData;
 import org.testng.annotations.DataProvider;
@@ -52,10 +52,12 @@ public class FactoryTest extends BaseTest {
 
     TestData toData(String method) {
         return new TestData(
-                TestNGStrategy.engineSegment + "/[class:"
-                        + getClass().getSimpleName()
-                        + "(" + param.getClass().getSimpleName() + "," + value.getClass().getSimpleName() + ")[" + param + "]"
-                        + "]/[method:" + method + "()" + "]",
+                new TestName(
+                        TestNGStrategy.engineSegment,
+                        getClass().getSimpleName(),
+                        method,
+                        "(" + param.getClass().getSimpleName() + "," + value.getClass().getSimpleName() + ")[" + param + "]",
+                        "()").getFullName(),
                 TestResult.PASSED
         );
     }

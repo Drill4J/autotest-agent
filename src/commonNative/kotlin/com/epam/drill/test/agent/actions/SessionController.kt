@@ -16,6 +16,7 @@
 package com.epam.drill.test.agent.actions
 
 import com.benasher44.uuid.*
+import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.config.*
 import com.epam.drill.test.agent.http.*
@@ -51,7 +52,7 @@ object SessionController {
     }
 
     private fun sendTests(tests: TestRun) {
-        val payload = AddTests.serializer() stringify AddTests(
+        val payload = Action.serializer() stringify AddTests(
             payload = AddTestsPayload(ThreadStorage.sessionId() ?: "", tests)
         )
         val result = dispatchAction(payload)
@@ -63,12 +64,12 @@ object SessionController {
         testType: String = "AUTO",
         isRealtime: Boolean = agentConfig.isRealtimeEnable,
         testName: String? = null,
-        isGlobal: Boolean = agentConfig.isGlobal
+        isGlobal: Boolean = agentConfig.isGlobal,
     ) = runCatching {
         mainLogger.debug { "Attempting to start a Drill4J test session..." }
         val sessionId = customSessionId ?: uuid4().toString()
-        val payload = StartSession.serializer() stringify StartSession(
-            payload = StartSessionPayload(
+        val payload = Action.serializer() stringify StartNewSession(
+            payload = StartPayload(
                 sessionId = sessionId,
                 testType = testType,
                 testName = testName,
@@ -84,9 +85,11 @@ object SessionController {
 
     fun stopSession(sessionIds: String? = null) = runCatching {
         mainLogger.debug { "Attempting to stop a Drill4J test session..." }
-        val payload = StopSession.serializer() stringify stopAction(
-            sessionIds ?: sessionId.value,
-            runCatching { TestRun.serializer() parse TestListener.getData() }.getOrNull()
+        val payload = Action.serializer() stringify StopSession(
+            payload = StopSessionPayload(
+                sessionId = sessionIds ?: sessionId.value,
+                testRun = runCatching { TestRun.serializer() parse TestListener.getData() }.getOrNull()
+            )
         )
         val response = dispatchAction(payload)
         mainLogger.debug { "Received response: ${response.body}" }

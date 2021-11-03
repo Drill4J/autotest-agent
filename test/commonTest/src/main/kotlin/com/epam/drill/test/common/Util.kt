@@ -16,6 +16,7 @@
 package com.epam.drill.test.common
 
 import com.epam.drill.plugins.test2code.api.*
+import com.google.gson.*
 import kotlinx.serialization.json.*
 import org.apache.http.client.methods.*
 import org.apache.http.impl.client.*
@@ -36,7 +37,8 @@ fun parseAction(
 
 fun ServerDate.encode() = json.encodeToString(ServerDate.serializer(), this)
 
-fun String.decodeServerDate() = json.decodeFromString(ServerDate.serializer(), this)
+//TODO Exception: $$serializer cannot be cast to kotlinx.serialization.KSerializer due to relocate("kotlin", "kruntime")
+fun String.decodeServerDate(): ServerDate = Gson().fromJson(this, ServerDate::class.java)
 
 fun getAdminData() = run {
     val host = System.getenv("host")
@@ -50,22 +52,28 @@ fun Method.toTestData(
     engine: String,
     testResult: TestResult,
     paramNumber: String,
-): TestData = TestData(name = "$engine/[class:${declaringClass.name}]/[method:$name" +
-        (paramNumber.takeIf { it.isNotBlank() }?.let {
+): TestData = run {
+    val testFullName = TestName(
+        engine = engine,
+        className = declaringClass.name,
+        method = name,
+        classParams = "",
+        methodParams = (paramNumber.takeIf { it.isNotBlank() }?.let {
             parameters.joinToString(",", "(", ")") { it.type.simpleName } + "[$paramNumber]"
-        } ?: "()") + "]",
-    testResult = testResult)
+        } ?: "()")).fullName
+    TestData(testFullName, testResult)
+}
 
 fun KFunction<*>.toTestData(
     engine: String,
     testResult: TestResult,
-    paramNumber: String = ""
+    paramNumber: String = "",
 ): TestData = javaMethod!!.toTestData(engine, testResult, paramNumber)
 
 fun String.cucumberTestToTestData(
     engine: String,
     featurePath: String,
     testResult: TestResult,
-) = TestData("$engine/[feature:$featurePath]/[scenario:$this]", testResult)
+) = TestData(TestName(engine, featurePath, this, classParams = "", methodParams = "()").fullName, testResult)
 
 fun TestInfo.toTestData() = TestData(name, result)

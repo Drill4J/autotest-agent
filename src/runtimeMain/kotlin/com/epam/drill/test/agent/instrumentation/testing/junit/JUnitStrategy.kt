@@ -15,8 +15,8 @@
  */
 package com.epam.drill.test.agent.instrumentation.testing.junit
 
+import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.*
-import com.epam.drill.test.agent.actions.*
 import com.epam.drill.test.agent.instrumentation.*
 import javassist.*
 import org.objectweb.asm.*
@@ -24,7 +24,7 @@ import java.security.*
 
 @Suppress("unused")
 object JUnitStrategy : AbstractTestStrategy() {
-    const val engineSegment = "[engine:junit]"
+    const val engineSegment = "junit"
 
     override val id: String
         get() = "junit"
@@ -37,7 +37,7 @@ object JUnitStrategy : AbstractTestStrategy() {
         ctClass: CtClass,
         pool: ClassPool,
         classLoader: ClassLoader?,
-        protectionDomain: ProtectionDomain?
+        protectionDomain: ProtectionDomain?,
     ): ByteArray? {
         val cc: CtClass = pool.makeClass("MyList")
         cc.superclass = pool.get("org.junit.runner.notification.RunListener")
@@ -45,9 +45,9 @@ object JUnitStrategy : AbstractTestStrategy() {
         cc.addConstructor(
             CtNewConstructor.make(
                 """
-public MyList(org.junit.runner.notification.RunListener mainRunner) {
-   this.mainRunner = mainRunner;
-}
+                    public MyList(org.junit.runner.notification.RunListener mainRunner) {
+                        this.mainRunner = mainRunner;
+                    }
                         """.trimMargin(), cc
             )
         )
@@ -55,9 +55,9 @@ public MyList(org.junit.runner.notification.RunListener mainRunner) {
         cc.addMethod(
             CtMethod.make(
                 """
-public void testRunStarted(org.junit.runner.Description $dp) throws Exception {
-    this.mainRunner.testRunStarted($dp);
-}
+                    public void testRunStarted(org.junit.runner.Description $dp) throws Exception {
+                        this.mainRunner.testRunStarted($dp);
+                    }
                         """.trimIndent(),
                 cc
             )
@@ -66,11 +66,10 @@ public void testRunStarted(org.junit.runner.Description $dp) throws Exception {
         cc.addMethod(
             CtMethod.make(
                 """
-public void testStarted(org.junit.runner.Description $dp) throws Exception {
-  this.mainRunner.testStarted($dp);
-   ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}
-("$engineSegment/${classSegment(dp)}/${methodSegment(dp)}");
-}
+                    public void testStarted(org.junit.runner.Description $dp) throws Exception {
+                        this.mainRunner.testStarted($dp);
+                        ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment", $dp.getClassName(), $dp.getMethodName());
+                    }
                         """.trimIndent(),
                 cc
             )
@@ -80,11 +79,10 @@ public void testStarted(org.junit.runner.Description $dp) throws Exception {
         cc.addMethod(
             CtMethod.make(
                 """
-public void testFinished(org.junit.runner.Description $dp) throws Exception {
-    this.mainRunner.testFinished(description);
-    ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}
-("$engineSegment/${classSegment(dp)}/${methodSegment(dp)}", "${TestResult.PASSED.name}");
-}
+                    public void testFinished(org.junit.runner.Description $dp) throws Exception {
+                        this.mainRunner.testFinished(description);
+                        ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment", $dp.getClassName(), $dp.getMethodName(), "${TestResult.PASSED.name}");
+                    }
                         """.trimIndent(),
                 cc
             )
@@ -93,9 +91,9 @@ public void testFinished(org.junit.runner.Description $dp) throws Exception {
         cc.addMethod(
             CtMethod.make(
                 """
-public void testRunFinished(org.junit.runner.Result result) throws Exception {
-  this.mainRunner.testRunFinished(result);
-}
+                    public void testRunFinished(org.junit.runner.Result result) throws Exception {
+                        this.mainRunner.testRunFinished(result);
+                    }
                         """.trimIndent(),
                 cc
             )
@@ -107,11 +105,10 @@ public void testRunFinished(org.junit.runner.Result result) throws Exception {
         cc.addMethod(
             CtMethod.make(
                 """
-public void testFailure(org.junit.runner.notification.Failure $failureParamName) throws Exception {
-   this.mainRunner.testFailure($failureParamName);
-   ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}
-("$engineSegment/${classSegment(desct)}/${methodSegment(desct)}", "${TestResult.FAILED.name}");
-}
+                    public void testFailure(org.junit.runner.notification.Failure $failureParamName) throws Exception {
+                        this.mainRunner.testFailure($failureParamName);
+                        ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment", $desct.getClassName(), $desct.getMethodName(), "${TestResult.FAILED.name}");
+                    }
                         """.trimIndent(),
                 cc
             )
@@ -121,9 +118,9 @@ public void testFailure(org.junit.runner.notification.Failure $failureParamName)
         cc.addMethod(
             CtMethod.make(
                 """
-public void testAssumptionFailure(org.junit.runner.notification.Failure $failureParamName) {
-    this.mainRunner.testAssumptionFailure(failure);
-}
+                    public void testAssumptionFailure(org.junit.runner.notification.Failure $failureParamName) {
+                        this.mainRunner.testAssumptionFailure(failure);
+                    }
                         """.trimIndent(),
                 cc
             )
@@ -134,17 +131,14 @@ public void testAssumptionFailure(org.junit.runner.notification.Failure $failure
         cc.addMethod(
             CtMethod.make(
                 """
-public void testIgnored(org.junit.runner.Description $dp) throws Exception {
-      this.mainRunner.testIgnored($dp);
-${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}
-("$engineSegment/${classSegment(dp)}/${methodSegment(dp)}");      
-}
+                    public void testIgnored(org.junit.runner.Description $dp) throws Exception {
+                        this.mainRunner.testIgnored($dp);
+                        ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment", $dp.getClassName(), $dp.getMethodName());      
+                    }
                         """.trimIndent(),
                 cc
             )
         )
-
-
 
         cc.toClass(classLoader, protectionDomain)
         ctClass.getDeclaredMethod("addListener").insertBefore(
@@ -159,9 +153,4 @@ ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}
         )
         return ctClass.toBytecode()
     }
-
-    private fun methodSegment(descriptionParamName: String) =
-        """[method:"+$descriptionParamName.getMethodName()+"()]"""
-
-    private fun classSegment(descriptionParamName: String) = """[class:"+$descriptionParamName.getClassName()+"]"""
 }
