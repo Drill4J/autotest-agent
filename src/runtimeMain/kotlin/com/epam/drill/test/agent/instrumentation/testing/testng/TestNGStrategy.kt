@@ -24,7 +24,7 @@ import java.security.*
 
 abstract class TestNGStrategy : AbstractTestStrategy() {
     companion object {
-        const val engineSegment = "[engine:testng]"
+        const val engineSegment = "testng"
         const val TestNGMethod = "org.testng.internal.TestNGMethod"
         const val ITestResult = "org.testng.ITestResult"
 
@@ -69,7 +69,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                         public void onTestStart($ITestResult result) {
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment/[class:" + result.getInstanceName() + getFactoryParams(result) + "]/[method:" + result.getName() + getParamsString(result) + "]");
+                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment", result.getInstanceName(), result.getName(), getParamsString(result), getFactoryParams(result));
                         }
                     """.trimIndent(),
                 testListener
@@ -79,7 +79,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                        public void onTestSuccess($ITestResult result) {
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment/[class:" + result.getInstanceName() + getFactoryParams(result) + "]/[method:" + result.getName() + getParamsString(result) + "]", "PASSED");
+                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment", result.getInstanceName(), result.getName(), "PASSED", getParamsString(result), getFactoryParams(result));
                        }
                     """.trimIndent(),
                 testListener
@@ -89,7 +89,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                         public void onTestFailure($ITestResult result) {
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment/[class:" + result.getInstanceName() + getFactoryParams(result) + "]/[method:" + result.getName() + getParamsString(result) + "]", "FAILED");      
+                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment", result.getInstanceName(), result.getName(), "FAILED", getParamsString(result));      
                         }
                     """.trimIndent(),
                 testListener
@@ -99,7 +99,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                         public void onTestSkipped($ITestResult result) {
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment/[class:" + result.getInstanceName() + getFactoryParams(result) + "]/[method:" + result.getName() + getParamsString(result) + "]");     
+                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment", result.getInstanceName(), result.getName(), getParamsString(result), getFactoryParams(result));     
                         }
                     """.trimIndent(),
                 testListener
@@ -148,7 +148,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             return paramString;
         }
     """.trimIndent()
-
+    
     abstract fun getFactoryParams(): String
     open fun getIgnoredTests(ctClass: CtClass, pool: ClassPool) {}
 

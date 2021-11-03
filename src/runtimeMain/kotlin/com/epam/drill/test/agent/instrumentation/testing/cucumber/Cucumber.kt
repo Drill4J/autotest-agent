@@ -17,11 +17,12 @@ package com.epam.drill.test.agent.instrumentation.testing.cucumber
 
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.*
+import com.epam.drill.test.agent.instrumentation.testing.testng.*
 import javassist.*
 import java.security.*
 
 abstract class CucumberStrategy : AbstractTestStrategy() {
-    val engineSegment = "[engine:cucumber]"
+    val engineSegment = "cucumber"
     val EventBusProxy = "EventBusProxy"
     override val id: String
         get() = "cucumber"
@@ -62,14 +63,14 @@ abstract class CucumberStrategy : AbstractTestStrategy() {
                     public void send($Event event) {
                         mainEventBus.send(event);   
                         if (event instanceof $testPackage.TestStepStarted) {
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment/[feature:" + featurePath + "]/[scenario:"+(($testPackage.TestStepStarted) event).getTestCase().getName() + "]");    
+                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment", featurePath, (($testPackage.TestStepStarted) event).getTestCase().getName());  
                         } else if (event instanceof $testPackage.TestStepFinished) {
                             $testPackage.TestStepFinished finishedTest = ($testPackage.TestStepFinished) event;
                             $Status status = ${getTestStatus()}
                             if (status != $Status.PASSED) {
                                 status = $Status.FAILED;
                             }
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment/[feature:" + featurePath + "]/[scenario:" + finishedTest.getTestCase().getName() + "]", status.name());                                    
+                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment", featurePath, finishedTest.getTestCase().getName(), status.name());                                    
                         }
                     }
                 """.trimIndent(),

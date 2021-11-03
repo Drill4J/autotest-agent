@@ -15,6 +15,7 @@
  */
 package com.epam.drill.test.agent
 
+import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 import kotlinx.serialization.internal.*
@@ -40,6 +41,11 @@ class PropertyDecoder(val map: Map<String, Any>) : NamedValueDecoder() {
 
     override fun decodeTaggedEnum(tag: String, enumDescriptor: SerialDescriptor): Int {
         return (map.getValue(tag) as Enum<*>).ordinal
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T> decodeSerializableValue(deserializer: DeserializationStrategy<T>, previousValue: T?): T {
+        return map[this.currentTagOrNull] as? T ?: super.decodeSerializableValue(deserializer, previousValue)
     }
 
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int {

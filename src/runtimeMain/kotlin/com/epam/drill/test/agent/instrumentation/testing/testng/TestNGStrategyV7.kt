@@ -46,7 +46,7 @@ object TestNGStrategyV7 : TestNGStrategy() {
             )?.insertAfter(
                 """ 
                     if ($3 == ${IIgnoreAnnotation}.class && ${'$'}_) {
-                        ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("${engineSegment}/[class:" + $2.getDeclaringClass().getName() + "]/[method:" + $2.getName() + "()]");
+                        ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment", $2.getDeclaringClass().getName(), $2.getName());
                     }
                 """.trimIndent()
             )

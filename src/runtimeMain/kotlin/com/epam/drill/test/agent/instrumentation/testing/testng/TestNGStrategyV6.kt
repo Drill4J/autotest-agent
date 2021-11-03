@@ -44,7 +44,7 @@ object TestNGStrategyV6 : TestNGStrategy() {
                         java.lang.Object baseMethod = disabledTests.next();
                         if (baseMethod instanceof $TestNGMethod) {
                             $TestNGMethod test = ($TestNGMethod) baseMethod;
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment/[class:" + test.getTestClass().getName() + "]/[method:" + test.getMethodName() + "()]");     
+                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment", test.getTestClass().getName(), test.getMethodName());     
                         }
                     }
                 """.trimIndent()

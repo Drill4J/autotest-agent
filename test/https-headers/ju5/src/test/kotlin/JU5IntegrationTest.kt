@@ -57,7 +57,7 @@ class JU5IntegrationTest {
 
     companion object {
 
-        private const val engine = "[engine:junit-jupiter]"
+        private const val engine = "junit-jupiter"
         private val sessionId = "${UUID.randomUUID()}"
         private val expectedTests = mutableListOf(
             JU5IntegrationTest::testSkipped.toTestData(engine, TestResult.SKIPPED),
