@@ -119,6 +119,6 @@ object SessionController {
     private fun getToken(): String {
         val httpCall = httpCall(agentConfig.adminAddress + "/api/login", HttpRequest("POST"))
         if (httpCall.code != 200) error("Can't perform request: $httpCall")
-        return httpCall.headers["authorization"] ?: error("No token received during login")
+        return httpCall.headers["Authorization"] ?: error("No token received during login")
     }
 }

@@ -38,13 +38,7 @@ actual object StrategyManager {
     private var systemStrategies: MutableSet<TransformStrategy> = HashSet()
 
     init {
-        systemStrategies.add(
-            //TODO EPMDJ-8916 Use default realisation
-            object : OkHttpClient() {
-                override fun permit(classReader: ClassReader): Boolean {
-                    return classReader.interfaces.any { "drill/$it" == "okhttp3/internal/http/HttpCodec" }
-                }
-            })
+        systemStrategies.add(OkHttpClient())
         systemStrategies.add(ApacheClient())
         systemStrategies.add(JavaHttpUrlConnection())
         systemStrategies.add(Selenium())
