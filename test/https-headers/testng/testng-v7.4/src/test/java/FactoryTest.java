@@ -50,10 +50,12 @@ public class FactoryTest extends BaseTest {
 
     TestData toData(String method) {
         return new TestData(
-                TestNGStrategy.engineSegment + "/[class:"
-                        + getClass().getSimpleName() +
-                        "(" + param.getClass().getSimpleName() + "," + value.getClass().getSimpleName() + ")[" + param + "]"
-                        + "]/[method:" + method + "()" + "]",
+                new TestName(
+                        TestNGStrategy.engineSegment,
+                        getClass().getSimpleName(),
+                        method,
+                        "(" + param.getClass().getSimpleName() + "," + value.getClass().getSimpleName() + ")[" + param + "]",
+                        "()").getFullName(),
                 TestResult.PASSED
         );
     }

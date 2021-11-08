@@ -53,9 +53,10 @@ fun Method.toTestData(
     testResult: TestResult,
     paramNumber: String,
 ): TestData = run {
-    val testFullName = TestName(engine,
-        declaringClass.name,
-        name,
+    val testFullName = TestName(
+        engine = engine,
+        className = declaringClass.name,
+        method = name,
         classParams = "",
         methodParams = (paramNumber.takeIf { it.isNotBlank() }?.let {
             parameters.joinToString(",", "(", ")") { it.type.simpleName } + "[$paramNumber]"
