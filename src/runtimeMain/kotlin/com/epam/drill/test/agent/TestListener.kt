@@ -50,10 +50,10 @@ actual object TestListener {
         if (className != null && method != null) {
             val test = TestName(
                 engine = engine,
-                className = className,
-                method = method,
-                classParams = classParams,
-                methodParams = methodParams,
+                path = className,
+                name = method,
+                params = methodParams,
+                pathParams = classParams,
             )
             if (test !in _testInfo.value) {
                 logger.info { "Test: $test STARTED" }
@@ -94,10 +94,10 @@ actual object TestListener {
         if (className != null && method != null) {
             val testName = TestName(
                 engine = engine,
-                className = className,
-                method = method,
-                classParams = classParams,
-                methodParams = methodParams,
+                path = className,
+                name = method,
+                params = methodParams,
+                pathParams = classParams,
             )
             logger.trace { "Test: $testName is finishing with status $status..." }
             if (isNotFinalizeTestState(testName)) {
@@ -140,10 +140,10 @@ actual object TestListener {
         if (className != null && method != null) {
             val test = TestName(
                 engine = engine,
-                className = className,
-                method = method,
-                classParams = classParams,
-                methodParams = methodParams,
+                path = className,
+                name = method,
+                params = methodParams,
+                pathParams = classParams,
             )
             addTestInfo(
                 test,
