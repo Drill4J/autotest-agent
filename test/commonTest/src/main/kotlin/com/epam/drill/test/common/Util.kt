@@ -55,10 +55,10 @@ fun Method.toTestData(
 ): TestData = run {
     val testFullName = TestName(
         engine = engine,
-        className = declaringClass.name,
-        method = name,
-        classParams = "",
-        methodParams = (paramNumber.takeIf { it.isNotBlank() }?.let {
+        path = declaringClass.name,
+        name = name,
+        pathParams = "",
+        params =  (paramNumber.takeIf { it.isNotBlank() }?.let {
             parameters.joinToString(",", "(", ")") { it.type.simpleName } + "[$paramNumber]"
         } ?: "()")).fullName
     TestData(testFullName, testResult)
@@ -74,6 +74,6 @@ fun String.cucumberTestToTestData(
     engine: String,
     featurePath: String,
     testResult: TestResult,
-) = TestData(TestName(engine, featurePath, this, classParams = "", methodParams = "()").fullName, testResult)
+) = TestData(TestName(engine, featurePath, this, pathParams = "", params = "()").fullName, testResult)
 
 fun TestInfo.toTestData() = TestData(name, result)
