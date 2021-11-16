@@ -37,7 +37,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
         get() = "testng"
 
     override fun permit(classReader: ClassReader): Boolean {
-        return classReader.className == "org/testng/TestRunner" //&& "${classReader.url}".contains(versionRegex)
+        return classReader.className == "org/testng/TestRunner"
     }
 
     override fun instrument(
@@ -48,7 +48,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
     ): ByteArray? {
         createTestListener(pool, classLoader, protectionDomain)
         ctClass.constructors.forEach { it.insertAfter("addTestListener(new $DrillTestNGTestListner());") }
-        getIgnoredTests(ctClass, pool)
+        ctClass.supportIgnoredTestsTracking()
         return ctClass.toBytecode()
     }
 
@@ -150,7 +150,19 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
     """.trimIndent()
     
     abstract fun getFactoryParams(): String
-    open fun getIgnoredTests(ctClass: CtClass, pool: ClassPool) {}
+
+    private fun CtClass.supportIgnoredTestsTracking() = getDeclaredMethod("run").insertAfter(
+        """
+            java.util.Iterator disabledTests = getExcludedMethods().iterator();
+            while(disabledTests.hasNext()) {
+                java.lang.Object baseMethod = disabledTests.next();
+                if (baseMethod instanceof $TestNGMethod) {
+                    $TestNGMethod test = ($TestNGMethod) baseMethod;
+                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment", test.getTestClass().getName(), test.getMethodName());     
+                }
+            }
+        """.trimIndent()
+    )
 
     fun paramTypes(objects: Array<Any>): String = objects.joinToString(",", "(", ")") {
         when (it) {

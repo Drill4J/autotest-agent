@@ -15,7 +15,6 @@
  */
 package com.epam.drill.test.agent.instrumentation.testing.testng
 
-import com.epam.drill.test.agent.*
 import javassist.*
 import java.security.*
 
@@ -34,21 +33,6 @@ object TestNGStrategyV6 : TestNGStrategy() {
         } else {
             null
         }
-    }
-
-    override fun getIgnoredTests(ctClass: CtClass, pool: ClassPool) {
-        ctClass.getDeclaredMethod("run").insertAfter(
-            """
-                    java.util.Iterator disabledTests = getExcludedMethods().iterator();
-                    while(disabledTests.hasNext()) {
-                        java.lang.Object baseMethod = disabledTests.next();
-                        if (baseMethod instanceof $TestNGMethod) {
-                            $TestNGMethod test = ($TestNGMethod) baseMethod;
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment", test.getTestClass().getName(), test.getMethodName());     
-                        }
-                    }
-                """.trimIndent()
-        )
     }
 
     override fun getFactoryParams(): String = """
