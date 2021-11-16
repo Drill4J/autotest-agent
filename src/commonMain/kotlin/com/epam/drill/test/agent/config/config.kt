@@ -22,7 +22,7 @@ import kotlinx.serialization.*
 data class AgentRawConfig(
     val agentId: String = "",
     val groupId: String = "",
-    val pluginId: String = "",
+    val pluginId: String = "test2code",
     val adminAddress: String = "",
     val drillInstallationDir: String = "",
     val logFile: String? = null,
