@@ -21,6 +21,7 @@ import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.config.*
 import com.epam.drill.test.agent.http.*
 import kotlinx.coroutines.*
+import kotlinx.serialization.builtins.*
 import kotlin.native.concurrent.*
 import kotlin.time.seconds as sec
 
@@ -42,21 +43,23 @@ object SessionController {
             while (true) {
                 delay(3.sec)
                 runCatching {
-                    val testRun = TestRun.serializer() parse TestListener.getData()
-                    if (testRun.tests.any()) {
-                        sendTests(testRun)
+                    val tests = runCatching {
+                        ListSerializer(TestInfo.serializer()) parse TestListener.getData()
+                    }.getOrNull() ?: emptyList()
+                    if (tests.any()) {
+                        sendTests(tests)
                     }
                 }.onFailure { mainLogger.error(it) { "Can't parse tests. Reason:" } }
             }
         }
     }
 
-    private fun sendTests(tests: TestRun) {
+    private fun sendTests(tests: List<TestInfo>) {
         val payload = Action.serializer() stringify AddTests(
             payload = AddTestsPayload(ThreadStorage.sessionId() ?: "", tests)
         )
         val result = dispatchAction(payload)
-        mainLogger.trace { "Count of tests sent: ${tests.tests.size}, received status ${result.code}" }
+        mainLogger.trace { "Count of tests sent: ${tests.size}, received status ${result.code}" }
     }
 
     fun startSession(
@@ -88,7 +91,9 @@ object SessionController {
         val payload = Action.serializer() stringify StopSession(
             payload = StopSessionPayload(
                 sessionId = sessionIds ?: sessionId.value,
-                testRun = runCatching { TestRun.serializer() parse TestListener.getData() }.getOrNull()
+                tests = runCatching {
+                    ListSerializer(TestInfo.serializer()) parse TestListener.getData()
+                }.getOrNull() ?: emptyList()
             )
         )
         val response = dispatchAction(payload)

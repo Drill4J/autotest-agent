@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 EPAM Systems
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,9 +15,12 @@
  */
 
 import com.epam.drill.plugins.test2code.api.*;
+import com.epam.drill.test.agent.*;
 import com.epam.drill.test.agent.instrumentation.testing.testng.*;
 import com.epam.drill.test.common.TestData;
 import org.testng.annotations.*;
+
+import java.util.*;
 
 public class FactoryTest extends BaseTest {
     private Integer param;
@@ -49,14 +52,14 @@ public class FactoryTest extends BaseTest {
     }
 
     TestData toData(String method) {
-        return new TestData(
-                new TestName(
-                        TestNGStrategy.engineSegment,
-                        getClass().getSimpleName(),
-                        method,
-                        "(" + param.getClass().getSimpleName() + "," + value.getClass().getSimpleName() + ")[" + param + "]",
-                        "()").getFullName(),
-                TestResult.PASSED
-        );
+        HashMap<String, String> params = new HashMap<>();
+        params.put(TestListener.classParamsKey, "(" + param.getClass().getSimpleName() + "," + value.getClass().getSimpleName() + ")[" + param + "]");
+        return new TestData(TestListenerKt.fullName(new TestDetails(
+                TestNGStrategy.engineSegment,
+                getClass().getSimpleName(),
+                method,
+                params,
+                new HashMap<>()
+        )), TestResult.PASSED);
     }
 }

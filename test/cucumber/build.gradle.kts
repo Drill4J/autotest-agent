@@ -10,7 +10,7 @@ subprojects {
     dependencies {
         implementation(project(":test:commonTest"))
         //TODO move to commonTest module
-        implementation(project(":")) { isTransitive = false }
+        api(project(":")) { isTransitive = false }
         testImplementation(project(":test:cucumber"))
     }
     configure<com.epam.drill.agent.runner.AgentConfiguration> {

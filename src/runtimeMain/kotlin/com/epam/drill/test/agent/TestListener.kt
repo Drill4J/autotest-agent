@@ -23,16 +23,21 @@ import com.epam.drill.test.agent.instrumentation.http.selenium.*
 import com.epam.drill.test.agent.util.*
 import kotlinx.atomicfu.*
 import kotlinx.collections.immutable.*
+import kotlinx.serialization.builtins.*
 
 @Kni
 actual object TestListener {
 
+    const val methodParamsKey = "methodParams"
+    const val classParamsKey = "classParams"
+
     private val logger = Logging.logger(TestListener::class.java.simpleName)
 
-    private val _testInfo = atomic(persistentHashMapOf<TestName, PersistentMap<String, Any>>())
+    private val _testInfo = atomic(persistentHashMapOf<TestDetails, PersistentMap<String, Any>>())
+
 
     private fun addTestInfo(
-        testId: TestName,
+        testId: TestDetails,
         vararg vals: Pair<String, Any>,
     ) = _testInfo.update { testProperties ->
         val currentInfo = testProperties[testId] ?: persistentHashMapOf()
@@ -48,27 +53,30 @@ actual object TestListener {
         classParams: String = "",
     ) {
         if (className != null && method != null) {
-            val test = TestName(
+            val test = TestDetails(
                 engine = engine,
                 path = className,
-                name = method,
-                params = methodParams,
-                pathParams = classParams,
+                testName = method,
+                params = mapOf(
+                    methodParamsKey to methodParams,
+                    classParamsKey to classParams,
+                )
             )
+            val testFullName = test.fullName()
             if (test !in _testInfo.value) {
                 logger.info { "Test: $test STARTED" }
                 addTestInfo(
                     test,
-                    TestInfo::name.name to test.fullName,
-                    TestInfo::testName.name to test,
+                    TestInfo::name.name to testFullName,
+                    TestInfo::details.name to test,
                     TestInfo::startedAt.name to System.currentTimeMillis()
                 )
                 DevToolsClientThreadStorage.addHeaders(
-                    mapOf(TEST_NAME_HEADER to test.fullName.urlEncode(),
+                    mapOf(TEST_NAME_HEADER to testFullName.urlEncode(),
                         SESSION_ID_HEADER to (ThreadStorage.sessionId() ?: ""))
                 )
-                ThreadStorage.startSession(test.fullName)
-                ThreadStorage.memorizeTestName(test.fullName)
+                ThreadStorage.startSession(testFullName)
+                ThreadStorage.memorizeTestName(testFullName)
                 WebDriverThreadStorage.addCookies()
             } else if (isFinalizeTestState(test)) {
                 logger.trace { "Test: $test was repeated. Change status to UNKNOWN" }
@@ -77,7 +85,7 @@ actual object TestListener {
                     TestInfo::result.name to TestResult.UNKNOWN,
                     TestInfo::startedAt.name to System.currentTimeMillis()
                 )
-                ThreadStorage.memorizeTestName(test.fullName)
+                ThreadStorage.memorizeTestName(testFullName)
             }
         }
     }
@@ -92,12 +100,14 @@ actual object TestListener {
         classParams: String = "",
     ) {
         if (className != null && method != null) {
-            val testName = TestName(
+            val testName = TestDetails(
                 engine = engine,
                 path = className,
-                name = method,
-                params = methodParams,
-                pathParams = classParams,
+                testName = method,
+                params = mapOf(
+                    methodParamsKey to methodParams,
+                    classParamsKey to classParams,
+                ),
             )
             logger.trace { "Test: $testName is finishing with status $status..." }
             if (isNotFinalizeTestState(testName)) {
@@ -106,7 +116,7 @@ actual object TestListener {
         }
     }
 
-    private fun addTestResult(test: TestName?, status: String) {
+    private fun addTestResult(test: TestDetails?, status: String) {
         test?.takeIf { it in _testInfo.value }?.let {
             addTestInfo(
                 test,
@@ -121,9 +131,9 @@ actual object TestListener {
     }
 
 
-    private fun isFinalizeTestState(test: TestName?): Boolean = !isNotFinalizeTestState(test)
+    private fun isFinalizeTestState(test: TestDetails?): Boolean = !isNotFinalizeTestState(test)
 
-    private fun isNotFinalizeTestState(test: TestName?): Boolean = _testInfo.value[test]?.let { testProperties ->
+    private fun isNotFinalizeTestState(test: TestDetails?): Boolean = _testInfo.value[test]?.let { testProperties ->
         testProperties[TestInfo::result.name]?.let { result ->
             result as TestResult == TestResult.UNKNOWN
         }
@@ -138,17 +148,19 @@ actual object TestListener {
         classParams: String = "",
     ) {
         if (className != null && method != null) {
-            val test = TestName(
+            val test = TestDetails(
                 engine = engine,
                 path = className,
-                name = method,
-                params = methodParams,
-                pathParams = classParams,
+                testName = method,
+                params = mapOf(
+                    methodParamsKey to methodParams,
+                    classParamsKey to classParams,
+                )
             )
             addTestInfo(
                 test,
-                TestInfo::name.name to test.fullName,
-                TestInfo::testName.name to test,
+                TestInfo::name.name to test.fullName(),
+                TestInfo::details.name to test,
                 TestInfo::startedAt.name to 0L,
                 TestInfo::finishedAt.name to 0L,
                 TestInfo::result.name to TestResult.SKIPPED
@@ -166,13 +178,9 @@ actual object TestListener {
             logger.error(it) { "Can't get tests list. Reason:" }
             emptyList()
         }
-        _testInfo.update { tests -> tests - finished.mapNotNull { it.testName } }
+        _testInfo.update { tests -> tests - finished.map { it.details } }
 
-        return TestRun.serializer() stringify TestRun(
-            startedAt = finished.filter { it.startedAt != 0L }.minByOrNull { it.startedAt }?.startedAt ?: 0,
-            finishedAt = finished.maxByOrNull { it.finishedAt }?.finishedAt ?: 0,
-            tests = finished
-        )
+        return ListSerializer(TestInfo.serializer()) stringify finished
     }
 
     actual fun reset() {
@@ -183,5 +191,11 @@ actual object TestListener {
         if (value == "SUCCESSFUL") return TestResult.PASSED
         return TestResult.valueOf(value)
     }
+
 }
 
+fun TestDetails.fullName() = run {
+    val classParams = params[TestListener.classParamsKey] ?: ""
+    val methodParams = params[TestListener.methodParamsKey] ?: "()"
+    "[engine:$engine]/[class:$path$classParams]/[method:$testName$methodParams]"
+}
