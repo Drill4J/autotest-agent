@@ -30,7 +30,7 @@ class AdminStubStorage {
                 startedSessions.add(action.payload.sessionId)
             }
             is AddTests -> {
-                action.payload.testRun?.let {
+                action.payload.let {
                     val testsInfo = tests[action.payload.sessionId] ?: listOf()
                     tests[action.payload.sessionId] = testsInfo + it.tests
                 }
@@ -38,7 +38,7 @@ class AdminStubStorage {
             is StopSession -> {
                 startedSessions.remove(action.payload.sessionId)
                 finishedSessions.add(action.payload.sessionId)
-                action.payload.testRun?.let {
+                action.payload.let {
                     val testsInfo = tests[action.payload.sessionId] ?: listOf()
                     tests[action.payload.sessionId] = testsInfo + it.tests
                 }

@@ -16,6 +16,8 @@
 package com.epam.drill.test.common
 
 import com.epam.drill.plugins.test2code.api.*
+import com.epam.drill.test.agent.*
+import com.epam.drill.test.agent.TestListener.methodParamsKey
 import com.google.gson.*
 import kotlinx.serialization.json.*
 import org.apache.http.client.methods.*
@@ -53,14 +55,15 @@ fun Method.toTestData(
     testResult: TestResult,
     paramNumber: String,
 ): TestData = run {
-    val testFullName = TestName(
+    val testFullName = TestDetails(
         engine = engine,
         path = declaringClass.name,
-        name = name,
-        pathParams = "",
-        params =  (paramNumber.takeIf { it.isNotBlank() }?.let {
+        testName = name,
+        params = mapOf(methodParamsKey to (paramNumber.takeIf { it.isNotBlank() }?.let {
             parameters.joinToString(",", "(", ")") { it.type.simpleName } + "[$paramNumber]"
-        } ?: "()")).fullName
+        } ?: "()")),
+        metadata = emptyMap()
+    ).fullName()
     TestData(testFullName, testResult)
 }
 
@@ -74,6 +77,13 @@ fun String.cucumberTestToTestData(
     engine: String,
     featurePath: String,
     testResult: TestResult,
-) = TestData(TestName(engine, featurePath, this, pathParams = "", params = "()").fullName, testResult)
+) = TestData(TestDetails(
+    engine = engine,
+    path = featurePath,
+    testName = this,
+    params = mapOf(methodParamsKey to "()"),
+    metadata = emptyMap()).fullName(),
+    testResult)
 
 fun TestInfo.toTestData() = TestData(name, result)
+

@@ -16,9 +16,10 @@
 
 
 import com.epam.drill.SessionProvider
+import com.epam.drill.plugins.test2code.api.TestDetails
 import com.epam.drill.plugins.test2code.api.TestInfo
-import com.epam.drill.plugins.test2code.api.TestName
 import com.epam.drill.plugins.test2code.api.TestResult
+import com.epam.drill.test.agent.TestListenerKt
 import com.epam.drill.test.agent.instrumentation.testing.junit.JUnitStrategy
 import com.epam.drill.test.common.AssertKt
 import com.epam.drill.test.common.ServerDate
@@ -27,7 +28,6 @@ import com.epam.drill.test.common.UtilKt
 import org.junit.experimental.categories.Category
 import spock.lang.Shared
 import spock.lang.Specification
-
 
 @Category(UnitTest.class)
 class MessageServiceSpec extends Specification {
@@ -74,6 +74,6 @@ class MessageServiceSpec extends Specification {
     }
 
     String getTestName(String name) {
-        return new TestName(JUnitStrategy.engineSegment, MessageServiceSpec.class.getName(), name, "", "()").fullName
+        return TestListenerKt.fullName(new TestDetails(JUnitStrategy.engineSegment, MessageServiceSpec.class.getName(), name, new HashMap<>(), new HashMap<>()))
     }
 }

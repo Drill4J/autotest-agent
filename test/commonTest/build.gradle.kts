@@ -11,4 +11,7 @@ dependencies {
     api("org.jetbrains.kotlinx:kotlinx-serialization-core:$serializationRuntimeVersion")
     api("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationRuntimeVersion")
     implementation(kotlin("test"))
+    implementation(project(":")) {
+        isTransitive = false
+    }
 }
