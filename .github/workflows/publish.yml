@@ -25,6 +25,23 @@ jobs:
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
           BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
           GRADLE_OPTS: -Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4096m
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
+      # place this action LAST
+      - uses: Drill4J/vee-table@0.0.0
+        with:
+          # leave everything "as-is"
+          github-access-token: ${{ secrets.VEE_TABLE_TOKEN }}
+          action-type: 'add-version'
+          ledger-repo-url: 'https://github.com/Drill4J/vee-ledger'
+          ledger-repo-owner: 'Drill4J'
+          ledger-repo-name: 'vee-ledger'
+          version-component-id: ${{ github.event.repository.name }}
+          # leave everything "as-is"
+
+          # steps.build_artifact is your step, where new version tag is created
+          version-tag: ${{ steps.get_version.outputs.VERSION }} # Pass new version tag
 
   build_and_publish_for_win:
     name: Publish for Windows platform (Windows platform)
