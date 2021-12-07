@@ -59,6 +59,12 @@ actual object StrategyManager {
             }
             headers
         }
+
+        ClientsCallback.initSendConditionCallback {
+            ClientsCallback.getHeaders().run {
+                isNotEmpty() && get(SESSION_ID_HEADER) != null && get(TEST_NAME_HEADER) != null
+            }
+        }
     }
 
     actual fun initialize(rawFrameworkPlugins: String, isManuallyControlled: Boolean) {
