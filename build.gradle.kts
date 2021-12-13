@@ -23,7 +23,6 @@ allprojects {
 repositories {
     mavenLocal()
     mavenCentral()
-    maven(url = "https://dl.bintray.com/kotlin/kotlinx/")
     maven(url = "https://oss.jfrog.org/artifactory/list/oss-release-local")
 }
 
