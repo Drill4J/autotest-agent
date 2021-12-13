@@ -35,6 +35,7 @@ import java.util.concurrent.*
 private const val CAPABILITY_NAME = "debuggerAddress"
 private const val DEV_TOOL_PROPERTY_NAME = "webSocketDebuggerUrl"
 private const val SELENOID_WS_TIMEOUT_SEC: Long = 2
+private const val RETRY_ADD_HEADERS_SLEEP_MILLIS: Long = 2000
 
 object DevToolsClientThreadStorage {
     private val logger = Logging.logger(ChromeDevTool::class.java.name)
@@ -48,10 +49,17 @@ object DevToolsClientThreadStorage {
             logger.debug { "Chrome Tool activated: ${threadLocalChromeDevTool.get() != null}. Headers: $headers" }
 
         } catch (ex: Exception) {
-            logger.debug { "exception $ex; try to resend" }
-            Thread.sleep(2000)
-            @Suppress("UNCHECKED_CAST")
-            getDevTool()?.addHeaders(headers as Map<String, String>)
+            //todo refactor and remove this workaround EPMDJ-9354
+            logger.debug { "try to resend because of exception: $ex" }
+            Thread.sleep(RETRY_ADD_HEADERS_SLEEP_MILLIS)
+            logger.debug { "[Second try] after sleep try to add headers: $headers" }
+            try {
+                @Suppress("UNCHECKED_CAST")
+                getDevTool()?.addHeaders(headers as Map<String, String>)
+                logger.debug { "[Second try] Chrome Tool activated: ${threadLocalChromeDevTool.get() != null}. Headers: $headers" }
+            } catch (ex: Exception){
+                logger.warn { "cannot resend for $headers because of exception: $ex" }
+            }
         }
     }
 
@@ -68,27 +76,30 @@ object DevToolsClientThreadStorage {
     fun resetHeaders() =  getDevTool()?.addHeaders(emptyMap())
 }
 
+/**
+ * Works with local or Selenoid DevTools by websocket
+ */
 class ChromeDevTool {
     private val logger = Logging.logger(ChromeDevTool::class.java.name)
-    internal var ws: ChromeDevToolWs? = null
-    internal var isHeadersAdded: Boolean = false
-    private var selenoidDevtools: ChromeDevToolsService? = null
+    private var localDevToolsWs: ChromeDevToolWs? = null
+    private var selenoidDevToolsWs: ChromeDevToolsService? = null
+    lateinit var localUrl: String
 
-    fun addHeaders(headers: Map<String, String>) {
-        trackTime("send headers") {
-            ws?.addHeaders(headers)
-            selenoidDevtools?.network?.let {
-                it.setExtraHTTPHeaders(headers)
-                it.enable()
-            }
-        }
-    }
+    internal var isHeadersAdded: Boolean = false
 
     init {
         DevToolsClientThreadStorage.setDevTool(this)
     }
 
-    lateinit var url: String
+    fun addHeaders(headers: Map<String, String>) {
+        trackTime("send headers") {
+            localDevToolsWs?.addHeaders(headers)
+            selenoidDevToolsWs?.network?.let {
+                it.setExtraHTTPHeaders(headers)
+                it.enable()
+            }
+        }
+    }
 
     /**
      * connect to remote Selenoid or local webDriver
@@ -98,7 +109,7 @@ class ChromeDevTool {
         trackTime("connect to selenoid") {
             remoteHost?.connectToSelenoid(sessionId)
         }
-        if (selenoidDevtools == null || selenoidDevtools?.isClosed == true) {
+        if (selenoidDevToolsWs == null || selenoidDevToolsWs?.isClosed == true) {
             trackTime("connect to local") {
                 connectToLocal(capabilities)
             }
@@ -115,7 +126,7 @@ class ChromeDevTool {
                 logger.debug { "Chrome info: $response" }
                 val chromeInfo = Json.parseToJsonElement(response) as JsonObject
                 chromeInfo[DEV_TOOL_PROPERTY_NAME]?.jsonPrimitive?.contentOrNull?.let { url ->
-                    this.url = url
+                    this.localUrl = url
                     connectWs()
                 } ?: logger.warn { "Can't get DevTools URL" }
             } else {
@@ -131,7 +142,7 @@ class ChromeDevTool {
         val commandsCache: MutableMap<Method, Any> = ConcurrentHashMap()
         val configuration = ChromeDevToolsServiceConfiguration()
         configuration.readTimeout = SELENOID_WS_TIMEOUT_SEC
-        selenoidDevtools = ProxyUtils.createProxyFromAbstract(
+        selenoidDevToolsWs = ProxyUtils.createProxyFromAbstract(
             ChromeDevToolsServiceImpl::class.java,
             arrayOf<Class<*>>(
                 WebSocketService::class.java,
@@ -143,25 +154,25 @@ class ChromeDevTool {
                 ProxyUtils.createProxy(method.returnType, commandInvocationHandler)
             }
         }
-        commandInvocationHandler.setChromeDevToolsService(selenoidDevtools)
+        commandInvocationHandler.setChromeDevToolsService(selenoidDevToolsWs)
     }
 
     fun close() {
-        ws?.let {
-            logger.debug { "${this.url} closing..." }
+        localDevToolsWs?.let {
+            logger.debug { "${this.localUrl} closing..." }
             it.close()
         }
-        selenoidDevtools?.let {
+        selenoidDevToolsWs?.let {
             logger.debug { "closing Selenoid ws..." }
             it.close()
         }
     }
 
     internal fun connectWs(): Boolean {
-        logger.debug { "DevTools URL: ${this.url}" }
+        logger.debug { "DevTools URL: ${this.localUrl}" }
         val cdl = CountDownLatch(4)
-        ws = ChromeDevToolWs(URI(this.url), cdl, this)
-        ws?.connect()
+        localDevToolsWs = ChromeDevToolWs(URI(this.localUrl), cdl, this)
+        localDevToolsWs?.connect()
         return cdl.await(5, TimeUnit.SECONDS)
     }
 
@@ -174,10 +185,13 @@ class ChromeDevTool {
     }
 }
 
+/**
+ * WS for local DevTools
+ */
 class ChromeDevToolWs(
-    val url: URI,
+    private val url: URI,
     private val cdl: CountDownLatch,
-    val chromeDevTool: ChromeDevTool,
+    private val chromeDevTool: ChromeDevTool,
 ) : WebSocketClient(url) {
 
     private val json = Json { ignoreUnknownKeys = true }
