@@ -17,6 +17,7 @@ package com.epam.drill.test.agent.instrumentation.testing.testng
 
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.*
+import com.epam.drill.test.agent.instrumentation.testing.logging.*
 import javassist.*
 import org.objectweb.asm.*
 import java.lang.reflect.*
@@ -69,9 +70,13 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                         public void onTestStart($ITestResult result) {
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment", result.getInstanceName(), result.getName(), getParamsString(result), getFactoryParams(result));
+                            if (result.getThrowable() == null) {
+                                ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment", result.getInstanceName(), result.getName(), getParamsString(result), getFactoryParams(result));
+                            } else {
+                                ${Logging::class.java.name}.INSTANCE.${Logging::debug.name}("The start of the test " + result.getName() + " is ignored by the drill");
+                            }
                         }
-                    """.trimIndent(),
+                """.trimIndent(),
                 testListener
             )
         )
@@ -148,7 +153,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             return paramString;
         }
     """.trimIndent()
-    
+
     abstract fun getFactoryParams(): String
 
     private fun CtClass.supportIgnoredTestsTracking() = getDeclaredMethod("run").insertAfter(
