@@ -30,7 +30,7 @@ public class Test {
     protected Set<String> testNames;
 
     public Test() {
-        this.testNames = Setup.testNames;
+        this.testNames = Setup.testHashes;
         this.port = Setup.port;
         this.driver = Setup.driver;
         this.wait = new Wait(this.driver);

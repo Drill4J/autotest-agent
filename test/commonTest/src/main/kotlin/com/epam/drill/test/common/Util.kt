@@ -18,6 +18,7 @@ package com.epam.drill.test.common
 import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.TestListener.methodParamsKey
+import com.epam.drill.test.agent.util.*
 import com.google.gson.*
 import kotlinx.serialization.json.*
 import org.apache.http.client.methods.*
@@ -26,8 +27,6 @@ import java.lang.reflect.*
 import java.net.*
 import kotlin.reflect.*
 import kotlin.reflect.jvm.*
-
-fun String.urlEncode(): String = URLEncoder.encode(this, Charsets.UTF_8.name())
 
 val json = Json {
     encodeDefaults = true
@@ -64,7 +63,7 @@ fun Method.toTestData(
             parameters.joinToString(",", "(", ")") { it?.javaClass?.simpleName ?: it.toString() } + "[$paramNumber]"
         } ?: "()")),
         metadata = emptyMap()
-    ).fullName()
+    ).hash()
     TestData(testFullName, testResult)
 }
 
@@ -86,9 +85,9 @@ fun String.cucumberTestToTestData(
         testName = this,
         params = mapOf(methodParamsKey to "()"),
         metadata = emptyMap()
-    ).fullName(),
+    ).hash(),
     testResult
 )
 
-fun TestInfo.toTestData() = TestData(name, result)
+fun TestInfo.toTestData() = TestData(id, result)
 

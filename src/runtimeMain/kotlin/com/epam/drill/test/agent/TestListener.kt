@@ -62,21 +62,21 @@ actual object TestListener {
                     classParamsKey to classParams,
                 )
             )
-            val testFullName = test.fullName()
+            val testHash = test.hash()
             if (test !in _testInfo.value) {
                 logger.info { "Test: $test STARTED" }
                 addTestInfo(
                     test,
-                    TestInfo::name.name to testFullName,
+                    TestInfo::id.name to testHash,
                     TestInfo::details.name to test,
                     TestInfo::startedAt.name to System.currentTimeMillis()
                 )
                 DevToolsClientThreadStorage.addHeaders(
-                    mapOf(TEST_NAME_HEADER to testFullName.urlEncode(),
+                    mapOf(TEST_ID_HEADER to testHash,
                         SESSION_ID_HEADER to (ThreadStorage.sessionId() ?: ""))
                 )
-                ThreadStorage.startSession(testFullName)
-                ThreadStorage.memorizeTestName(testFullName)
+                ThreadStorage.startSession(testHash)
+                ThreadStorage.memorizeTestName(testHash)
                 WebDriverThreadStorage.addCookies()
             } else if (isFinalizeTestState(test)) {
                 logger.trace { "Test: $test was repeated. Change status to UNKNOWN" }
@@ -85,7 +85,7 @@ actual object TestListener {
                     TestInfo::result.name to TestResult.UNKNOWN,
                     TestInfo::startedAt.name to System.currentTimeMillis()
                 )
-                ThreadStorage.memorizeTestName(testFullName)
+                ThreadStorage.memorizeTestName(testHash)
             }
         }
     }
@@ -100,7 +100,7 @@ actual object TestListener {
         classParams: String = "",
     ) {
         if (className != null && method != null) {
-            val testName = TestDetails(
+            val test = TestDetails(
                 engine = engine,
                 path = className,
                 testName = method,
@@ -109,9 +109,9 @@ actual object TestListener {
                     classParamsKey to classParams,
                 ),
             )
-            logger.trace { "Test: $testName is finishing with status $status..." }
-            if (isNotFinalizeTestState(testName)) {
-                addTestResult(testName, status)
+            logger.trace { "Test: $test is finishing with status $status..." }
+            if (isNotFinalizeTestState(test)) {
+                addTestResult(test, status)
             }
         }
     }
@@ -159,7 +159,7 @@ actual object TestListener {
             )
             addTestInfo(
                 test,
-                TestInfo::name.name to test.fullName(),
+                TestInfo::id.name to test.hash(),
                 TestInfo::details.name to test,
                 TestInfo::startedAt.name to 0L,
                 TestInfo::finishedAt.name to 0L,
@@ -192,10 +192,4 @@ actual object TestListener {
         return TestResult.valueOf(value)
     }
 
-}
-
-fun TestDetails.fullName() = run {
-    val classParams = params[TestListener.classParamsKey] ?: ""
-    val methodParams = params[TestListener.methodParamsKey] ?: "()"
-    "[engine:$engine]/[class:$path$classParams]/[method:$testName$methodParams]"
 }

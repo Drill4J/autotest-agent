@@ -54,7 +54,7 @@ public class FactoryTest extends BaseTest {
     TestData toData(String method) {
         HashMap<String, String> params = new HashMap<>();
         params.put(TestListener.classParamsKey, "(" + param.getClass().getSimpleName() + "," + value.getClass().getSimpleName() + ")[" + param + "]");
-        return new TestData(TestListenerKt.fullName(new TestDetails(
+        return new TestData(TestListenerKt.hash(new TestDetails(
                 TestNGStrategy.engineSegment,
                 getClass().getSimpleName(),
                 method,

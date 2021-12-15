@@ -15,7 +15,6 @@
  */
 package pack
 
-import com.epam.drill.test.common.*
 import com.google.gson.*
 import com.mashape.unirest.http.*
 import okhttp3.*
@@ -25,9 +24,10 @@ import java.io.*
 import java.net.*
 import kotlin.test.*
 
-const val TEST_NAME_HEADER = "drill-test-name"
+const val TEST_ID_HEADER = "drill-test-id"
 const val SESSION_ID_HEADER = "drill-session-id"
 
+//TODO Remove or rewrite
 object HttpHeadersTest {
 
 
@@ -68,7 +68,7 @@ object HttpHeadersTest {
         Gson().fromJson(inpt, Map::class.java)["headers"] as Map<*, *>
 
     private fun check(methodName: String, headersContainer: Map<*, *>) {
-        assertTrue(headersContainer[TEST_NAME_HEADER]?.toString()?.contains(methodName.urlEncode()) ?: false)
+        assertTrue(headersContainer[TEST_ID_HEADER]?.toString()?.isNotBlank() ?: false)
         assertEquals("testSession", headersContainer[SESSION_ID_HEADER])
     }
 }
