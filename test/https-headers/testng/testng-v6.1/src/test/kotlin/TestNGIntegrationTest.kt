@@ -25,7 +25,7 @@ import org.testng.annotations.*
 class TestNGIntegrationTest : BaseTest() {
 
     @DataProvider
-    fun dataProvider() = arrayOf(arrayOf(1, "first"), arrayOf(2, "second"))
+    fun dataProvider() = arrayOf<Array<Any?>>(arrayOf(1, "first"), arrayOf(2, "second"), arrayOf(null, null))
 
     @BeforeClass
     fun `add skipped tests`() {
@@ -51,7 +51,7 @@ class TestNGIntegrationTest : BaseTest() {
     }
 
     @Test(dataProvider = "dataProvider")
-    fun parametrizedTest(int: Integer, string: String) {
+    fun parametrizedTest(int: Integer?, string: String?) {
         val paramNumber = dataProvider().indexOfFirst {
             it.contentEquals(arrayOf(int, string))
         }
@@ -59,6 +59,7 @@ class TestNGIntegrationTest : BaseTest() {
             ::parametrizedTest.toTestData(
                 TestNGStrategy.engineSegment,
                 TestResult.PASSED,
+                listOf(int, string),
                 "$paramNumber"
             )
         )
