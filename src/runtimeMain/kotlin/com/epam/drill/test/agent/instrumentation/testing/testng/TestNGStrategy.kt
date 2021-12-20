@@ -148,7 +148,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             return paramString;
         }
     """.trimIndent()
-    
+
     abstract fun getFactoryParams(): String
 
     private fun CtClass.supportIgnoredTestsTracking() = getDeclaredMethod("run").insertAfter(
@@ -164,10 +164,11 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
         """.trimIndent()
     )
 
-    fun paramTypes(objects: Array<Any>): String = objects.joinToString(",", "(", ")") {
+    fun paramTypes(objects: Array<Any?>?): String = objects?.joinToString(",", "(", ")") {
         when (it) {
+            null -> it.toString()
             is Field -> it.type.simpleName
             else -> it.javaClass.simpleName
         }
-    }
+    } ?: ""
 }
