@@ -50,7 +50,7 @@ object TestNGStrategyV6 : TestNGStrategy() {
     """.trimIndent()
 
     fun paramNumber(
-        instance: Any,
-        instances: Array<Any>
-    ): String = "[${instances.indexOf(instance)}]"
+        instance: Any?,
+        instances: Array<Any?>?
+    ): String = instances?.let { "[${it.indexOf(instance)}]" } ?: ""
 }
