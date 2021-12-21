@@ -53,14 +53,15 @@ fun getAdminData() = run {
 fun Method.toTestData(
     engine: String,
     testResult: TestResult,
+    parameters: List<Any?>,
     paramNumber: String,
 ): TestData = run {
     val testFullName = TestDetails(
         engine = engine,
         path = declaringClass.name,
         testName = name,
-        params = mapOf(methodParamsKey to (paramNumber.takeIf { it.isNotBlank() }?.let {
-            parameters.joinToString(",", "(", ")") { it.type.simpleName } + "[$paramNumber]"
+        params = mapOf(methodParamsKey to (parameters.takeIf { it.any() }?.let {
+            parameters.joinToString(",", "(", ")") { it?.javaClass?.simpleName ?: it.toString() } + "[$paramNumber]"
         } ?: "()")),
         metadata = emptyMap()
     ).fullName()
@@ -70,20 +71,24 @@ fun Method.toTestData(
 fun KFunction<*>.toTestData(
     engine: String,
     testResult: TestResult,
+    parameters: List<Any?> = emptyList(),
     paramNumber: String = "",
-): TestData = javaMethod!!.toTestData(engine, testResult, paramNumber)
+): TestData = javaMethod!!.toTestData(engine, testResult, parameters, paramNumber)
 
 fun String.cucumberTestToTestData(
     engine: String,
     featurePath: String,
     testResult: TestResult,
-) = TestData(TestDetails(
-    engine = engine,
-    path = featurePath,
-    testName = this,
-    params = mapOf(methodParamsKey to "()"),
-    metadata = emptyMap()).fullName(),
-    testResult)
+) = TestData(
+    TestDetails(
+        engine = engine,
+        path = featurePath,
+        testName = this,
+        params = mapOf(methodParamsKey to "()"),
+        metadata = emptyMap()
+    ).fullName(),
+    testResult
+)
 
 fun TestInfo.toTestData() = TestData(name, result)
 
