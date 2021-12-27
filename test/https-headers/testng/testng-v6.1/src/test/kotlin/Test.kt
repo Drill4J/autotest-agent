@@ -24,13 +24,15 @@ class TestTestNG : BaseTest() {
 
     @Test
     fun simpleTestMethodName() {
-        HttpHeadersTest.test(::simpleTestMethodName.name)
-        expectedTests.add(::simpleTestMethodName.toTestData(TestNGStrategy.engineSegment, TestResult.PASSED))
+        val toTestData = ::simpleTestMethodName.toTestData(TestNGStrategy.engineSegment, TestResult.PASSED)
+        HttpHeadersTest.test(toTestData.hash)
+        expectedTests.add(toTestData)
     }
 
     @Test
     fun `method with backtick names`() {
-        HttpHeadersTest.test(::`method with backtick names`.name)
-        expectedTests.add(::`method with backtick names`.toTestData(TestNGStrategy.engineSegment, TestResult.PASSED))
+        val toTestData = ::`method with backtick names`.toTestData(TestNGStrategy.engineSegment, TestResult.PASSED)
+        HttpHeadersTest.test(toTestData.hash)
+        expectedTests.add(toTestData)
     }
 }

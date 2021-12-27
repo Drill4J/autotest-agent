@@ -15,6 +15,16 @@
  */
 package com.epam.drill.test.agent.util
 
+import com.epam.drill.plugins.test2code.api.*
 import java.net.*
+import java.util.zip.*
+import java.lang.Long.*
 
 fun String.urlEncode(): String = URLEncoder.encode(this, Charsets.UTF_8.name())
+
+fun TestDetails.hash(): String = toString().crc32()
+
+fun String.crc32(): String = CRC32().let {
+    it.update(toByteArray())
+    toHexString(it.value)
+}

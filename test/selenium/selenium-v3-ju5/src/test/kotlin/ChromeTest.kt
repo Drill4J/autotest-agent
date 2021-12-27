@@ -18,10 +18,13 @@ package abs
 import io.github.bonigarcia.wdm.*
 import org.junit.jupiter.api.*
 import org.openqa.selenium.chrome.*
+import kotlin.reflect.*
 
-class ChromeTest : BasedTest(){
+class ChromeTest : BasedTest() {
 
-    override fun setupDriver(){
+    override val testClass: KClass<*> = this::class
+
+    override fun setupDriver() {
         WebDriverManager.chromedriver().setup()
         val options = ChromeOptions()
         options.setHeadless(true)

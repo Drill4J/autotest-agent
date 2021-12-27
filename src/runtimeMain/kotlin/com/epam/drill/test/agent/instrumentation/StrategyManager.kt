@@ -51,14 +51,14 @@ actual object StrategyManager {
                     put(SESSION_ID_HEADER, it)
                 }
                 ThreadStorage.storage.get()?.let {
-                    put(TEST_NAME_HEADER, it)
+                    put(TEST_ID_HEADER, it)
                 }
             }
         }
 
         ClientsCallback.initSendConditionCallback {
             ClientsCallback.getHeaders().run {
-                isNotEmpty() && get(SESSION_ID_HEADER) != null && get(TEST_NAME_HEADER) != null
+                isNotEmpty() && get(SESSION_ID_HEADER) != null && get(TEST_ID_HEADER) != null
             }
         }
     }

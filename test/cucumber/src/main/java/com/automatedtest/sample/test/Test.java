@@ -27,10 +27,10 @@ public class Test {
     protected WebDriver driver;
     protected Wait wait;
     protected int port;
-    protected Set<String> testNames;
+    protected Set<String> testHashes;
 
     public Test() {
-        this.testNames = Setup.testNames;
+        this.testHashes = Setup.testHashes;
         this.port = Setup.port;
         this.driver = Setup.driver;
         this.wait = new Wait(this.driver);
@@ -42,9 +42,9 @@ public class Test {
         wait.forLoading(5);
     }
 
-    public void checkTestName(String testName) {
-        Assert.assertFalse(testNames.isEmpty());
-        Assert.assertTrue(testNames.stream().anyMatch(x -> x.contains(testName)));
+    public void checkTestName(String testHash) {
+        Assert.assertFalse(testHashes.isEmpty());
+        Assert.assertTrue(testHashes.stream().anyMatch(x -> x.contains(testHash)));
     }
 
 }

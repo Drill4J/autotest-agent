@@ -58,20 +58,20 @@ actual object TestListener {
                 path = className,
                 testName = method,
                 params = mapOf(
-                    methodParamsKey to methodParams,
                     classParamsKey to classParams,
+                    methodParamsKey to methodParams,
                 )
             )
-            val testFullName = test.fullName()
+            val testHash = test.hash()
             if (test !in _testInfo.value) {
                 logger.info { "Test: $test STARTED" }
                 addTestInfo(
                     test,
-                    TestInfo::name.name to testFullName,
+                    TestInfo::id.name to testHash,
                     TestInfo::details.name to test,
                     TestInfo::startedAt.name to System.currentTimeMillis()
                 )
-                addDrillHeaders(testFullName)
+                addDrillHeaders(testHash)
             } else if (isFinalizeTestState(test)) {
                 logger.trace { "Test: $test was repeated. Change status to UNKNOWN" }
                 addTestInfo(
@@ -79,7 +79,7 @@ actual object TestListener {
                     TestInfo::result.name to TestResult.UNKNOWN,
                     TestInfo::startedAt.name to System.currentTimeMillis()
                 )
-                addDrillHeaders(testFullName)
+                addDrillHeaders(testHash)
             }
         }
     }
@@ -94,18 +94,18 @@ actual object TestListener {
         classParams: String = "",
     ) {
         if (className != null && method != null) {
-            val testName = TestDetails(
+            val test = TestDetails(
                 engine = engine,
                 path = className,
                 testName = method,
                 params = mapOf(
-                    methodParamsKey to methodParams,
                     classParamsKey to classParams,
+                    methodParamsKey to methodParams,
                 ),
             )
-            logger.trace { "Test: $testName is finishing with status $status..." }
-            if (isNotFinalizeTestState(testName)) {
-                addTestResult(testName, status)
+            logger.trace { "Test: $test is finishing with status $status..." }
+            if (isNotFinalizeTestState(test)) {
+                addTestResult(test, status)
             }
         }
     }
@@ -145,14 +145,14 @@ actual object TestListener {
                 path = className,
                 testName = method,
                 params = mapOf(
-                    methodParamsKey to methodParams,
                     classParamsKey to classParams,
+                    methodParamsKey to methodParams,
                 )
             )
             clearDrillHeaders(test)
             addTestInfo(
                 test,
-                TestInfo::name.name to test.fullName(),
+                TestInfo::id.name to test.hash(),
                 TestInfo::details.name to test,
                 TestInfo::startedAt.name to 0L,
                 TestInfo::finishedAt.name to 0L,
@@ -162,13 +162,13 @@ actual object TestListener {
         }
     }
 
-    private fun addDrillHeaders(testName: String) {
+    private fun addDrillHeaders(testHash: String) {
         DevToolsClientThreadStorage.addHeaders(
-            mapOf(TEST_NAME_HEADER to testName.urlEncode(),
+            mapOf(TEST_ID_HEADER to testHash,
                 SESSION_ID_HEADER to (ThreadStorage.sessionId() ?: ""))
         )
-        ThreadStorage.startSession(testName)
-        ThreadStorage.memorizeTestName(testName)
+        ThreadStorage.startSession(testHash)
+        ThreadStorage.memorizeTestName(testHash)
         WebDriverThreadStorage.addCookies()
     }
 
@@ -206,10 +206,4 @@ actual object TestListener {
         return TestResult.valueOf(value)
     }
 
-}
-
-fun TestDetails.fullName() = run {
-    val classParams = params[TestListener.classParamsKey] ?: ""
-    val methodParams = params[TestListener.methodParamsKey] ?: "()"
-    "[engine:$engine]/[class:$path$classParams]/[method:$testName$methodParams]"
 }
