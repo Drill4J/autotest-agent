@@ -19,7 +19,6 @@ import com.epam.drill.SessionProvider
 import com.epam.drill.plugins.test2code.api.TestDetails
 import com.epam.drill.plugins.test2code.api.TestInfo
 import com.epam.drill.plugins.test2code.api.TestResult
-import com.epam.drill.test.agent.TestListenerKt
 import com.epam.drill.test.agent.instrumentation.testing.junit.JUnitStrategy
 import com.epam.drill.test.common.AssertKt
 import com.epam.drill.test.common.ServerDate
@@ -36,20 +35,22 @@ class MessageServiceSpec extends Specification {
     private Set<TestData> actualTests = new HashSet<>();
 
     def 'Get message'() {
-        actualTests.add new TestData(getTestName(specificationContext.currentIteration.name), TestResult.PASSED)
+        def testHash = getTestHash(specificationContext.currentIteration.name)
+        actualTests.add new TestData(testHash, TestResult.PASSED)
         URLConnection con = (URLConnection) new URL("http://postman-echo.com/headers").openConnection()
         def bytes = con.inputStream.bytes
         expect: 'Should return the correct message'
         println 'Should return the correct message'
-        new String(bytes).contains(UtilKt.urlEncode("Get message"))
+        new String(bytes).contains(testHash)
     }
 
     def "numbers to the power of two"(int a, int b, int c) {
-        actualTests.add new TestData(getTestName(specificationContext.currentIteration.name), TestResult.PASSED)
+        def testHash = getTestHash(specificationContext.currentIteration.name)
+        actualTests.add new TestData(testHash, TestResult.PASSED)
         URLConnection con = (URLConnection) new URL("http://postman-echo.com/headers").openConnection()
         def bytes = con.inputStream.bytes
         expect:
-        new String(bytes).contains(UtilKt.urlEncode("numbers to the power of two"))
+        new String(bytes).contains(testHash)
         where:
         a | b | c
         1 | 2 | 1
@@ -73,7 +74,10 @@ class MessageServiceSpec extends Specification {
         AssertKt.assertTestTime(testFromAdmin)
     }
 
-    String getTestName(String name) {
-        return TestListenerKt.fullName(new TestDetails(JUnitStrategy.engineSegment, MessageServiceSpec.class.getName(), name, new HashMap<>(), new HashMap<>()))
+    String getTestHash(String name) {
+        def params = new HashMap<String, String>()
+        params.put("classParams", "")
+        params.put("methodParams", "()")
+        return com.epam.drill.test.agent.util.UtilKt.hash(new TestDetails(JUnitStrategy.engineSegment, MessageServiceSpec.class.getName(), name, params, new HashMap<>()))
     }
 }

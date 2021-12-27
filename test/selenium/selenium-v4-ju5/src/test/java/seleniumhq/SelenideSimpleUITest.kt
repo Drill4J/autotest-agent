@@ -44,12 +44,12 @@ internal class SelenideSimpleUITest {
         val secondTestName = "second Test"
         return listOf(DynamicTest.dynamicTest(firsTestName) {
             Selenide.open("http://host.docker.internal:$port/1")
-            println(testNames)
-            Assertions.assertTrue(testNames.any { it.contains(::dynamicTestsWithCollection.name) })
+            println(testHashes)
+            Assertions.assertTrue(testHashes.any { it.contains(::dynamicTestsWithCollection.name) })
         },
             DynamicTest.dynamicTest(secondTestName) {
                 Selenide.open("http://host.docker.internal:$port/1")
-                Assertions.assertTrue(testNames.any { it.contains(::dynamicTestsWithCollection.name) })
+                Assertions.assertTrue(testHashes.any { it.contains(::dynamicTestsWithCollection.name) })
             }
         )
     }
@@ -62,18 +62,18 @@ internal class SelenideSimpleUITest {
 
     @AfterEach
     fun after() {
-        testNames.clear()
+        testHashes.clear()
     }
 
     @DisplayName(dispNameForTest1)
     @Test
     fun test1() {
-        Assertions.assertTrue(testNames.any { it.contains(::test1.name) })
+        Assertions.assertTrue(testHashes.any { it.contains(::test1.name) })
     }
 
     @Test
     fun test2() {
-        Assertions.assertTrue(testNames.any { it.contains(::test2.name) })
+        Assertions.assertTrue(testHashes.any { it.contains(::test2.name) })
     }
 
     @ParameterizedTest
@@ -87,7 +87,7 @@ internal class SelenideSimpleUITest {
         val fn = ::parameterizedTest
         val signature = fn.parameters.map { (it.type.classifier as KClass<*>).simpleName }
             .joinToString(separator = ", ", prefix = "(", postfix = ")")
-        Assertions.assertTrue(testNames.any { it.contains(fn.name) })
+        Assertions.assertTrue(testHashes.any { it.contains(fn.name) })
     }
 
     companion object {
@@ -109,12 +109,12 @@ internal class SelenideSimpleUITest {
 
         private var httpServer: HttpServer = HttpServer.create(InetSocketAddress(0), 0)
         var port: Int
-        val testNames = mutableSetOf<String>()
+        val testHashes = mutableSetOf<String>()
 
         init {
             httpServer.createContext("/1") { t ->
                 val response = "OK"
-                testNames.add(t.requestHeaders["drill-test-name"]?.firstOrNull() ?: "")
+                testHashes.add(t.requestHeaders["drill-test-id"]?.firstOrNull() ?: "")
                 t.sendResponseHeaders(200, response.toByteArray().size.toLong())
                 val os = t.responseBody
                 os.write(response.toByteArray())

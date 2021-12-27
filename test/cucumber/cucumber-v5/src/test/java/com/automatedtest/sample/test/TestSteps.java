@@ -30,7 +30,7 @@ public class TestSteps {
 
     private final Test test;
     private final Set<TestData> actualTests = new HashSet<>();
-    private String actualTestName;
+    private String testHash;
 
     public TestSteps() {
         test = new Test();
@@ -38,13 +38,13 @@ public class TestSteps {
 
     @Before
     public void saveScenarioName(Scenario scenario) {
-        actualTestName = UtilKt.urlEncode(scenario.getName());
-        actualTests.add(UtilKt.cucumberTestToTestData(
+        TestData test = UtilKt.cucumberTestToTestData(
                 scenario.getName(),
                 CucumberV5.INSTANCE.getEngineSegment(),
                 "src/test/resources/com/automatedtest/sample/test_name.feature",
-                TestResult.PASSED)
-        );
+                TestResult.PASSED);
+        testHash = test.getHash();
+        actualTests.add(test);
     }
 
     @Given("^A user navigates to HomePage$")
@@ -54,7 +54,7 @@ public class TestSteps {
 
     @Then("^Headers are injected$")
     public void headersAreInjected() {
-        test.checkTestName(actualTestName);
+        test.checkTestName(testHash);
     }
 
     private final String sessionId = UUID.randomUUID().toString();

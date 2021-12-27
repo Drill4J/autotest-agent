@@ -30,7 +30,7 @@ public class Setup {
 
     public static WebDriver driver;
     public static HttpServer httpServer;
-    public static Set<String> testNames = new LinkedHashSet<>();
+    public static Set<String> testHashes = new LinkedHashSet<>();
     public static int port;
 
     @Before
@@ -58,7 +58,7 @@ public class Setup {
         httpServer = HttpServer.create(new InetSocketAddress(0), 0);
         httpServer.createContext("/1", httpExchange -> {
                     String status = "OK";
-                    testNames.add(httpExchange.getRequestHeaders().getFirst("drill-test-name"));
+                    testHashes.add(httpExchange.getRequestHeaders().getFirst("drill-test-id"));
                     httpExchange.sendResponseHeaders(200, status.getBytes().length);
                     OutputStream os = httpExchange.getResponseBody();
                     os.write(status.getBytes());

@@ -50,9 +50,13 @@ actual object StrategyManager {
         systemStrategies.add(Selenium())
         systemStrategies.add(Kafka())
         ClientsCallback.initRequestCallback {
-            val headers = mutableMapOf<String, String>()
-            ThreadStorage.sessionId()?.let {
-                headers.put(SESSION_ID_HEADER, it)
+            mutableMapOf<String, String>().apply {
+                ThreadStorage.sessionId()?.let {
+                    put(SESSION_ID_HEADER, it)
+                }
+                ThreadStorage.storage.get()?.let {
+                    put(TEST_ID_HEADER, it)
+                }
             }
             ThreadStorage.storage.get()?.let {
                 headers.put(TEST_NAME_HEADER, it)
@@ -62,7 +66,7 @@ actual object StrategyManager {
 
         ClientsCallback.initSendConditionCallback {
             ClientsCallback.getHeaders().run {
-                isNotEmpty() && get(SESSION_ID_HEADER) != null && get(TEST_NAME_HEADER) != null
+                isNotEmpty() && get(SESSION_ID_HEADER) != null && get(TEST_ID_HEADER) != null
             }
         }
     }

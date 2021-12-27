@@ -15,6 +15,8 @@
  */
 package abs
 
+import com.epam.drill.plugins.test2code.api.*
+import com.epam.drill.test.common.*
 import com.sun.net.httpserver.*
 import io.github.bonigarcia.wdm.*
 import org.junit.jupiter.api.*
@@ -26,13 +28,15 @@ import java.net.*
 class Junit5Selenium4Test {
 
     companion object {
+        private const val engine = "junit-jupiter"
         private var httpServer: HttpServer = HttpServer.create(InetSocketAddress(0), 0)
         var port: Int
         val testNames = mutableSetOf<String>()
+
         init {
             httpServer.createContext("/1") { t ->
                 val response = "OK"
-                testNames.add(t.requestHeaders["drill-test-name"]?.firstOrNull() ?: "")
+                testNames.add(t.requestHeaders["drill-test-id"]?.firstOrNull() ?: "")
                 t.sendResponseHeaders(200, response.toByteArray().size.toLong())
                 val os = t.responseBody
                 os.write(response.toByteArray())
@@ -69,12 +73,17 @@ class Junit5Selenium4Test {
     @Test
     fun itCanBeAnyTestName() {
         driver.get("http://localhost:$port/1")
-        Assertions.assertTrue(testNames.any { it.contains(::itCanBeAnyTestName.name) })
+        Assertions.assertTrue(testNames.any {
+            it.contains(::itCanBeAnyTestName.toTestData(engine,
+                TestResult.PASSED).hash)
+        })
     }
 
     @Test
     fun itCanBeAnyTestName2() {
         driver.get("http://localhost:$port/1")
-        Assertions.assertTrue(testNames.any { it.contains(::itCanBeAnyTestName2.name) })
+        Assertions.assertTrue(testNames.any {
+            it.contains(::itCanBeAnyTestName2.toTestData(engine, TestResult.PASSED).hash)
+        })
     }
 }

@@ -21,7 +21,7 @@ import org.hamcrest.CoreMatchers.*
 import org.junit.jupiter.api.*
 
 
-const val TEST_NAME_HEADER = "drill-test-name"
+const val TEST_ID_HEADER = "drill-test-id"
 const val SESSION_ID_HEADER = "drill-session-id"
 
 class Tests {
@@ -42,7 +42,7 @@ class Tests {
             .spec(
                 ResponseSpecBuilder()
                     .expectStatusCode(200)
-                    .expectBody(containsString(TEST_NAME_HEADER))
+                    .expectBody(containsString(TEST_ID_HEADER))
                     .expectBody(containsString(SESSION_ID_HEADER))
                     .build()
             )

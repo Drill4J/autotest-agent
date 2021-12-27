@@ -17,8 +17,11 @@ package abs
 
 import io.github.bonigarcia.wdm.*
 import org.openqa.selenium.firefox.*
+import kotlin.reflect.*
 
 class FirefoxTest : BasedTest(){
+
+    override val testClass: KClass<*> = this::class
 
     override fun setupDriver(){
         WebDriverManager.firefoxdriver().setup()

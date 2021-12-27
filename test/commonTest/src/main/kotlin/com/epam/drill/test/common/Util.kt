@@ -17,7 +17,9 @@ package com.epam.drill.test.common
 
 import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.*
+import com.epam.drill.test.agent.TestListener.classParamsKey
 import com.epam.drill.test.agent.TestListener.methodParamsKey
+import com.epam.drill.test.agent.util.*
 import com.google.gson.*
 import kotlinx.serialization.json.*
 import org.apache.http.client.methods.*
@@ -26,8 +28,6 @@ import java.lang.reflect.*
 import java.net.*
 import kotlin.reflect.*
 import kotlin.reflect.jvm.*
-
-fun String.urlEncode(): String = URLEncoder.encode(this, Charsets.UTF_8.name())
 
 val json = Json {
     encodeDefaults = true
@@ -52,28 +52,32 @@ fun getAdminData() = run {
 
 fun Method.toTestData(
     engine: String,
+    testClass: KClass<*>?,
     testResult: TestResult,
     parameters: List<Any?>,
     paramNumber: String,
 ): TestData = run {
     val testFullName = TestDetails(
         engine = engine,
-        path = declaringClass.name,
+        path = testClass?.jvmName ?: declaringClass.name,
         testName = name,
-        params = mapOf(methodParamsKey to (parameters.takeIf { it.any() }?.let {
-            parameters.joinToString(",", "(", ")") { it?.javaClass?.simpleName ?: it.toString() } + "[$paramNumber]"
-        } ?: "()")),
+        params = mapOf(
+            classParamsKey to "",
+            methodParamsKey to (parameters.takeIf { it.any() }?.let {
+                parameters.joinToString(",", "(", ")") { it?.javaClass?.simpleName ?: it.toString() } + "[$paramNumber]"
+            } ?: "()")),
         metadata = emptyMap()
-    ).fullName()
+    ).hash()
     TestData(testFullName, testResult)
 }
 
 fun KFunction<*>.toTestData(
     engine: String,
     testResult: TestResult,
+    testClass: KClass<*>? = null,
     parameters: List<Any?> = emptyList(),
     paramNumber: String = "",
-): TestData = javaMethod!!.toTestData(engine, testResult, parameters, paramNumber)
+): TestData = javaMethod!!.toTestData(engine, testClass, testResult, parameters, paramNumber)
 
 fun String.cucumberTestToTestData(
     engine: String,
@@ -84,11 +88,14 @@ fun String.cucumberTestToTestData(
         engine = engine,
         path = featurePath,
         testName = this,
-        params = mapOf(methodParamsKey to "()"),
+        params = mapOf(
+            classParamsKey to "",
+            methodParamsKey to "()"
+        ),
         metadata = emptyMap()
-    ).fullName(),
+    ).hash(),
     testResult
 )
 
-fun TestInfo.toTestData() = TestData(name, result)
+fun TestInfo.toTestData() = TestData(id, result)
 

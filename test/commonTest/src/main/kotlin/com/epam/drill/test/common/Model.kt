@@ -26,6 +26,6 @@ data class ServerDate(
 )
 
 data class TestData(
-    val name: String,
+    val hash: String,
     val testResult: TestResult,
 )

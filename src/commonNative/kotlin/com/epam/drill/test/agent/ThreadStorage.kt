@@ -20,7 +20,7 @@ import com.epam.drill.test.agent.actions.*
 actual object ThreadStorage {
 
     actual fun memorizeTestNameNative(testName: String?) {
-        SessionController.testName.value = testName ?: ""
+        SessionController.testHash.value = testName ?: ""
     }
 
     actual fun sessionId(): String? {

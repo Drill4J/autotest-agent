@@ -74,11 +74,11 @@ fun configureHooks() {
     mainLogger.debug { "Interceptor configured" }
     injectedHeaders.value = {
         mainLogger.debug { "Injecting headers" }
-        val lastTestName = SessionController.testName.value
+        val lastTestHash = SessionController.testHash.value
         val sessionId = SessionController.sessionId.value
-        mainLogger.debug { "Adding headers: $lastTestName to $sessionId" }
+        mainLogger.debug { "Adding headers: $lastTestHash to $sessionId" }
         mapOf(
-            "drill-test-name" to lastTestName,
+            "drill-test-id" to lastTestHash,
             "drill-session-id" to sessionId
         )
     }.freeze()
