@@ -29,7 +29,7 @@ object SessionController {
     val _agentConfig = AtomicReference(AgentRawConfig().freeze()).freeze()
     val agentConfig
         get() = _agentConfig.value
-    val testName = AtomicReference("undefined")
+    val testHash = AtomicReference("undefined")
     val sessionId = AtomicReference("")
     private val token = AtomicReference("")
 

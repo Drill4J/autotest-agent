@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 import com.epam.drill.*
+import com.epam.drill.plugins.test2code.api.*
+import com.epam.drill.test.agent.instrumentation.testing.junit.*
+import com.epam.drill.test.common.*
 import org.junit.*
 import pack.*
 import java.util.*
@@ -26,17 +29,17 @@ class Test {
     @Test
     @Ignore
     fun simpleTestMethodName() {
-        HttpHeadersTest.test(::simpleTestMethodName.name)
+        HttpHeadersTest.test(::simpleTestMethodName.toTestData(JUnitStrategy.engineSegment, TestResult.SKIPPED).hash)
     }
 
     @Test
     fun `method with backtick names`() {
-        HttpHeadersTest.test(::`method with backtick names`.name)
+        HttpHeadersTest.test(::`method with backtick names`.toTestData(JUnitStrategy.engineSegment, TestResult.PASSED).hash)
     }
 
     @Test
     fun `Кириллик леттерс`() {
-        HttpHeadersTest.test(::`Кириллик леттерс`.name)
+        HttpHeadersTest.test(::`Кириллик леттерс`.toTestData(JUnitStrategy.engineSegment, TestResult.PASSED).hash)
     }
 
     companion object {

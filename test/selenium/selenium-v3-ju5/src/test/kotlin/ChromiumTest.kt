@@ -18,10 +18,13 @@ package abs
 import io.github.bonigarcia.wdm.*
 import org.junit.jupiter.api.*
 import org.openqa.selenium.chrome.*
+import kotlin.reflect.*
 
 //TODO FIX CHECK EPMDJ-6835
 @Disabled
 class ChromiumTest : BasedTest(){
+
+    override val testClass: KClass<*> = this::class
 
     override fun setupDriver(){
         WebDriverManager.chromiumdriver().setup()

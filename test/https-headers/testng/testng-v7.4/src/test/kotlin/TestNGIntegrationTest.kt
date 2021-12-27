@@ -53,8 +53,8 @@ class TestNGIntegrationTest : BaseTest() {
             ::parametrizedTest.toTestData(
                 TestNGStrategy.engineSegment,
                 TestResult.PASSED,
-                listOf(int, string),
-                "$paramNumber"
+                parameters = listOf(int, string),
+                paramNumber = "$paramNumber"
             )
         )
         assertTrue(true)

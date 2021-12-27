@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 EPAM Systems
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ public class TestSteps {
 
     private final Test test;
     private final Set<TestData> actualTests = new HashSet<>();
-    private String actualTestName;
+    private String testHash;
 
     public TestSteps() {
         test = new Test();
@@ -38,13 +38,14 @@ public class TestSteps {
 
     @Before
     public void saveScenarioName(Scenario scenario) {
-        actualTestName = UtilKt.urlEncode(scenario.getName());
-        actualTests.add(UtilKt.cucumberTestToTestData(
+        TestData test = UtilKt.cucumberTestToTestData(
                 scenario.getName(),
                 CucumberV6.INSTANCE.getEngineSegment(),
                 "src/test/resources/com/automatedtest/sample/test_name.feature",
-                TestResult.PASSED)
+                TestResult.PASSED
         );
+        testHash = test.getHash();
+        actualTests.add(test);
     }
 
     @Given("^A user navigates to HomePage$")
@@ -54,7 +55,7 @@ public class TestSteps {
 
     @Then("^Headers are injected$")
     public void headersAreInjected() {
-        test.checkTestName(actualTestName);
+        test.checkTestName(testHash);
     }
 
     private final String sessionId = UUID.randomUUID().toString();

@@ -14,21 +14,25 @@
  * limitations under the License.
  */
 import com.epam.drill.*
+import com.epam.drill.plugins.test2code.api.*
+import com.epam.drill.test.agent.instrumentation.testing.junit.*
+import com.epam.drill.test.common.*
 import org.junit.jupiter.api.*
 import pack.*
 import kotlin.test.*
 import kotlin.test.Test
 
 class TestJU5 {
+    private val engine = "junit-jupiter"
 
     @Test
     fun simpleTestMethodName() {
-        HttpHeadersTest.test(::simpleTestMethodName.name)
+        HttpHeadersTest.test(::simpleTestMethodName.toTestData(engine, TestResult.PASSED).hash)
     }
 
     @Test
     fun `method with backtick names`() {
-        HttpHeadersTest.test(::`method with backtick names`.name)
+        HttpHeadersTest.test(::`method with backtick names`.toTestData(engine, TestResult.PASSED).hash)
     }
 
     companion object {
