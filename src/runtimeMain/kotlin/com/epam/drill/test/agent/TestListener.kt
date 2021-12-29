@@ -71,13 +71,7 @@ actual object TestListener {
                     TestInfo::details.name to test,
                     TestInfo::startedAt.name to System.currentTimeMillis()
                 )
-                DevToolsClientThreadStorage.addHeaders(
-                    mapOf(TEST_NAME_HEADER to testFullName.urlEncode(),
-                        SESSION_ID_HEADER to (ThreadStorage.sessionId() ?: ""))
-                )
-                ThreadStorage.startSession(testFullName)
-                ThreadStorage.memorizeTestName(testFullName)
-                WebDriverThreadStorage.addCookies()
+                addDrillHeaders(testFullName)
             } else if (isFinalizeTestState(test)) {
                 logger.trace { "Test: $test was repeated. Change status to UNKNOWN" }
                 addTestInfo(
@@ -85,7 +79,7 @@ actual object TestListener {
                     TestInfo::result.name to TestResult.UNKNOWN,
                     TestInfo::startedAt.name to System.currentTimeMillis()
                 )
-                ThreadStorage.memorizeTestName(testFullName)
+                addDrillHeaders(testFullName)
             }
         }
     }
@@ -124,10 +118,8 @@ actual object TestListener {
                 TestInfo::result.name to getByMapping(status)
             )
             logger.info { "Test: $test FINISHED. Result:$status" }
+            clearDrillHeaders(it)
         }
-        ThreadStorage.stopSession()
-        DevToolsClientThreadStorage.resetHeaders()
-        ThreadStorage.clear()
     }
 
 
@@ -157,6 +149,7 @@ actual object TestListener {
                     classParamsKey to classParams,
                 )
             )
+            clearDrillHeaders(test)
             addTestInfo(
                 test,
                 TestInfo::name.name to test.fullName(),
@@ -166,6 +159,27 @@ actual object TestListener {
                 TestInfo::result.name to TestResult.SKIPPED
             )
             logger.trace { "Test: $test FINISHED. Result:${TestResult.SKIPPED.name}" }
+        }
+    }
+
+    private fun addDrillHeaders(testName: String) {
+        DevToolsClientThreadStorage.addHeaders(
+            mapOf(TEST_NAME_HEADER to testName.urlEncode(),
+                SESSION_ID_HEADER to (ThreadStorage.sessionId() ?: ""))
+        )
+        ThreadStorage.startSession(testName)
+        ThreadStorage.memorizeTestName(testName)
+        WebDriverThreadStorage.addCookies()
+    }
+
+    /**
+     * Removing headers only for started tests
+     */
+    private fun clearDrillHeaders(test: TestDetails) {
+        if (test in _testInfo.value) {
+            ThreadStorage.stopSession()
+            DevToolsClientThreadStorage.resetHeaders()
+            ThreadStorage.clear()
         }
     }
 
