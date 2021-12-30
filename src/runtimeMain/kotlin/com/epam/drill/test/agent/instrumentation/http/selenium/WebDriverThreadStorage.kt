@@ -27,4 +27,6 @@ object WebDriverThreadStorage {
             }
         }.getOrNull()
     }
+
+    fun clear() = webDriver.remove()
 }

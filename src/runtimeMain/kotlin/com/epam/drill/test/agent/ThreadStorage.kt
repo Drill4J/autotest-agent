@@ -16,6 +16,8 @@
 package com.epam.drill.test.agent
 
 import com.epam.drill.kni.*
+import com.epam.drill.test.agent.config.*
+import com.epam.drill.test.agent.js.*
 import com.epam.drill.test.agent.util.*
 
 @Kni
@@ -29,7 +31,7 @@ actual object ThreadStorage {
         memorizeTestNameNative(value)
     }
 
-    fun clear(){
+    fun clear() {
         storage.set(null)
     }
 
@@ -37,9 +39,9 @@ actual object ThreadStorage {
 
     actual external fun sessionId(): String?
 
-    actual external fun proxyUrl(): String?
-
     actual external fun startSession(testName: String?)
 
     actual external fun stopSession()
+
+    actual external fun sendSessionData(preciseCoverage: String, scriptParsed: String, testId: String)
 }

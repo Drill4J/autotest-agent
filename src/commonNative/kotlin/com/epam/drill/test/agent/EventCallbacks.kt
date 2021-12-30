@@ -56,7 +56,7 @@ private const val isHttpHookEnabled = false // based on args
 fun jvmtiEventVMInitEvent(env: CPointer<jvmtiEnvVar>?, jniEnv: CPointer<JNIEnvVar>?, thread: jthread?) {
     mainLogger.debug { "Init event" }
     initRuntimeIfNeeded()
-    val agentConfig = SessionController.agentConfig
+    val agentConfig = AgentConfig.config
     if (!agentConfig.isManuallyControlled && !agentConfig.sessionForEachTest)
         SessionController.startSession(agentConfig.sessionId)
     agentConfig.run {

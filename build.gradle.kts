@@ -71,6 +71,7 @@ kotlin {
                     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$serializationRuntimeVersion")
                     implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
                     implementation("com.epam.drill.kni:runtime:$kniVersion")
+                    //todo remove
                     implementation("com.squareup.okhttp3:okhttp:3.13.1")
                     implementation("org.jetbrains.kotlinx:atomicfu:$atomicFuVersion")
                     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:$collectionImmutableVersion")

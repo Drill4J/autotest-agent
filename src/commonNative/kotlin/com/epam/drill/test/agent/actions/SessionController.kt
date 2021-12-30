@@ -20,15 +20,14 @@ import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.config.*
 import com.epam.drill.test.agent.http.*
+import com.epam.drill.test.agent.js.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.builtins.*
 import kotlin.native.concurrent.*
 import kotlin.time.*
 
 object SessionController {
-    val _agentConfig = AtomicReference(AgentRawConfig().freeze()).freeze()
-    val agentConfig
-        get() = _agentConfig.value
+    private val agentConfig = AgentConfig.config
     val testHash = AtomicReference("undefined")
     val sessionId = AtomicReference("")
     private val token = AtomicReference("")
@@ -124,9 +123,23 @@ object SessionController {
         ).apply { if (code != 200) error("Can't perform request: $this") }
     }
 
+    fun sendSessionData(data: String) = runCatching {
+        mainLogger.debug { "Attempting to send session data ..." }
+        val payload = Action.serializer() stringify AddSessionData(
+            payload = SessionDataPayload(
+                sessionId = sessionId.value,
+                data = data
+            )
+        )
+        val response = dispatchAction(payload)
+        mainLogger.debug { "Received response: ${response.body}" }
+    }.onFailure {
+        mainLogger.warn(it) { "Can't send session data ${sessionId.value}" }
+    }.getOrNull().also { TestListener.reset() }
+
     private fun getToken(): String {
         val httpCall = httpCall(agentConfig.adminAddress + "/api/login", HttpRequest("POST"))
         if (httpCall.code != 200) error("Can't perform request: $httpCall")
-        return httpCall.headers["authorization"] ?: error("No token received during login")
+        return httpCall.headers["Authorization"] ?: error("No token received during login")
     }
 }

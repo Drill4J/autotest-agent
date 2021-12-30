@@ -58,7 +58,10 @@ object Agent : JvmtiAgent {
                 mainLogger.warn { "Expected format for a browser proxy is hostname.com:1234" }
             }
 
-            SessionController._agentConfig.value = config
+            if (config.devToolsProxyAddress.isNullOrBlank()) {
+                mainLogger.error { "UI coverage will be lost. Please specify devToolsProxyAddress" }
+            }
+            AgentConfig.updateConfig(config)
         } catch (ex: Throwable) {
             mainLogger.error(ex) { "Can't load the agent. Reason:" }
         }
@@ -68,7 +71,7 @@ object Agent : JvmtiAgent {
     override fun agentOnUnload() {
         try {
             mainLogger.info { "Shutting the agent down" }
-            val agentConfig = SessionController.agentConfig
+            val agentConfig = AgentConfig.config
             if (!agentConfig.isManuallyControlled && !agentConfig.sessionForEachTest)
                 SessionController.stopSession()
         } catch (ex: Throwable) {
