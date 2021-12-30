@@ -16,6 +16,8 @@
 package com.epam.drill.test.agent
 
 import com.epam.drill.test.agent.actions.*
+import com.epam.drill.test.agent.config.*
+import com.epam.drill.test.agent.js.*
 
 actual object ThreadStorage {
 
@@ -27,22 +29,23 @@ actual object ThreadStorage {
         return SessionController.sessionId.value
     }
 
-    actual fun proxyUrl(): String? {
-        return SessionController._agentConfig.value.browserProxyAddress
-    }
-
-    actual fun startSession(testName: String?) = SessionController.run {
-        if (agentConfig.sessionForEachTest) {
-            startSession(
-                customSessionId = agentConfig.sessionId,
+    actual fun startSession(testName: String?) {
+        if (AgentConfig.config.sessionForEachTest) {
+            SessionController.startSession(
+                customSessionId = AgentConfig.config.sessionId,
                 testName = testName
             )
         }
     }
 
     actual fun stopSession() = SessionController.run {
-        if (agentConfig.sessionForEachTest) {
+        if (AgentConfig.config.sessionForEachTest) {
             stopSession(sessionIds = sessionId.value)
         }
+    }
+
+    actual fun sendSessionData(preciseCoverage: String, scriptParsed: String, testId: String) {
+        val data = JsSessionData(preciseCoverage, scriptParsed, testId)
+        SessionController.sendSessionData(JsSessionData.serializer() stringify data)
     }
 }
