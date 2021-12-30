@@ -112,6 +112,7 @@ actual object StrategyManager {
 //TODO EPMDJ-8916 Replace with [com.epam.drill.agent.instrument.http.ok.OkHttpClient]
 object OkHttpClientStub : TransformStrategy() {
     override fun permit(classReader: ClassReader): Boolean {
+        //todo EPMDJ-10494 no need drill suffix after removing dependency
         return classReader.interfaces.any { "drill/$it" == "okhttp3/internal/http/HttpCodec" }
     }
     override fun instrument(

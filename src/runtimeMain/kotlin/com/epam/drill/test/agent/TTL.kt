@@ -24,8 +24,11 @@ val TEST_NAME_VALUE_CALC_LINE = "((String)${ThreadStorage::class.qualifiedName}.
 val TEST_NAME_CALC_LINE = "\"$TEST_ID_HEADER\", $TEST_NAME_VALUE_CALC_LINE"
 val SESSION_ID_VALUE_CALC_LINE = "${ThreadStorage::class.qualifiedName}.INSTANCE.${ThreadStorage::sessionId.name}()"
 val SESSION_ID_CALC_LINE = "\"$SESSION_ID_HEADER\", $SESSION_ID_VALUE_CALC_LINE"
+val IF_CONDITION = "$TEST_NAME_VALUE_CALC_LINE != null && $SESSION_ID_VALUE_CALC_LINE != null"
+val DEV_TOOL = "((${ChromeDevTool::class.java.name})${DevToolStorage::class.java.name}.INSTANCE.${DevToolStorage::get.name}())"
+val IS_DEV_TOOL_NOT_NULL = "$DEV_TOOL != null"
+val IS_HEADER_ADDED = "($DEV_TOOL != null && $DEV_TOOL.${ChromeDevTool::isHeadersAdded.name}())"
 val ARE_DRILL_HEADERS_PRESENT = "$TEST_NAME_VALUE_CALC_LINE != null && $SESSION_ID_VALUE_CALC_LINE != null"
-val IS_HEADER_ADDED = "${DevToolsClientThreadStorage::class.java.name}.INSTANCE.${DevToolsClientThreadStorage::isHeadersAdded.name}()"
 
 @Suppress("RedundantOverride")
 class TTL : InheritableThreadLocal<String>() {

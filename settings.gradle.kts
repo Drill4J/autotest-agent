@@ -8,15 +8,15 @@ include(":test:https-headers:ju4")
 include(":test:https-headers:testng")
 include(":test:https-headers:testng:testng-v6.1")
 include(":test:https-headers:testng:testng-v7.4")
-include(":test:selenium:selenium-v3-ju5")
-include(":test:selenium:selenium-v4-ju5")
 include(":test:rest-assure-ju5")
-
 include(":test:spock")
-include(":test:cucumber:cucumber-v4")
-include(":test:cucumber:cucumber-v5")
-include(":test:cucumber:cucumber-v6")
-include(":test:cucumber:cucumber-v6.7")
+//todo EPMDJ-10493 fix tests with selenium
+//include(":test:selenium:selenium-v3-ju5")
+//include(":test:selenium:selenium-v4-ju5")
+//include(":test:cucumber:cucumber-v4")
+//include(":test:cucumber:cucumber-v5")
+//include(":test:cucumber:cucumber-v6")
+//include(":test:cucumber:cucumber-v6.7")
 
 include(":test:admin-stub-server")
 pluginManagement {

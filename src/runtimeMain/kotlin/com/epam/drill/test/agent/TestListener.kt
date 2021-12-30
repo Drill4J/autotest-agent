@@ -23,7 +23,9 @@ import com.epam.drill.test.agent.instrumentation.http.selenium.*
 import com.epam.drill.test.agent.util.*
 import kotlinx.atomicfu.*
 import kotlinx.collections.immutable.*
+import kotlinx.coroutines.*
 import kotlinx.serialization.builtins.*
+import kotlin.time.*
 
 @Kni
 actual object TestListener {
@@ -34,7 +36,6 @@ actual object TestListener {
     private val logger = Logging.logger(TestListener::class.java.simpleName)
 
     private val _testInfo = atomic(persistentHashMapOf<TestDetails, PersistentMap<String, Any>>())
-
 
     private fun addTestInfo(
         testId: TestDetails,
@@ -131,9 +132,9 @@ actual object TestListener {
             )
             logger.info { "Test: $test FINISHED. Result:$status" }
             clearDrillHeaders(it)
+            if (AgentConfig.withJsCoverage()) sendSessionData(test.hash())
         }
     }
-
 
     private fun isFinalizeTestState(test: TestDetails?): Boolean = !isNotFinalizeTestState(test)
 
@@ -175,14 +176,9 @@ actual object TestListener {
     }
 
     private fun addDrillHeaders(testHash: String) {
-        DevToolsClientThreadStorage.addHeaders(
-            mapOf(
-                TEST_ID_HEADER to testHash,
-                SESSION_ID_HEADER to (ThreadStorage.sessionId() ?: "")
-            )
-        )
         ThreadStorage.startSession(testHash)
         ThreadStorage.memorizeTestName(testHash)
+        DevToolStorage.get()?.startIntercept()
         WebDriverThreadStorage.addCookies()
     }
 
@@ -192,7 +188,7 @@ actual object TestListener {
     private fun clearDrillHeaders(test: TestDetails) {
         if (test in _testInfo.value) {
             ThreadStorage.stopSession()
-            DevToolsClientThreadStorage.resetHeaders()
+            DevToolStorage.get()?.stopIntercept()
             ThreadStorage.clear()
         }
     }
@@ -220,4 +216,7 @@ actual object TestListener {
         return TestResult.valueOf(value)
     }
 
+    private fun sendSessionData(testId: String) = DevToolStorage.get()?.run {
+        ThreadStorage.sendSessionData(takePreciseCoverage(), scriptParsed(), testId)
+    }
 }

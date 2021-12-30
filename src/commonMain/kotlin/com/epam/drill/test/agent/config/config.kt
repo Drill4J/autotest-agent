@@ -38,6 +38,8 @@ data class AgentRawConfig(
     val sessionForEachTest: Boolean = false,
     val adminUserName: String? = null,
     val adminPassword: String? = null,
+    val devToolsProxyAddress: String? = null,
+    val withJsCoverage: Boolean = false,
 ) {
     val level: LogLevel
         get() = LogLevel.valueOf(logLevel)

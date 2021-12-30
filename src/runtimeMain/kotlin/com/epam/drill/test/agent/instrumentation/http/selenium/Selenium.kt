@@ -32,13 +32,14 @@ object Selenium : TransformStrategy() {
     private const val DesiredCapabilities = "org.openqa.selenium.remote.DesiredCapabilities"
     private const val Proxy = "org.openqa.selenium.Proxy"
     private const val initPages = "\"about:blank\", \"data:,\""
-    private const val isFirefoxDriver = "this instanceof org.openqa.selenium.firefox.FirefoxDriver"
-    private const val isFirefoxBrowser = "org.openqa.selenium.remote.BrowserType.FIREFOX.equals(getCapabilities().getBrowserName())"
     private const val EXTENSION_NAME = "header-transmitter.xpi"
+    private val FirefoxDriver = "org.openqa.selenium.firefox.FirefoxDriver"
 
     private val extensionFile: String
 
     internal const val addDrillCookiesMethod = "addDrillCookies"
+    private const val isFirefoxBrowser = "isFirefoxBrowser"
+
 
 
     init {
@@ -53,6 +54,7 @@ object Selenium : TransformStrategy() {
         return classReader.className == "org/openqa/selenium/remote/RemoteWebDriver"
     }
 
+
     override fun instrument(
         ctClass: CtClass,
         pool: ClassPool,
@@ -61,23 +63,36 @@ object Selenium : TransformStrategy() {
     ): ByteArray? {
         logger.debug { "starting instrument ${ctClass.name}..." }
         ctClass.addField(CtField.make("java.lang.String drillRemoteAddress;", ctClass))
-        ctClass.getConstructor("(Ljava/net/URL;Lorg/openqa/selenium/Capabilities;)V")
+        ctClass
+            .getConstructor("(Ljava/net/URL;Lorg/openqa/selenium/Capabilities;)V")
             .insertBefore(
                 """
                 drillRemoteAddress = $1.getAuthority();
             """.trimIndent()
             )
+        ctClass.addMethod(
+            CtMethod.make(
+                """
+                    public boolean $isFirefoxBrowser(org.openqa.selenium.Capabilities capabilities){
+                       return org.openqa.selenium.remote.BrowserType.FIREFOX.equals(capabilities.getBrowserName());
+                    }
+                """.trimIndent(),
+                ctClass
+            )
+        )
 
         val startSession = ctClass.getDeclaredMethod("startSession")
 
-        //todo remove proxy - EPMDJ-8435
+        /**
+         * Browser proxy is needed only for Firefox browser
+         */
         startSession.insertBefore(
             """
-                if (${ThreadStorage::class.java.name}.INSTANCE.${ThreadStorage::proxyUrl.name}() != null) {
+                if (${AgentConfig::class.java.name}.INSTANCE.${AgentConfig::proxyUrl.name}() != null && $isFirefoxBrowser($1)) {
                     $DesiredCapabilities dCap = new $DesiredCapabilities();
                     $Proxy dProxy = new $Proxy();
-                    dProxy.setHttpProxy(${ThreadStorage::class.java.name}.INSTANCE.${ThreadStorage::proxyUrl.name}());
-                    dProxy.setSslProxy(${ThreadStorage::class.java.name}.INSTANCE.${ThreadStorage::proxyUrl.name}());
+                    dProxy.setHttpProxy(${AgentConfig::class.java.name}.INSTANCE.${AgentConfig::proxyUrl.name}());
+                    dProxy.setSslProxy(${AgentConfig::class.java.name}.INSTANCE.${AgentConfig::proxyUrl.name}());
                     dCap.setCapability("proxy", dProxy);
                     $1 = $1.merge(dCap);
                 }
@@ -86,9 +101,15 @@ object Selenium : TransformStrategy() {
         )
         startSession.insertAfter(
             """
-                   ${connectToDevTools()}
+                    if (${AgentConfig::class.java.name}.INSTANCE.${AgentConfig::devToolsProxyAddress.name}() != null){
+                        ${ChromeDevTool::class.java.name} drillDevTools = new ${ChromeDevTool::class.java.name}(
+                            ((java.util.Map)getCapabilities().getCapability("goog:chromeOptions")),
+                            drillRemoteAddress
+                        );
+                       drillDevTools.${ChromeDevTool::connect.name}(sessionId.toString(), getCurrentUrl());
+                    }
                     try {
-                        if ($isFirefoxDriver) {
+                        if (this instanceof $FirefoxDriver) {
                             java.util.HashMap hashMapq = new java.util.HashMap();
                             hashMapq.put("path", "${extensionFile.replace("\\", "\\\\")}");
                             hashMapq.put("temporary", Boolean.TRUE);
@@ -101,7 +122,7 @@ object Selenium : TransformStrategy() {
             CtMethod.make(
                 """
                     public void $addDrillCookiesMethod() {
-                        if ($isFirefoxBrowser && $ARE_DRILL_HEADERS_PRESENT) {
+                        if ($isFirefoxBrowser(getCapabilities()) && $ARE_DRILL_HEADERS_PRESENT) {
                             try {
                                 executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
                                 executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
@@ -116,12 +137,12 @@ object Selenium : TransformStrategy() {
             CtMethod.make(
                 """
                     public void addDrillHeaders() {
-                        if ($ARE_DRILL_HEADERS_PRESENT && !$IS_HEADER_ADDED) {
+                        if ($IS_DEV_TOOL_NOT_NULL && $ARE_DRILL_HEADERS_PRESENT && !$IS_HEADER_ADDED) {
                             try {
                                 java.util.HashMap hashMap = new java.util.HashMap();
                                 hashMap.put($SESSION_ID_CALC_LINE);
                                 hashMap.put($TEST_NAME_CALC_LINE);
-                                ${DevToolsClientThreadStorage::class.java.name}.INSTANCE.${DevToolsClientThreadStorage::addHeaders.name}(hashMap);
+                                ${getChromeDevTool()}.${ChromeDevTool::addHeaders.name}(hashMap);
                             } catch(Exception e) { e.printStackTrace();}
                         }
                     }
@@ -140,31 +161,30 @@ object Selenium : TransformStrategy() {
         ctClass.getMethod(
             "execute",
             "(Ljava/lang/String;Ljava/util/Map;)Lorg/openqa/selenium/remote/Response;"
-        ).insertBefore(
+        ).insertAfter(
             """
-                if($1.equals(org.openqa.selenium.remote.DriverCommand.SWITCH_TO_WINDOW)){
-                   ${connectToDevTools()}
-                    addDrillHeaders();
-                    $addDrillCookiesMethod();
+                if ($1.equals(org.openqa.selenium.remote.DriverCommand.SWITCH_TO_WINDOW)){
+                    java.lang.String currentUrl = getCurrentUrl();
+                    if ($IS_DEV_TOOL_NOT_NULL){
+                        ${getChromeDevTool()}.${ChromeDevTool::switchSession.name}(currentUrl);
+                    } else {
+                        execute("get", $ImmutableMap.of("url",currentUrl));
+                        $addDrillCookiesMethod();
+                    }
                 }
             """.trimIndent()
         )
         ctClass.getDeclaredMethod("quit").insertBefore(
             """
-                    ${DevToolsClientThreadStorage::class.java.name}.INSTANCE.${DevToolsClientThreadStorage::clean.name}();
+                if ($IS_DEV_TOOL_NOT_NULL){
+                    ${getChromeDevTool()}.${ChromeDevTool::close.name}();
+                    ${DevToolStorage::class.java.name}.INSTANCE.${DevToolStorage::clear.name}();
+                }
+                ${WebDriverThreadStorage::class.java.name}.INSTANCE.${WebDriverThreadStorage::clear.name}();
             """.trimIndent()
         )
         return ctClass.toBytecode()
     }
 
-    private fun connectToDevTools() = run {
-        """
-            new ${ChromeDevTool::class.java.name}().${ChromeDevTool::connect.name}(
-                ((java.util.Map)getCapabilities().getCapability("goog:chromeOptions")),
-                sessionId.toString(),
-                drillRemoteAddress
-             );
-            
-        """.trimIndent()
-    }
+    private fun getChromeDevTool() = "${DevToolStorage::class.java.name}.INSTANCE.${DevToolStorage::get.name}()"
 }
