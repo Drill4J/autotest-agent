@@ -19,7 +19,7 @@ import org.slf4j.*
 import org.testng.annotations.*
 
 abstract class BaseTest {
-    private val sessionId = "testSession"
+    protected val sessionId = "testSession"
 
     @JvmField
     protected var logger: Logger = LoggerFactory.getLogger("Testng-7.4-logger")
@@ -35,7 +35,7 @@ abstract class BaseTest {
     }
 
     @AfterSuite
-    fun checkTests() {
+    open fun checkTests() {
         SessionProvider.stopSession(sessionId)
         val serverDate: ServerDate = getAdminData()
         val testFromAdmin = serverDate.tests[sessionId] ?: emptyList()

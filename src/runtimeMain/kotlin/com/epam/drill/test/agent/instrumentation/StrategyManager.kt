@@ -58,10 +58,6 @@ actual object StrategyManager {
                     put(TEST_ID_HEADER, it)
                 }
             }
-            ThreadStorage.storage.get()?.let {
-                headers.put(TEST_NAME_HEADER, it)
-            }
-            headers
         }
 
         ClientsCallback.initSendConditionCallback {
