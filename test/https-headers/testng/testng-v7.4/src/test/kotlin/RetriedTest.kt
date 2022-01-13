@@ -14,33 +14,34 @@
  * limitations under the License.
  */
 import com.epam.drill.*
+import com.epam.drill.plugins.test2code.api.*
+import com.epam.drill.test.agent.instrumentation.testing.testng.*
 import com.epam.drill.test.common.*
-import org.slf4j.*
+import org.testng.*
+import org.testng.Assert.*
 import org.testng.annotations.*
+import pack.*
 
-abstract class BaseTest {
-    protected val sessionId = "testSession"
+class RetriedTest : BaseTest() {
 
-    @JvmField
-    protected var logger: Logger = LoggerFactory.getLogger("Testng-7.4-logger")
+    private val sleepTime = 600L
 
-    companion object {
-        val expectedTests = mutableSetOf<TestData>()
+    @Test(invocationCount = 2)
+    fun testWithRetryListener() {
+        val toTestData = ::testWithRetryListener.toTestData(TestNGStrategy.engineSegment, TestResult.PASSED)
+        expectedTests.add(toTestData)
+        Thread.sleep(sleepTime)
     }
 
-    @BeforeSuite
-    fun beforeSuite() {
-        getAdminData()
-        SessionProvider.startSession(sessionId)
-    }
 
     @AfterSuite
-    open fun checkTests() {
+    override fun checkTests() {
         SessionProvider.stopSession(sessionId)
         val serverDate: ServerDate = getAdminData()
         val testFromAdmin = serverDate.tests[sessionId] ?: emptyList()
         testFromAdmin shouldContainsAllTests expectedTests
         testFromAdmin.assertTestTime()
+        val testInfo = testFromAdmin.first()
+        assertTrue((testInfo.finishedAt - testInfo.startedAt) >= sleepTime * 2)
     }
-
 }

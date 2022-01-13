@@ -73,15 +73,24 @@ actual object TestListener {
                 )
                 addDrillHeaders(testHash)
             } else if (isFinalizeTestState(test)) {
-                logger.trace { "Test: $test was repeated. Change status to UNKNOWN" }
-                addTestInfo(
-                    test,
-                    TestInfo::result.name to TestResult.UNKNOWN,
-                    TestInfo::startedAt.name to System.currentTimeMillis()
-                )
+                restartTest(test)
                 addDrillHeaders(testHash)
             }
         }
+    }
+
+    private fun restartTest(test: TestDetails) {
+        val prevDuration = _testInfo.value[test]?.let { testProperties ->
+            val startedAt = testProperties[TestInfo::startedAt.name] as Long
+            val finishedAt = testProperties[TestInfo::finishedAt.name] as Long
+            finishedAt - startedAt
+        } ?: 0L
+        logger.trace { "Test: $test was repeated, prev duration $prevDuration. Change status to UNKNOWN" }
+        addTestInfo(
+            test,
+            TestInfo::result.name to TestResult.UNKNOWN,
+            TestInfo::startedAt.name to System.currentTimeMillis() - prevDuration
+        )
     }
 
     @JvmOverloads
