@@ -43,8 +43,8 @@ actual object StrategyManager {
         systemStrategies.add(OkHttpClientStub)
         systemStrategies.add(ApacheClient)
         systemStrategies.add(JavaHttpUrlConnection)
-        systemStrategies.add(Selenium())
-        systemStrategies.add(Kafka())
+        systemStrategies.add(Selenium)
+        systemStrategies.add(Kafka)
         ClientsCallback.initRequestCallback {
             mutableMapOf<String, String>().apply {
                 ThreadStorage.sessionId()?.let {
