@@ -22,11 +22,9 @@ import javassist.*
 import org.objectweb.asm.*
 import java.security.*
 
-class Kafka : TransformStrategy() {
+object Kafka : TransformStrategy() {
 
-    companion object {
-        private const val KAFKA_PRODUCER_INTERFACE = "org/apache/kafka/clients/producer/Producer"
-    }
+    private const val KAFKA_PRODUCER_INTERFACE = "org/apache/kafka/clients/producer/Producer"
 
     override fun permit(classReader: ClassReader) = classReader.interfaces.any { it == KAFKA_PRODUCER_INTERFACE }
 
@@ -38,7 +36,7 @@ class Kafka : TransformStrategy() {
     ): ByteArray? {
         ctClass.getDeclaredMethods("send").forEach {
             it.insertBefore("""
-                if ($IF_CONDITION) {
+                if ($ARE_DRILL_HEADERS_PRESENT) {
                     ${Log::class.java.name}.INSTANCE.${Log::injectHeaderLog.name}($TEST_NAME_VALUE_CALC_LINE,$SESSION_ID_VALUE_CALC_LINE);
                     $1.headers().add("$SESSION_ID_HEADER", $SESSION_ID_VALUE_CALC_LINE.getBytes());
                     $1.headers().add("$TEST_ID_HEADER", $TEST_NAME_VALUE_CALC_LINE.getBytes());

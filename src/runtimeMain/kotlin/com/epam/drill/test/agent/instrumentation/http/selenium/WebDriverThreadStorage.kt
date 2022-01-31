@@ -16,14 +16,14 @@
 package com.epam.drill.test.agent.instrumentation.http.selenium
 
 object WebDriverThreadStorage {
-    private val remoteWebDriver = InheritableThreadLocal<Any>()
+    private val webDriver = InheritableThreadLocal<Any>()
 
-    fun set(obj: Any) = remoteWebDriver.set(obj)
+    fun set(obj: Any) = webDriver.set(obj)
 
     fun addCookies() {
         runCatching {
-            remoteWebDriver.get()?.let {
-                it.javaClass.getDeclaredMethod("addDrillCookies").invoke(it)
+            webDriver.get()?.let {
+                it.javaClass.getMethod(Selenium.addDrillCookiesMethod).invoke(it)
             }
         }.getOrNull()
     }

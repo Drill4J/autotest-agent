@@ -17,24 +17,28 @@ package com.epam.drill.test.agent.instrumentation.http.selenium
 
 import com.epam.drill.agent.instrument.*
 import com.epam.drill.test.agent.*
-import com.epam.drill.test.agent.instrumentation.*
 import javassist.*
 import org.objectweb.asm.*
 import java.io.*
 import java.security.*
 
-const val EXTENSION_NAME = "header-transmitter.xpi"
-
 @Suppress("PrivatePropertyName")
-class Selenium : TransformStrategy() {
+object Selenium : TransformStrategy() {
+
+    private const val Command = "org.openqa.selenium.remote.Command"
+    private const val ImmutableMap = "com.google.common.collect.ImmutableMap"
+    private const val ImmutableList = "com.google.common.collect.ImmutableList"
+    private const val Cookie = "org.openqa.selenium.Cookie"
+    private const val DesiredCapabilities = "org.openqa.selenium.remote.DesiredCapabilities"
+    private const val Proxy = "org.openqa.selenium.Proxy"
+    private const val initPages = "\"about:blank\", \"data:,\""
+    private const val isFirefoxDriver = "this instanceof org.openqa.selenium.firefox.FirefoxDriver"
+    private const val EXTENSION_NAME = "header-transmitter.xpi"
+
     private val extensionFile: String
-    private val Command = "org.openqa.selenium.remote.Command"
-    private val ImmutableMap = "com.google.common.collect.ImmutableMap"
-    private val ImmutableList = "com.google.common.collect.ImmutableList"
-    private val Cookie = "org.openqa.selenium.Cookie"
-    private val DesiredCapabilities = "org.openqa.selenium.remote.DesiredCapabilities"
-    private val Proxy = "org.openqa.selenium.Proxy"
-    private val initPages = """"about:blank", "data:,""""
+
+    internal const val addDrillCookiesMethod = "addDrillCookies"
+
 
     init {
         val extension = this::class.java.getResource("/$EXTENSION_NAME")
@@ -73,17 +77,17 @@ class Selenium : TransformStrategy() {
                     $Proxy dProxy = new $Proxy();
                     dProxy.setHttpProxy(${ThreadStorage::class.java.name}.INSTANCE.${ThreadStorage::proxyUrl.name}());
                     dProxy.setSslProxy(${ThreadStorage::class.java.name}.INSTANCE.${ThreadStorage::proxyUrl.name}());
-                    ${WebDriverThreadStorage::class.java.name}.INSTANCE.${WebDriverThreadStorage::set.name}(this);
                     dCap.setCapability("proxy", dProxy);
                     $1 = $1.merge(dCap);
                 }
+                ${WebDriverThreadStorage::class.java.name}.INSTANCE.${WebDriverThreadStorage::set.name}(this);
                 """
         )
         startSession.insertAfter(
             """
                    ${connectToDevTools()}
                     try {
-                        if (this instanceof org.openqa.selenium.firefox.FirefoxDriver) {
+                        if ($isFirefoxDriver) {
                             java.util.HashMap hashMapq = new java.util.HashMap();
                             hashMapq.put("path", "${extensionFile.replace("\\", "\\\\")}");
                             hashMapq.put("temporary", Boolean.TRUE);
@@ -95,8 +99,8 @@ class Selenium : TransformStrategy() {
         ctClass.addMethod(
             CtMethod.make(
                 """
-                    public void addDrillCookies() {
-                        if ($IF_CONDITION && !$IS_HEADER_ADDED){
+                    public void $addDrillCookiesMethod() {
+                        if ($isFirefoxDriver && $ARE_DRILL_HEADERS_PRESENT) {
                             try {
                                 executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
                                 executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
@@ -111,7 +115,7 @@ class Selenium : TransformStrategy() {
             CtMethod.make(
                 """
                     public void addDrillHeaders() {
-                        if ($IF_CONDITION && !$IS_HEADER_ADDED) {
+                        if ($ARE_DRILL_HEADERS_PRESENT && !$IS_HEADER_ADDED) {
                             try {
                                 java.util.HashMap hashMap = new java.util.HashMap();
                                 hashMap.put($SESSION_ID_CALC_LINE);
@@ -129,7 +133,7 @@ class Selenium : TransformStrategy() {
                 boolean isInitPage = $ImmutableList.of($initPages).contains(getCurrentUrl());
                 if (isInitPage) { execute("get", $ImmutableMap.of("url", $1)); }
                 addDrillHeaders();
-                addDrillCookies();
+                $addDrillCookiesMethod();
             """.trimIndent()
         )
         ctClass.getMethod(
@@ -140,7 +144,7 @@ class Selenium : TransformStrategy() {
                 if($1.equals(org.openqa.selenium.remote.DriverCommand.SWITCH_TO_WINDOW)){
                    ${connectToDevTools()}
                     addDrillHeaders();
-                    addDrillCookies();
+                    $addDrillCookiesMethod();
                 }
             """.trimIndent()
         )
