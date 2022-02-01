@@ -17,8 +17,6 @@
 
 package com.epam.drill.test.agent
 
-import com.epam.drill.hook.io.tcp.injectedHeaders
-import com.epam.drill.interceptor.configureHttpInterceptor
 import com.epam.drill.jvmapi.gen.*
 import com.epam.drill.test.agent.actions.SessionController
 import com.epam.drill.test.agent.instrumentation.StrategyManager
@@ -70,16 +68,6 @@ fun jvmtiEventVMInitEvent(env: CPointer<jvmtiEnvVar>?, jniEnv: CPointer<JNIEnvVa
 }
 
 fun configureHooks() {
-    configureHttpInterceptor()
-    mainLogger.debug { "Interceptor configured" }
-    injectedHeaders.value = {
-        mainLogger.debug { "Injecting headers" }
-        val lastTestHash = SessionController.testHash.value
-        val sessionId = SessionController.sessionId.value
-        mainLogger.debug { "Adding headers: $lastTestHash to $sessionId" }
-        mapOf(
-            "drill-test-id" to lastTestHash,
-            "drill-session-id" to sessionId
-        )
-    }.freeze()
+    mainLogger.debug { "Drill interceptor is unavailable" }
+
 }
