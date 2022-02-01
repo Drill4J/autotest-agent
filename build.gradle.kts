@@ -31,7 +31,6 @@ val kniOutputDir = "src/kni/kotlin"
 val drillJvmApiLibVersion: String by rootProject
 val serializationRuntimeVersion: String by rootProject
 val drillLoggerVersion: String by rootProject
-val drillHttpInterceptorVersion: String by rootProject
 val websocketVersion: String by rootProject
 val kniVersion: String by rootProject
 val uuidVersion: String by rootProject
@@ -116,7 +115,6 @@ kotlin {
             dependsOn(commonMain)
             dependencies {
                 implementation("com.epam.drill:jvmapi:$drillJvmApiLibVersion")
-                implementation("com.epam.drill.interceptor:http:$drillHttpInterceptorVersion")
                 implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$serializationRuntimeVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-properties:$serializationRuntimeVersion")
