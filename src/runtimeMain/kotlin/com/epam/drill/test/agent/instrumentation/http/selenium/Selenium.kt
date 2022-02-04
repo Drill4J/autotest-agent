@@ -33,6 +33,7 @@ object Selenium : TransformStrategy() {
     private const val Proxy = "org.openqa.selenium.Proxy"
     private const val initPages = "\"about:blank\", \"data:,\""
     private const val isFirefoxDriver = "this instanceof org.openqa.selenium.firefox.FirefoxDriver"
+    private const val isFirefoxBrowser = "org.openqa.selenium.remote.BrowserType.FIREFOX.equals(getCapabilities().getBrowserName())"
     private const val EXTENSION_NAME = "header-transmitter.xpi"
 
     private val extensionFile: String
@@ -100,7 +101,7 @@ object Selenium : TransformStrategy() {
             CtMethod.make(
                 """
                     public void $addDrillCookiesMethod() {
-                        if ($isFirefoxDriver && $ARE_DRILL_HEADERS_PRESENT) {
+                        if ($isFirefoxBrowser && $ARE_DRILL_HEADERS_PRESENT) {
                             try {
                                 executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($SESSION_ID_CALC_LINE))));
                                 executor.execute(new $Command(sessionId, "addCookie", $ImmutableMap.of("cookie", new $Cookie($TEST_NAME_CALC_LINE))));
