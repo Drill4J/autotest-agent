@@ -58,7 +58,7 @@ object DevToolsClientThreadStorage {
                 @Suppress("UNCHECKED_CAST")
                 getDevTool()?.addHeaders(headers as Map<String, String>)
                 logger.debug { "[Second try] Chrome Tool activated: ${threadLocalChromeDevTool.get() != null}. Headers: $headers" }
-            } catch (ex: Exception){
+            } catch (ex: Exception) {
                 logger.warn { "cannot resend for $headers because of exception: $ex" }
             }
         }
@@ -74,7 +74,12 @@ object DevToolsClientThreadStorage {
 
     fun isHeadersAdded() = threadLocalChromeDevTool.get()?.isHeadersAdded ?: false
 
-    fun resetHeaders() =  getDevTool()?.addHeaders(emptyMap())
+    fun resetHeaders() = getDevTool()?.addHeaders(emptyMap())
+
+    fun clean() {
+        getDevTool()?.close()
+        threadLocalChromeDevTool.set(null)
+    }
 }
 
 /**
