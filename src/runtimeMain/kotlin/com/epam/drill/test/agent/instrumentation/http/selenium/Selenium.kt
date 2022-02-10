@@ -146,7 +146,7 @@ class Selenium : TransformStrategy() {
         )
         ctClass.getDeclaredMethod("quit").insertBefore(
             """
-                    ${DevToolsClientThreadStorage::class.java.name}.INSTANCE.${DevToolsClientThreadStorage::getDevTool.name}().${ChromeDevTool::close.name}();
+                    ${DevToolsClientThreadStorage::class.java.name}.INSTANCE.${DevToolsClientThreadStorage::clean.name}();
             """.trimIndent()
         )
         return ctClass.toBytecode()
