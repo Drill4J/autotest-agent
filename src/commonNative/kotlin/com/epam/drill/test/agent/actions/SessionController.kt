@@ -21,6 +21,7 @@ import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.config.*
 import com.epam.drill.test.agent.http.*
 import kotlinx.coroutines.*
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.*
 import kotlin.native.concurrent.*
 import kotlin.time.*
@@ -125,8 +126,22 @@ object SessionController {
     }
 
     private fun getToken(): String {
-        val httpCall = httpCall(agentConfig.adminAddress + "/api/login", HttpRequest("POST"))
+        val httpCall = httpCall(
+            agentConfig.adminAddress + "/api/login", HttpRequest(
+                "POST",
+                body = UserData.serializer() stringify UserData(
+                    agentConfig.adminUserName ?: "guest",
+                    agentConfig.adminPassword ?: ""
+                )
+            )
+        )
         if (httpCall.code != 200) error("Can't perform request: $httpCall")
         return httpCall.headers["authorization"] ?: error("No token received during login")
     }
 }
+
+@Serializable
+data class UserData(
+    val name: String,
+    val password: String,
+)
