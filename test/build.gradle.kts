@@ -4,7 +4,7 @@ import java.net.*
 
 plugins {
     kotlin("jvm")
-    id("com.epam.drill.agent.runner.autotest") version "0.2.3" apply false
+    id("com.epam.drill.agent.runner.autotest") version "0.3.1" apply false
 }
 val jupiterVersion: String by rootProject
 val gsonVersion: String by rootProject
@@ -75,6 +75,7 @@ subprojects {
         adminPort = port
         logLevel = TRACE
         jvmArgs = jvmArgs + "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006"
+        labels = mapOf("User" to "Test", "Team" to "Drill4j")
     }
 
 

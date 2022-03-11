@@ -16,7 +16,6 @@
 package com.epam.drill.test.common
 
 import com.epam.drill.plugins.test2code.api.*
-import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.TestListener.classParamsKey
 import com.epam.drill.test.agent.TestListener.methodParamsKey
 import com.epam.drill.test.agent.util.*
@@ -25,9 +24,9 @@ import kotlinx.serialization.json.*
 import org.apache.http.client.methods.*
 import org.apache.http.impl.client.*
 import java.lang.reflect.*
-import java.net.*
 import kotlin.reflect.*
 import kotlin.reflect.jvm.*
+
 
 val json = Json {
     encodeDefaults = true
@@ -66,7 +65,8 @@ fun Method.toTestData(
             methodParamsKey to (parameters.takeIf { it.any() }?.let {
                 parameters.joinToString(",", "(", ")") { it?.javaClass?.simpleName ?: it.toString() } + "[$paramNumber]"
             } ?: "()")),
-        metadata = emptyMap()
+        metadata = emptyMap(),
+        labels = emptySet(),
     ).hash()
     TestData(testFullName, testResult)
 }
@@ -92,7 +92,8 @@ fun String.cucumberTestToTestData(
             classParamsKey to "",
             methodParamsKey to "()"
         ),
-        metadata = emptyMap()
+        metadata = emptyMap(),
+        labels = emptySet(),
     ).hash(),
     testResult
 )

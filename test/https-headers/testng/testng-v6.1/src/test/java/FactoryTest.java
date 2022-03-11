@@ -60,8 +60,7 @@ public class FactoryTest extends BaseTest {
                 TestNGStrategy.engineSegment,
                 getClass().getSimpleName(),
                 method,
-                params,
-                new HashMap<>()
+                params
         )), TestResult.PASSED);
     }
 }
