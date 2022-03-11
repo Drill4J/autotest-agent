@@ -78,6 +78,6 @@ class MessageServiceSpec extends Specification {
         def params = new HashMap<String, String>()
         params.put("classParams", "")
         params.put("methodParams", "()")
-        return com.epam.drill.test.agent.util.UtilKt.hash(new TestDetails(JUnitStrategy.engineSegment, MessageServiceSpec.class.getName(), name, params, new HashMap<>()))
+        return com.epam.drill.test.agent.util.UtilKt.hash(new TestDetails(JUnitStrategy.engineSegment, MessageServiceSpec.class.getName(), name, params))
     }
 }
