@@ -69,6 +69,7 @@ object SessionController {
         isRealtime: Boolean = agentConfig.isRealtimeEnable,
         testName: String? = null,
         isGlobal: Boolean = agentConfig.isGlobal,
+        labels: Set<Label> = agentConfig.labelCollection,
     ) = runCatching {
         mainLogger.debug { "Attempting to start a Drill4J test session..." }
         val sessionId = customSessionId ?: uuid4().toString()
@@ -78,7 +79,8 @@ object SessionController {
                 testType = testType,
                 testName = testName,
                 isRealtime = isRealtime,
-                isGlobal = isGlobal
+                isGlobal = isGlobal,
+                labels = labels,
             )
         )
         this.sessionId.value = sessionId
