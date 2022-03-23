@@ -16,6 +16,7 @@
 package com.epam.drill.test.agent.instrumentation.http.selenium
 
 import com.epam.drill.logger.*
+import com.epam.drill.logger.api.trackTime
 import com.epam.drill.test.agent.config.*
 import com.epam.drill.test.agent.util.*
 import com.github.kklisura.cdt.services.*
@@ -98,7 +99,7 @@ class ChromeDevTool {
     }
 
     fun addHeaders(headers: Map<String, String>) {
-        trackTime("send headers") {
+        perfLogger.trackTime("send headers") {
             localDevToolsWs?.addHeaders(headers)
             selenoidDevToolsWs?.network?.let {
                 it.setExtraHTTPHeaders(headers)
@@ -112,11 +113,11 @@ class ChromeDevTool {
      */
     fun connect(capabilities: Map<*, *>?, sessionId: String?, remoteHost: String?) = kotlin.runCatching {
         logger.debug { "starting connectToDevTools with cap='$capabilities' sessionId='$sessionId' remote='$remoteHost'..." }
-        trackTime("connect to selenoid") {
+        perfLogger.trackTime("connect to selenoid") {
             remoteHost?.connectToSelenoid(sessionId)
         }
         if (selenoidDevToolsWs == null || selenoidDevToolsWs?.isClosed == true) {
-            trackTime("connect to local") {
+            perfLogger.trackTime("connect to local") {
                 connectToLocal(capabilities)
             }
         }

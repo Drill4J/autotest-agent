@@ -15,10 +15,13 @@
  */
 package com.epam.drill.test.agent.util
 
+import com.epam.drill.logger.Logging
 import com.epam.drill.plugins.test2code.api.*
 import java.net.*
 import java.util.zip.*
 import java.lang.Long.*
+
+val perfLogger = Logging.logger("PerfLogger")
 
 fun String.urlEncode(): String = URLEncoder.encode(this, Charsets.UTF_8.name())
 
