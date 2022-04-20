@@ -74,13 +74,13 @@ actual object TestListener {
                 )
                 addDrillHeaders(testHash)
             } else if (isFinalizeTestState(test)) {
-                restartTest(test)
+                restartTest(testHash, test)
                 addDrillHeaders(testHash)
             }
         }
     }
 
-    private fun restartTest(test: TestDetails) {
+    private fun restartTest(testHash: String, test: TestDetails) {
         val prevDuration = _testInfo.value[test]?.let { testProperties ->
             val startedAt = testProperties[TestInfo::startedAt.name] as Long
             val finishedAt = testProperties[TestInfo::finishedAt.name] as Long
@@ -89,6 +89,8 @@ actual object TestListener {
         logger.trace { "Test: $test was repeated, prev duration $prevDuration. Change status to UNKNOWN" }
         addTestInfo(
             test,
+            TestInfo::id.name to testHash,
+            TestInfo::details.name to test,
             TestInfo::result.name to TestResult.UNKNOWN,
             TestInfo::startedAt.name to System.currentTimeMillis() - prevDuration
         )
@@ -174,8 +176,10 @@ actual object TestListener {
 
     private fun addDrillHeaders(testHash: String) {
         DevToolsClientThreadStorage.addHeaders(
-            mapOf(TEST_ID_HEADER to testHash,
-                SESSION_ID_HEADER to (ThreadStorage.sessionId() ?: ""))
+            mapOf(
+                TEST_ID_HEADER to testHash,
+                SESSION_ID_HEADER to (ThreadStorage.sessionId() ?: "")
+            )
         )
         ThreadStorage.startSession(testHash)
         ThreadStorage.memorizeTestName(testHash)
