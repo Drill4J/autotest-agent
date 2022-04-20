@@ -82,6 +82,8 @@ actual object TestListener {
                 logger.trace { "Test: $test was repeated. Change status to UNKNOWN" }
                 addTestInfo(
                     test,
+                    TestInfo::name.name to testFullName,
+                    TestInfo::details.name to test,
                     TestInfo::result.name to TestResult.UNKNOWN,
                     TestInfo::startedAt.name to System.currentTimeMillis()
                 )
