@@ -63,11 +63,13 @@ fun Method.toTestData(
         params = mapOf(
             classParamsKey to "",
             methodParamsKey to (parameters.takeIf { it.any() }?.let {
-                parameters.joinToString(",", "(", ")") { it?.javaClass?.simpleName ?: it.toString() } + "[$paramNumber]"
+                parameters.joinToString(",", "(", ")") {
+                    it?.javaClass?.simpleName?.substringBeforeLast("\$") ?: it.toString()
+                } + "[$paramNumber]"
             } ?: "()")),
         metadata = emptyMap(),
         labels = emptySet(),
-    ).hash()
+    ).also { println("Expected: $it") }.hash()
     TestData(testFullName, testResult)
 }
 

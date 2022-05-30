@@ -169,11 +169,11 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
         """.trimIndent()
     )
 
-    fun paramTypes(objects: Array<Any?>?): String = objects?.joinToString(",", "(", ")") {
-        when (it) {
-            null -> it.toString()
-            is Field -> it.type.simpleName
-            else -> it.javaClass.simpleName
+    fun paramTypes(objects: Array<Any?>?): String = objects?.joinToString(",", "(", ")") { obj ->
+        when (obj) {
+            null -> obj.toString()
+            is Field -> obj.type.simpleName
+            else -> obj.javaClass.simpleName.substringBeforeLast("\$")
         }
     } ?: ""
 }

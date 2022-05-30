@@ -22,20 +22,24 @@ import com.epam.drill.test.common.TestData;
 import org.testng.annotations.*;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 public class FactoryTest extends BaseTest {
     private Integer param;
     private String value;
+    private Consumer<String> func;
 
     @Factory(dataProvider = "dataMethod")
-    public FactoryTest(int param, String value) {
+    public FactoryTest(int param, String value, Consumer<String> func) {
         this.param = param;
         this.value = value;
+        this.func = func;
     }
 
     @DataProvider
     public static Object[][] dataMethod() {
-        return new Object[][]{{0, "first"}, {1, "second"}};
+        Consumer<String> ff = str -> str.contains("FIRST");
+        return new Object[][]{{0, "first", ff}, {1, "second", ff}};
     }
 
     @Test
@@ -54,7 +58,7 @@ public class FactoryTest extends BaseTest {
 
     TestData toData(String method) {
         HashMap<String, String> params = new HashMap<>();
-        params.put(TestListener.classParamsKey, "(" + param.getClass().getSimpleName() + "," + value.getClass().getSimpleName() + ")[" + param + "]");
+        params.put(TestListener.classParamsKey, "(" + param.getClass().getSimpleName() + "," + value.getClass().getSimpleName() + ",Consumer)[" + param + "]");
         params.put("methodParams", "()");
         return new TestData(UtilKt.hash(new TestDetails(
                 TestNGStrategy.engineSegment,
