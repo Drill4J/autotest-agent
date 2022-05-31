@@ -4,7 +4,7 @@ import java.net.*
 
 plugins {
     kotlin("jvm")
-    id("com.epam.drill.agent.runner.autotest") version "0.3.1" apply false
+    id("com.epam.drill.agent.runner.autotest") version "0.3.3" apply false
 }
 val jupiterVersion: String by rootProject
 val gsonVersion: String by rootProject

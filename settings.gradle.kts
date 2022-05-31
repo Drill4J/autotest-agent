@@ -24,6 +24,7 @@ pluginManagement {
         mavenLocal()
         maven(url = "https://oss.jfrog.org/oss-release-local")
         maven(url = "https://drill4j.jfrog.io/artifactory/drill")
+        maven(url = "https://oss.sonatype.org/service/local/repo_groups/staging/content")
         gradlePluginPortal()
     }
     val kotlinVersion: String by extra
