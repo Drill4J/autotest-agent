@@ -75,6 +75,7 @@ actual object StrategyManager {
         logger.debug { "Added strategies: ${strategies.map { it::class.simpleName }.joinToString()}" }
     }
 
+    // TODO EPMDJ-10496 path encode with url encoding
     private fun hotLoad() {
         val pack = this::class.java.`package`.name.replace(".", "/")
         val removeSuffix = this::class.java.getResource("/$pack").file
