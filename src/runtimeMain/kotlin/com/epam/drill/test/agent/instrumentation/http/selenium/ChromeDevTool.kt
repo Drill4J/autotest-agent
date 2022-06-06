@@ -99,12 +99,11 @@ class ChromeDevTool(
 
     fun switchSession(url: String) {
         val targetId = retrieveTargetId(url)
-        logger.trace { "Reconnect to target: $targetId with url $url" }
+        logger.trace { "Reconnect to target: $targetId, sessionId: ${sessionId.sessionId}, url $url" }
         targetId?.takeIf { it != this.targetId }?.let { attachToTarget(it) }?.let {
             this.targetId = targetId
             sessionId = it
             enableToggles()
-            startIntercept()
             startCollectJsCoverage()
         }
     }
@@ -237,8 +236,8 @@ class ChromeDevTool(
         val response = HttpClient.request("$devToolsProxyAddress/intercept") {
             method = HttpMethod.POST
             body = json.encodeToString(
-                DevToolsHeaderRequest.serializer(),
-                DevToolsHeaderRequest(targetUrl, sessionId.sessionId, params = mapOf("headers" to headers))
+                DevToolInterceptRequest.serializer(),
+                DevToolInterceptRequest(targetUrl, params = mapOf("headers" to headers))
             )
         }
         response.code == HttpURLConnection.HTTP_OK
@@ -248,8 +247,9 @@ class ChromeDevTool(
         logger.debug { "Stop intercepting: $targetUrl, sessionId $sessionId" }
         val response = HttpClient.request("$devToolsProxyAddress/intercept") {
             method = HttpMethod.DELETE
-            body = json.encodeToString(DevToolsRequest.serializer(), DevToolsRequest(targetUrl, sessionId.sessionId))
+            body = json.encodeToString(DevToolInterceptRequest.serializer(), DevToolInterceptRequest(targetUrl))
         }
+        setHeaders(mapOf())
         return response.code == HttpURLConnection.HTTP_OK
     }
 
@@ -280,16 +280,18 @@ class ChromeDevTool(
         }
     }
 
-    private fun retrieveTargetId(currentUrl: String): String? = executeCommand(
+    private fun retrieveTargetId(currentUrl: String): String? = targets()
+        .find { it.url == currentUrl }
+        ?.targetId
+        ?.uppercase(Locale.getDefault())
+        ?.takeIf { it.isNotBlank() }
+
+    private fun targets(): List<Target> = executeCommand(
         "Target.getTargets",
         DevToolsRequest(target = targetUrl)
-    ).let { response ->
+    ).takeIf { it.code == HttpURLConnection.HTTP_OK }?.let { response ->
         json.decodeFromString(TargetInfos.serializer(), response.body).targetInfos
-            .find { it.url == currentUrl }
-            ?.targetId
-            ?.uppercase(Locale.getDefault())
-            ?.takeIf { it.isNotBlank() }
-    }
+    } ?: emptyList()
 
     private fun executeCommand(
         commandName: String,

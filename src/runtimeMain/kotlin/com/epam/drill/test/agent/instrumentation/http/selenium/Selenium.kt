@@ -158,6 +158,9 @@ object Selenium : TransformStrategy() {
                 $addDrillCookiesMethod();
             """.trimIndent()
         )
+        /**
+         * todo enable js instrumentation on tab open @Roman_Davliatshin
+         */
         ctClass.getMethod(
             "execute",
             "(Ljava/lang/String;Ljava/util/Map;)Lorg/openqa/selenium/remote/Response;"

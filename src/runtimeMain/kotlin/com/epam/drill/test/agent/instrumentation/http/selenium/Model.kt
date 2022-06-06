@@ -22,19 +22,24 @@ data class Target(
 @Serializable
 sealed class DevToolsMessage {
     abstract val target: String
-    abstract val sessionId: String
 }
 
 @Serializable
 data class DevToolsRequest(
     override val target: String,
-    override val sessionId: String = "",
+    val sessionId: String = "",
     val params: Map<String, JsonElement> = emptyMap()
+) : DevToolsMessage()
+
+@Serializable
+data class DevToolInterceptRequest(
+    override val target: String,
+    val params: Map<String, Map<String, String>> = emptyMap()
 ) : DevToolsMessage()
 
 @Serializable
 data class DevToolsHeaderRequest(
     override val target: String,
-    override val sessionId: String,
+    val sessionId: String,
     val params: Map<String, Map<String, String>> = emptyMap(),
 ) : DevToolsMessage()
