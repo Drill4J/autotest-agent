@@ -68,6 +68,7 @@ object Selenium : TransformStrategy() {
             .insertBefore(
                 """
                 drillRemoteAddress = $1.getAuthority();
+                logger.debug("drillRemoteAddress "+drillRemoteAddress);
             """.trimIndent()
             )
         ctClass.addMethod(
