@@ -62,15 +62,54 @@ object Selenium : TransformStrategy() {
         protectionDomain: ProtectionDomain?,
     ): ByteArray? {
         logger.debug { "starting instrument ${ctClass.name}..." }
+
         ctClass.addField(CtField.make("java.lang.String drillRemoteAddress;", ctClass))
-        ctClass
+
+        logger.debug { "#####################################" }
+
+        try {
+            ctClass
+                .getConstructor("(Lorg/openqa/selenium/remote/CommandExecutor;Lorg/openqa/selenium/Capabilities;)V")
+                .insertBefore(
+                    """
+                    java.lang.System.out.println("Constructor called - RemoteWebDriver(CommandExecutor executor, Capabilities desiredCapabilities)");
+                """.trimIndent()
+                )
+        } catch (e: Exception){}
+
+        try {
+            ctClass
+                .getConstructor("(Lorg/openqa/selenium/Capabilities;)V")
+                .insertBefore(
+                    """
+                    java.lang.System.out.println("Constructor called - RemoteWebDriver(Capabilities desiredCapabilities)");
+                """.trimIndent()
+                )
+        } catch (e: Exception){}
+
+        try {
+            ctClass
             .getConstructor("(Ljava/net/URL;Lorg/openqa/selenium/Capabilities;)V")
             .insertBefore(
                 """
                 drillRemoteAddress = $1.getAuthority();
-                logger.debug("drillRemoteAddress "+drillRemoteAddress);
+                java.lang.System.out.println("Constructor called - RemoteWebDriver(URL remoteAddress, Capabilities desiredCapabilities) - drillRemoteAddress: " + $1.getAuthority());
             """.trimIndent()
             )
+        } catch (e: Exception){}
+
+        try {
+            ctClass
+                .getConstructor("(Ljava/net/URL;Lorg/openqa/selenium/Capabilities;Lorg/openqa/selenium/Capabilities;)V")
+                .insertBefore(
+                    """
+                    drillRemoteAddress = $1.getAuthority();
+                    java.lang.System.out.println("Constructor called - RemoteWebDriver(URL remoteAddress, Capabilities desiredCapabilities, Capabilities requiredCapabilities) - drillRemoteAddress: " + $1.getAuthority());
+                """.trimIndent()
+                )
+        } catch (e: Exception){}
+        logger.debug { "#####################################" }
+
         ctClass.addMethod(
             CtMethod.make(
                 """
