@@ -16,10 +16,10 @@ plugins {
 
 val scriptUrl: String by extra
 
-//allprojects {
-    //apply(from = rootProject.uri("$scriptUrl/git-version.gradle.kts"))
-    //apply(from = rootProject.uri("$scriptUrl/maven-repo.gradle.kts"))
-//}
+allprojects {
+    apply(from = rootProject.uri("$scriptUrl/git-version.gradle.kts"))
+    apply(from = rootProject.uri("$scriptUrl/maven-repo.gradle.kts"))
+}
 
 repositories {
     mavenLocal()
