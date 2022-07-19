@@ -62,9 +62,12 @@ object Selenium : TransformStrategy() {
     ): ByteArray? {
         logger.debug { "starting instrument ${ctClass.name}..." }
 
+        var remoteWebDriverConstructorInstrumented = false;
+
         fun tryCatch(fn: () -> Any) {
             try {
-                fn()
+                fn();
+                remoteWebDriverConstructorInstrumented = true;
             } catch (e: Exception) {
                 logger.debug { "failed to instrument: $e" }
             }
@@ -78,15 +81,14 @@ object Selenium : TransformStrategy() {
                 .insertBefore(
                     """
                         try {
+                            java.lang.System.out.println("Constructor called - (Lorg/openqa/selenium/remote/CommandExecutor;Lorg/openqa/selenium/Capabilities;)V");
+                            
                             org.openqa.selenium.remote.HttpCommandExecutor drillHttpCommandExecutor = (org.openqa.selenium.remote.HttpCommandExecutor) $1;
                             drillRemoteAddress = drillHttpCommandExecutor.getAddressOfRemoteServer().getAuthority();
-                        } catch (e: Exception) {
+                            
+                        } catch (Exception e) {
                             java.lang.System.out.println(
-                                String.join(System.getProperty("line.separator"),
-                                "Drill4J: failed to get remote address",
-                                "Constructor: RemoteWebDriver(CommandExecutor executor, Capabilities desiredCapabilities)",
-                                "Error:",     
-                                e.toString()
+                                "Drill4J: failed to get remote address - Constructor: RemoteWebDriver(CommandExecutor executor, Capabilities desiredCapabilities) - Error: " + e.toString() 
                             );
                         }
                     """.trimIndent()
@@ -99,14 +101,12 @@ object Selenium : TransformStrategy() {
                 .insertBefore(
                     """
                         try {
+                            java.lang.System.out.println("Constructor called - (Ljava/net/URL;Lorg/openqa/selenium/Capabilities;)V");
+
                             drillRemoteAddress = $1.getAuthority();
-                        } catch (e: Exception) {
+                        } catch (Exception e) {
                            java.lang.System.out.println(
-                               String.join(System.getProperty("line.separator"),
-                               "Drill4J: failed to get remote address",
-                               "Constructor: RemoteWebDriver(URL remoteAddress, Capabilities desiredCapabilities)",
-                               "Error:",     
-                               e.toString()
+                               "Drill4J: failed to get remote address - Constructor: RemoteWebDriver(URL remoteAddress, Capabilities desiredCapabilities) - Error: " + e.toString()
                            );
                        }
                     """.trimIndent()
@@ -119,14 +119,11 @@ object Selenium : TransformStrategy() {
                 .insertBefore(
                     """
                         try {
+                            java.lang.System.out.println("Constructor called - (Ljava/net/URL;Lorg/openqa/selenium/Capabilities;Lorg/openqa/selenium/Capabilities;)V");
                             drillRemoteAddress = $1.getAuthority();
-                        } catch (e: Exception) {
+                        } catch (Exception e) {
                            java.lang.System.out.println(
-                               String.join(System.getProperty("line.separator"),
-                               "Drill4J: failed to get remote address",
-                               "Constructor: RemoteWebDriver(URL remoteAddress, Capabilities desiredCapabilities, Capabilities requiredCapabilities)",
-                               "Error:",     
-                               e.toString()
+                               "Drill4J: failed to get remote address - Constructor: RemoteWebDriver(URL remoteAddress, Capabilities desiredCapabilities, Capabilities requiredCapabilities) - Error: " + e.toString()
                            );
                        }
                     """.trimIndent()
@@ -138,9 +135,15 @@ object Selenium : TransformStrategy() {
                 .getConstructor("(Lorg/openqa/selenium/Capabilities;)V")
                 .insertBefore(
                     """
-                        java.lang.System.out.println("Constructor called - RemoteWebDriver(Capabilities desiredCapabilities)");
+                        java.lang.System.out.println("Constructor called - (Lorg/openqa/selenium/Capabilities;)V");
                     """.trimIndent()
                 )
+        }
+
+        if (!remoteWebDriverConstructorInstrumented) {
+            logger.warn { "No RemoteWebDriver constructors were instrumented. Possibly unsupported Selenium version" }
+        } else {
+            logger.debug { "RemoteWebDriver constructors instrumented" }
         }
 
         ctClass.addMethod(
