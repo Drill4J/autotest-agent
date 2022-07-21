@@ -22,6 +22,8 @@ actual object AgentConfig {
 
     actual fun withJsCoverage(): Boolean = config.withJsCoverage
 
+    actual fun launchType(): String? = config.launchType
+
     fun updateConfig(config: AgentRawConfig) {
         _config.value = config
     }

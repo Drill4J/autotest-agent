@@ -7,4 +7,5 @@ expect object AgentConfig {
     fun groupId(): String?
     fun devToolsProxyAddress(): String?
     fun withJsCoverage(): Boolean
+    fun launchType(): String?
 }

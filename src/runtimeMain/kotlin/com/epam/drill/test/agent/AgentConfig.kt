@@ -15,4 +15,6 @@ actual object AgentConfig {
     actual external fun devToolsProxyAddress(): String?
 
     actual external fun withJsCoverage(): Boolean
+
+    actual external fun  launchType(): String?
 }
