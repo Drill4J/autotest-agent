@@ -53,6 +53,7 @@ class ChromeDevTool(
     private val remoteHost: String?
 ) {
     private val logger = Logging.logger(ChromeDevTool::class.java.name)
+    private val launchType = AgentConfig.launchType()
     private val devToolsProxyAddress = AgentConfig.devToolsProxyAddress()?.let {
         if (it.startsWith("http")) it else "http://$it"
     }
@@ -184,18 +185,34 @@ class ChromeDevTool(
         capabilities: Map<*, *>?,
         sessionId: String?,
         remoteHost: String?
-    ): String? = takeIf { !remoteHost.isNullOrBlank() && !capabilities.isNullOrEmpty() }?.let {
-        "ws://$remoteHost/devtools/$sessionId"
-    } ?: capabilities?.run {
-        val debuggerURL = get(DEBUGGER_ADDRESS).toString()
-        val response = HttpClient.request("http://$debuggerURL/json/version")
-        if (response.code == HttpURLConnection.HTTP_OK) {
-            logger.debug { "Chrome info: ${response.body}" }
-            val chromeInfo = Json.parseToJsonElement(response.body) as JsonObject
-            chromeInfo[DEV_TOOL_DEBUGGER_URL]?.jsonPrimitive?.contentOrNull
-        } else {
-            logger.warn { "Can't get chrome info: code=${response.code}, body:${response.body}" }
-            null
+    ): String? {
+        return when (launchType) {
+
+            // selenoid provides no access to /json/version, but allows to connect to debugger directly
+            // see https://aerokube.com/selenoid/latest/#_accessing_browser_developer_tools
+            "selenoid" -> {
+                if (remoteHost.isNullOrBlank() || sessionId.isNullOrBlank()) return null
+                return "ws://$remoteHost/devtools/$sessionId"
+            }
+
+            else -> capabilities?.run {
+                val debuggerURL = get(DEBUGGER_ADDRESS)?.toString()
+
+                if (debuggerURL.isNullOrBlank()) {
+                    logger.warn { "Can't get debugger address by field name $DEBUGGER_ADDRESS from capabilities: $capabilities}" }
+                    return null
+                }
+
+                val response = HttpClient.request("http://$debuggerURL/json/version")
+                if (response.code != HttpURLConnection.HTTP_OK) {
+                    logger.warn { "Can't get debugger address from http://$debuggerURL/json/version: code=${response.code}, body:${response.body}" }
+                    return null
+                }
+
+                logger.debug { "/json/version: ${response.body}" }
+                val chromeInfo = Json.parseToJsonElement(response.body) as JsonObject
+                return chromeInfo[DEV_TOOL_DEBUGGER_URL]?.jsonPrimitive?.contentOrNull
+            }
         }
     }
 

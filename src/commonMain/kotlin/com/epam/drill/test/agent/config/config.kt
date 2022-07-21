@@ -40,6 +40,7 @@ data class AgentRawConfig(
     val adminPassword: String? = null,
     val devToolsProxyAddress: String? = null,
     val withJsCoverage: Boolean = false,
+    val launchType: String? = null,
 ) {
     val level: LogLevel
         get() = LogLevel.valueOf(logLevel)
