@@ -217,6 +217,10 @@ actual object TestListener {
     }
 
     private fun sendSessionData(testId: String) = DevToolStorage.get()?.run {
-        ThreadStorage.sendSessionData(takePreciseCoverage(), scriptParsed(), testId)
+        val coverage = takePreciseCoverage()
+        if (coverage.isNullOrBlank()) return null
+        val scripts = scriptParsed()
+        if (scripts.isNullOrBlank()) return null
+        ThreadStorage.sendSessionData(coverage, scripts, testId)
     }
 }
