@@ -24,6 +24,8 @@ actual object AgentConfig {
 
     actual fun launchType(): String? = config.launchType
 
+    actual fun devtoolsAddressReplaceLocalhost(): String? = config.devtoolsAddressReplaceLocalhost
+
     fun updateConfig(config: AgentRawConfig) {
         _config.value = config
     }
