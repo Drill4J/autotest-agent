@@ -8,4 +8,5 @@ expect object AgentConfig {
     fun devToolsProxyAddress(): String?
     fun withJsCoverage(): Boolean
     fun launchType(): String?
+    fun devtoolsAddressReplaceLocalhost(): String?
 }

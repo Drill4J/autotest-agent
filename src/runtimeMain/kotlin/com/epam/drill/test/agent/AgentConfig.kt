@@ -16,5 +16,7 @@ actual object AgentConfig {
 
     actual external fun withJsCoverage(): Boolean
 
-    actual external fun  launchType(): String?
+    actual external fun launchType(): String?
+
+    actual external fun devtoolsAddressReplaceLocalhost(): String?
 }
