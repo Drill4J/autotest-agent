@@ -30,6 +30,7 @@ private const val DEBUGGER_ADDRESS = "debuggerAddress"
 private const val DEV_TOOL_DEBUGGER_URL = "webSocketDebuggerUrl"
 private val JAVA_TOGGLES = listOf("Network")
 private val JS_TOGGLES = listOf("Debugger", "Profiler").takeIf { AgentConfig.withJsCoverage() } ?: emptyList()
+private val REPLACE_LOCALHOST = AgentConfig.devtoolsAddressReplaceLocalhost()
 
 object DevToolStorage {
     private val logger = Logging.logger(DevToolStorage::class.java.name)
@@ -217,8 +218,9 @@ class ChromeDevTool(
     }
 
     private fun connect(devToolAddress: String, currentUrl: String) {
-        //todo hack: browser doesn't allow connect from docker??
-        targetUrl = devToolAddress.replace("localhost", "host.docker.internal")
+        if (!REPLACE_LOCALHOST.isNullOrBlank()) {
+            targetUrl = devToolAddress.replace("localhost", REPLACE_LOCALHOST)
+        }
         val success: Boolean = connectToDevTools().takeIf { it }?.also {
             val targetId = retrieveTargetId(currentUrl)
             logger.info { "Retrieved target for url $currentUrl: $targetId" }
