@@ -218,7 +218,7 @@ class ChromeDevTool(
     }
 
     private fun connect(devToolAddress: String, currentUrl: String) {
-        if (REPLACE_LOCALHOST != null) {
+        if (!REPLACE_LOCALHOST.isNullOrBlank()) {
             targetUrl = devToolAddress.replace("localhost", REPLACE_LOCALHOST)
         }
         val success: Boolean = connectToDevTools().takeIf { it }?.also {
