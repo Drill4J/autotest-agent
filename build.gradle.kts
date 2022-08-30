@@ -68,7 +68,6 @@ kotlin {
             compilations["main"].defaultSourceSet {
                 dependencies {
                     api("org.javassist:javassist:$javassistVersion")
-                    implementation("org.java-websocket:Java-WebSocket:$websocketVersion")
                     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$serializationRuntimeVersion")
                     implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
                     implementation("com.epam.drill.kni:runtime:$kniVersion")
