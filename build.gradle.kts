@@ -77,7 +77,6 @@ kotlin {
                     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:$collectionImmutableVersion")
                     implementation("com.epam.drill:http-clients-instrumentation:$httpClientInstrumentVersion")
                     implementation("com.epam.drill.knasm:knasm:$knasmVersion")
-                    implementation("com.github.kklisura.cdt:cdt-java-client:$cdtJavaClient")
                     implementation(project(":runtime"))
                 }
             }
