@@ -114,7 +114,7 @@ actual object StrategyManager {
 object OkHttpClientStub : TransformStrategy() {
     override fun permit(classReader: ClassReader): Boolean {
         //todo EPMDJ-10494 no need drill suffix after removing dependency
-        return classReader.interfaces.any { "drill/$it" == "okhttp3/internal/http/HttpCodec" }
+        return classReader.interfaces.any { "$it" == "okhttp3/internal/http/HttpCodec" }
     }
     override fun instrument(
         ctClass: CtClass,
