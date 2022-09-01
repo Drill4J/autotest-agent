@@ -71,8 +71,6 @@ kotlin {
                     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$serializationRuntimeVersion")
                     implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
                     implementation("com.epam.drill.kni:runtime:$kniVersion")
-                    //todo EPMDJ-10494 remove
-                    //implementation("com.squareup.okhttp3:okhttp:3.13.1")
                     implementation("org.jetbrains.kotlinx:atomicfu:$atomicFuVersion")
                     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:$collectionImmutableVersion")
                     implementation("com.epam.drill:http-clients-instrumentation:$httpClientInstrumentVersion")
@@ -163,10 +161,6 @@ val agentShadow by tasks.registering(com.github.jengelman.gradle.plugins.shadow.
     relocate("javassist", "drill.javassist")
     relocate("org.java_websocket", "drill.org.java_websocket")
     relocate("org.slf4j", "drill.org.slf4j")
-    //todo EPMDJ-10494 remove
-    //relocate("com.squareup.okhttp3", "drill.com.squareup.okhttp3")
-    relocate("okhttp3", "drill.okhttp3")
-    relocate("okio", "drill.okio")
 }
 
 distributions {
