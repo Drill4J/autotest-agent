@@ -102,6 +102,7 @@ actual object StrategyManager {
     ): ByteArray? {
         val transformedClassBytes = mutableListOf<ByteArray?>()
         val classReader = ClassReader(classBytes)
+        logger.debug { "Processsing ${classReader.className}" }
         for (strategy in strategies) {
             if (strategy.permit(classReader)) {
                 transformedClassBytes.add(strategy.transform(className, classBytes, loader, protectionDomain))
