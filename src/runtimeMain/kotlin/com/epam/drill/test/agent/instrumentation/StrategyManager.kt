@@ -30,6 +30,7 @@ import org.objectweb.asm.*
 import java.io.*
 import java.security.*
 import java.util.jar.*
+import com.epam.drill.agent.instrument.util.*
 
 @Kni
 actual object StrategyManager {
@@ -114,12 +115,53 @@ actual object StrategyManager {
 //TODO EPMDJ-8916 Replace with [com.epam.drill.agent.instrument.http.ok.OkHttpClient]
 object OkHttpClientStub : TransformStrategy() {
     override fun permit(classReader: ClassReader): Boolean {
-        return classReader.interfaces.any { "$it" == "okhttp3/internal/http/HttpCodec" }
+        return classReader.interfaces.any { "$it" == "okhttp3/internal/http/HttpCodec" || "$it" == "okhttp3/internal/http/ExchangeCodec" }
     }
     override fun instrument(
         ctClass: CtClass,
         pool: ClassPool,
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?,
-    ): ByteArray? = OkHttpClient.instrument(ctClass, pool, classLoader, protectionDomain)
+    ): ByteArray? {
+
+        kotlin.runCatching {
+            ctClass.getDeclaredMethod("writeRequestHeaders").insertBefore(
+                """
+                java.lang.System.out.println("CALLED writeRequestHeaders");
+                if (${ClientsCallback::class.qualifiedName}.INSTANCE.${ClientsCallback::isSendCondition.name}()) {
+                    java.lang.System.out.println("CALLED writeRequestHeaders passed condition");
+                    okhttp3.Request.Builder builder = $1.newBuilder();
+                    java.util.Map headers = ${ClientsCallback::class.qualifiedName}.INSTANCE.${ClientsCallback::getHeaders.name}();
+                    java.util.Iterator iterator = headers.entrySet().iterator();             
+                    while (iterator.hasNext()) {
+                        java.util.Map.Entry entry = (java.util.Map.Entry) iterator.next();
+                        builder.addHeader((String) entry.getKey(), (String) entry.getValue());
+                    }
+                    $1 = builder.build();
+                    ${Log::class.java.name}.INSTANCE.${Log::injectHeaderLog.name}(headers);                    
+                } else {
+                  java.lang.System.out.println("CALLED writeRequestHeaders failed condition ${ClientsCallback::class.qualifiedName}");
+                }
+            """.trimIndent()
+            )
+            ctClass.getDeclaredMethod("openResponseBodySource").insertBefore(
+                """
+                if (${ClientsCallback::class.qualifiedName}.INSTANCE.${ClientsCallback::isResponseCallbackSet.name}()) {
+                    java.util.Map allHeaders = new java.util.HashMap();
+                    java.util.Iterator iterator = $1.headers().names().iterator();
+                    while (iterator.hasNext()) { 
+                        String key = (String) iterator.next();
+                        String value = $1.headers().get(key);
+                        allHeaders.put(key, value);
+                    }
+                    ${ClientsCallback::class.qualifiedName}.INSTANCE.${ClientsCallback::storeHeaders.name}(allHeaders);
+                }
+                """.trimIndent()
+            )
+        }.onFailure {
+            logger.error(it) { "Error while instrumenting the class ${ctClass.name}" }
+        }
+
+        return ctClass.toBytecode()
+    }
 }
