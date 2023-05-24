@@ -62,6 +62,16 @@ object SessionController {
         mainLogger.trace { "Count of tests sent: ${tests.size}, received status ${result.code}" }
     }
 
+    /**
+     * Start a test session
+     * @param customSessionId the predefined test session ID
+     * @param testType the type of test
+     * @param isRealtime a sign of the need to recalculate coverage in real time
+     * @param testName the name of the test
+     * @param isGlobal is the test session global?
+     * @param labels the set of labels for marking tests
+     * @features Session starting
+     */
     fun startSession(
         customSessionId: String?,
         testType: String = "AUTO",
@@ -88,6 +98,11 @@ object SessionController {
         mainLogger.info { "Started a test session with ID $sessionId" }
     }.onFailure { mainLogger.warn(it) { "Can't startSession '${sessionId.value}'" } }.getOrNull()
 
+    /**
+     * Stop a test session
+     * @param sessionIds the session ID which need to stop (if not define, current session will be used)
+     * @features Session finishing
+     */
     fun stopSession(sessionIds: String? = null) = runCatching {
         mainLogger.debug { "Attempting to stop a Drill4J test session..." }
         val payload = Action.serializer() stringify StopSession(
@@ -126,6 +141,11 @@ object SessionController {
         ).apply { if (code != 200) error("Can't perform request: $this") }
     }
 
+    /**
+     * Send session data to the agents through the admin side
+     * @param data session data
+     * @features Running tests
+     */
     fun sendSessionData(data: String) = runCatching {
         mainLogger.debug { "Attempting to send session data ..." }
         val payload = Action.serializer() stringify AddSessionData(

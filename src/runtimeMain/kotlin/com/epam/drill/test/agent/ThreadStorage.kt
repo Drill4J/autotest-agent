@@ -24,6 +24,11 @@ import com.epam.drill.test.agent.util.*
 actual object ThreadStorage {
     val storage = TTL()
 
+    /**
+     * Store the test name in the current thread
+     * @param testName the name of the test
+     * @features Running tests
+     */
     @Suppress("unused")
     fun memorizeTestName(testName: String?) {
         val value = testName?.urlEncode()
@@ -31,6 +36,10 @@ actual object ThreadStorage {
         memorizeTestNameNative(value)
     }
 
+    /**
+     * Clear the test name from the current thread
+     * @features Running tests
+     */
     fun clear() {
         storage.set(null)
     }
@@ -39,9 +48,22 @@ actual object ThreadStorage {
 
     actual external fun sessionId(): String?
 
+    /**
+     * Start a new test session
+     * @param testName the first test of the test session
+     * @features Session starting
+     */
     actual external fun startSession(testName: String?)
 
+    /**
+     * Stop the test session
+     * @features Session finishing
+     */
     actual external fun stopSession()
 
+    /**
+     * Send results of the tests
+     * @features Running tests
+     */
     actual external fun sendSessionData(preciseCoverage: String, scriptParsed: String, testId: String)
 }

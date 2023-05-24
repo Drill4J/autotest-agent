@@ -246,6 +246,11 @@ class ChromeDevTool(
         return response.code == HttpURLConnection.HTTP_OK
     }
 
+    /**
+     * Send the current test session ID and test ID to the devToolsProxy server to start intercepting all requests from the browser
+     * @return true if the response was successful
+     * @features Running tests
+     */
     fun startIntercept(): Boolean = ThreadStorage.storage.get()?.let { testHash ->
         val headers = mapOf(
             TEST_ID_HEADER to testHash,
@@ -262,6 +267,10 @@ class ChromeDevTool(
         response.code == HttpURLConnection.HTTP_OK
     } ?: false
 
+    /**
+     * Stop intercepting all requests from the browser
+     * @features Running tests
+     */
     fun stopIntercept(): Boolean {
         logger.debug { "Stop intercepting: $targetUrl, sessionId $sessionId" }
         val response = HttpClient.request("$devToolsProxyAddress/intercept") {

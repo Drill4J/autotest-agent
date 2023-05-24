@@ -45,6 +45,15 @@ actual object TestListener {
         testProperties.put(testId, currentInfo + vals)
     }
 
+    /**
+     * Called when the test starts
+     * @param engine the test engine
+     * @param className the test class name
+     * @param method the test method name
+     * @param methodParams the parameters of the test method
+     * @param classParams the parameters of the test class
+     * @features Running tests
+     */
     //TODO EPMDJ-10251 add browser name for ui tests
     @JvmOverloads
     fun testStarted(
@@ -97,6 +106,16 @@ actual object TestListener {
         )
     }
 
+    /**
+     * Called when the test finishes
+     * @param engine the test engine
+     * @param className the test class name
+     * @param method the test method name
+     * @param status the result of the test
+     * @param methodParams the parameters of the test method
+     * @param classParams the parameters of the test class
+     * @features Running tests
+     */
     @JvmOverloads
     fun testFinished(
         engine: String,
