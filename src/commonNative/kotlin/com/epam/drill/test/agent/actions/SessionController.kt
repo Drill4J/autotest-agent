@@ -113,7 +113,7 @@ object SessionController {
         mainLogger.debug {
             """Dispatch action: 
                                 |path:$dispatchActionPath
-                                |payload:${payload.toString().substring(0, 4000)}
+                                |payload:${if (payload.length > 4000) payload.substring(0, 4000) else payload}
                                 |""".trimMargin()
         }
         return httpCall(
