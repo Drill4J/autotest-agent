@@ -18,7 +18,7 @@ val scriptUrl: String by extra
 
 allprojects {
     apply(from = rootProject.uri("$scriptUrl/git-version.gradle.kts"))
-    apply(from = rootProject.uri("$scriptUrl/maven-repo.gradle.kts"))
+//    apply(from = rootProject.uri("$scriptUrl/maven-repo.gradle.kts"))
 }
 
 repositories {
@@ -273,3 +273,4 @@ fun KotlinNativeCompilation.setCommonSources(modulePath: String = "src/commonNat
         resources.setSrcDirs(listOf("${modulePath}/resources"))
     }
 }
+
