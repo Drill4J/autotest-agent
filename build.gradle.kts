@@ -1,275 +1,120 @@
-import org.jetbrains.kotlin.konan.target.*
-import org.jetbrains.kotlin.gradle.plugin.mpp.*
-import java.net.*
+import org.gradle.api.Task
+import org.jetbrains.kotlin.util.prefixIfNot
+import org.apache.commons.configuration2.builder.fluent.Configurations
+import org.ajoberstar.grgit.Grgit
+import org.ajoberstar.grgit.Branch
+import org.ajoberstar.grgit.Credentials
+import org.ajoberstar.grgit.operation.BranchListOp
 
-
+@Suppress("RemoveRedundantBackticks")
 plugins {
-    id("org.jetbrains.kotlin.multiplatform")
-    id("org.jetbrains.kotlin.plugin.serialization")
-    id("com.epam.drill.gradle.plugin.kni")
-    id("com.github.johnrengelman.shadow")
-    id("com.github.hierynomus.license")
-    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
-    distribution
-    `maven-publish`
+    `distribution`
+    kotlin("multiplatform").apply(false)
+    kotlin("plugin.serialization").apply(false)
+    id("org.ajoberstar.grgit")
+    id("com.github.hierynomus.license").apply(false)
+    id("com.github.johnrengelman.shadow").apply(false)
 }
 
-val scriptUrl: String by extra
+group = "com.epam.drill.autotest"
 
-allprojects {
-    apply(from = rootProject.uri("$scriptUrl/git-version.gradle.kts"))
-    apply(from = rootProject.uri("$scriptUrl/maven-repo.gradle.kts"))
-}
+val kotlinVersion: String by extra
+val kotlinxCollectionsVersion: String by extra
+val kotlinxCoroutinesVersion: String by extra
+val kotlinxSerializationVersion: String by extra
 
 repositories {
     mavenLocal()
     mavenCentral()
-    maven(url = "https://oss.jfrog.org/artifactory/list/oss-release-local")
-    maven(url = "https://drill4j.jfrog.io/artifactory/drill")
 }
 
-val kniOutputDir = "src/kni/kotlin"
-val drillJvmApiLibVersion: String by rootProject
-val serializationRuntimeVersion: String by rootProject
-val drillLoggerVersion: String by rootProject
-val websocketVersion: String by rootProject
-val kniVersion: String by rootProject
-val uuidVersion: String by rootProject
-val atomicFuVersion: String by rootProject
-val collectionImmutableVersion: String by rootProject
-val cdtJavaClient: String by rootProject
-val javassistVersion: String by rootProject
-val knasmVersion: String by rootProject
-val httpClientInstrumentVersion: String by rootProject
-val test2codeApiVersion: String by rootProject
-val coroutinesVersion: String by rootProject
-
-
-val libName = "autoTestAgent"
-
-val currentPlatformName = HostManager.host.presetName
-
-kotlin {
-    targets {
-        val nativeTargets = sequenceOf(
-            linuxX64(),
-            macosX64(),
-            mingwX64 { binaries.all { linkerOpts("-lpsapi", "-lwsock32", "-lws2_32", "-lmswsock") } }
-        )
-        nativeTargets.forEach { target ->
-            if (currentPlatformName == target.name) {
-                target.compilations["main"].setCommonSources()
-            }
-            target.binaries {
-                sharedLib(libName, setOf(DEBUG))
-            }
-        }
-        jvm("runtime") {
-            compilations["main"].defaultSourceSet {
-                dependencies {
-                    api("org.javassist:javassist:$javassistVersion")
-                    implementation("org.java-websocket:Java-WebSocket:$websocketVersion")
-                    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$serializationRuntimeVersion")
-                    implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
-                    implementation("com.epam.drill.kni:runtime:$kniVersion")
-                    //todo EPMDJ-10494 remove
-                    implementation("com.squareup.okhttp3:okhttp:3.13.1")
-                    implementation("org.jetbrains.kotlinx:atomicfu:$atomicFuVersion")
-                    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:$collectionImmutableVersion")
-                    implementation("com.epam.drill:http-clients-instrumentation:$httpClientInstrumentVersion")
-                    implementation("com.epam.drill.knasm:knasm:$knasmVersion")
-                    implementation("com.github.kklisura.cdt:cdt-java-client:$cdtJavaClient")
-                    implementation(project(":runtime"))
-                }
-            }
-        }
-        kni {
-            jvmTargets = sequenceOf(jvm("runtime"))
-            additionalJavaClasses = sequenceOf()
-            jvmtiAgentObjectPath = "com.epam.drill.test.agent.Agent"
-            nativeCrossCompileTarget = nativeTargets
-        }
-    }
-
-    sourceSets {
-        all {
-            languageSettings.apply {
-                optIn("kotlinx.serialization.InternalSerializationApi")
-                optIn("kotlinx.serialization.ExperimentalSerializationApi")
-            }
-        }
-        val commonMain by getting {
-            dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$serializationRuntimeVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationRuntimeVersion")
-                implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
-                implementation("com.epam.drill.kni:runtime:$kniVersion")
-                implementation("com.epam.drill.plugins.test2code:api:$test2codeApiVersion")
-                implementation("com.epam.drill:http-clients-instrumentation:$httpClientInstrumentVersion")
-                implementation("com.epam.drill.knasm:knasm:$knasmVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core") {
-                    version { strictly("$coroutinesVersion-native-mt") }
-                }
-            }
-        }
-        //TODO EPMDJ-8696 Rename to commonNative
-        val commonNativeDependenciesOnly by creating {
-            dependsOn(commonMain)
-            dependencies {
-                implementation("com.epam.drill:jvmapi:$drillJvmApiLibVersion")
-                implementation("com.epam.drill.logger:logger:$drillLoggerVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$serializationRuntimeVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-properties:$serializationRuntimeVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:$serializationRuntimeVersion")
-                implementation("com.epam.drill.kni:runtime:$kniVersion")
-                implementation("com.benasher44:uuid:$uuidVersion")
-            }
-        }
-        val linuxX64Main by getting {
-            dependsOn(commonNativeDependenciesOnly)
-        }
-        val mingwX64Main by getting {
-            dependsOn(commonNativeDependenciesOnly)
-        }
-        val macosX64Main by getting {
-            dependsOn(commonNativeDependenciesOnly)
-        }
-
-    }
-}
-val nativeTargets = kotlin.targets.filterIsInstance<KotlinNativeTarget>()
-
-
-val runtimeJar by tasks.getting(Jar::class) {
-    from(provider {
-        kotlin.jvm("runtime").compilations["main"].compileDependencyFiles.map { if (it.isDirectory) it else zipTree(it) }
-    })
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+buildscript {
+    dependencies.classpath("org.apache.commons:commons-configuration2:2.9.0")
+    dependencies.classpath("commons-beanutils:commons-beanutils:1.9.4")
 }
 
-val resourceDir = buildDir
-    .resolve("resources")
-    .resolve("main")
-
-val agentShadow by tasks.registering(com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar::class) {
-    val extensionDistZip = tasks.getByPath("extensionDistZip")
-    dependsOn(extensionDistZip)
-    doFirst {
-        val firefoxAddon = resourceDir.apply { mkdirs() }.resolve("header-transmitter.xpi")
-        extensionDistZip.outputs.files.singleFile.renameTo(firefoxAddon)
+if(version == Project.DEFAULT_VERSION) {
+    val fromEnv: () -> String? = {
+        System.getenv("GITHUB_REF")?.let { Regex("refs/tags/v(.*)").matchEntire(it)?.groupValues?.get(1) }
     }
-    from(runtimeJar)
-    from(resourceDir)
-    archiveFileName.set("drillRuntime.jar")
-    relocate("kotlin", "kruntime")
-    relocate("javassist", "drill.javassist")
-    relocate("org.java_websocket", "drill.org.java_websocket")
-    relocate("org.slf4j", "drill.org.slf4j")
-    //todo EPMDJ-10494 remove
-    relocate("com.squareup.okhttp3", "drill.com.squareup.okhttp3")
-    relocate("okhttp3", "drill.okhttp3")
-    relocate("okio", "drill.okio")
+    val fromGit: () -> String? = {
+        val gitdir: (Any) -> Boolean = { projectDir.resolve(".git").isDirectory }
+        takeIf(gitdir)?.let {
+            val gitrepo = Grgit.open { dir = projectDir }
+            val gittag = gitrepo.describe {
+                tags = true
+                longDescr = true
+                match = listOf("v[0-9]*.[0-9]*.[0-9]*")
+            }
+            gittag?.trim()?.removePrefix("v")?.replace(Regex("-[0-9]+-g[0-9a-f]+$"), "")?.takeIf(String::any)
+        }
+    }
+    version = fromEnv() ?: fromGit() ?: version
 }
 
-distributions {
-    nativeTargets.forEach {
-        val name = it.name
-        create(name) {
-            distributionBaseName.set(name)
-            contents {
-                from(agentShadow)
-                from(tasks.getByPath("link${libName.capitalize()}DebugShared${name.capitalize()}")) {
-                    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-                }
-            }
-        }
-    }
-    create("extension") {
-        distributionBaseName.set("extension")
-        contents {
-            from(file("drill-header-transmitter"))
-            eachFile(object : Action<FileCopyDetails> {
-                override fun execute(fcp: FileCopyDetails) {
-                    fcp.relativePath = RelativePath(
-                        true, fcp.relativePath.pathString
-                            .replace("extension-$version/", "")
-                            .replace("extension/", "")
-                    )
-                }
-            })
-        }
+subprojects {
+    val constraints = setOf(
+        dependencies.constraints.create("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"),
+        dependencies.constraints.create("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"),
+        dependencies.constraints.create("org.jetbrains.kotlin:kotlin-stdlib-common:$kotlinVersion"),
+        dependencies.constraints.create("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"),
+        dependencies.constraints.create("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"),
+        dependencies.constraints.create("org.jetbrains.kotlinx:kotlinx-collections-immutable:$kotlinxCollectionsVersion"),
+        dependencies.constraints.create("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:$kotlinxCollectionsVersion"),
+        dependencies.constraints.create("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion"),
+        dependencies.constraints.create("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$kotlinxCoroutinesVersion"),
+        dependencies.constraints.create("org.jetbrains.kotlinx:kotlinx-coroutines-debug:$kotlinxCoroutinesVersion"),
+        dependencies.constraints.create("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinxCoroutinesVersion"),
+        dependencies.constraints.create("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion"),
+        dependencies.constraints.create("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:$kotlinxSerializationVersion"),
+        dependencies.constraints.create("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion"),
+        dependencies.constraints.create("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinxSerializationVersion"),
+        dependencies.constraints.create("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:$kotlinxSerializationVersion"),
+    )
+    configurations.all {
+        dependencyConstraints += constraints
     }
 }
 
-publishing {
-    publications {
-        nativeTargets.filter {
-            HostManager().isEnabled(it.konanTarget)
-        }.forEach {
-            create<MavenPublication>("${it.name}Zip") {
-                artifactId = "$libName-${it.name}"
-                artifact(tasks["${it.name}DistZip"])
-            }
-        }
-    }
-}
-
+@Suppress("UNUSED_VARIABLE")
 tasks {
-    val generateNativeClasses by getting {}
-    //TODO EPMDJ-8696 remove copy
-    val copy = nativeTargets.filter { it.name != currentPlatformName }.map {
-        register<Copy>("copy for ${it.name}") {
-            from(file("src/commonNative/kotlin"))
-            into(file("src/${it.name}Main/kotlin/gen"))
+//    val filterDistTasks: (Task) -> Boolean = { it.name.endsWith("DistTar") || it.name.endsWith("DistZip") }
+//    val copyAutotestAgentDist by registering(Copy::class) {
+//        from(project(":autotest-agent").tasks.filter(filterDistTasks))
+//        into(buildDir.resolve("distributions"))
+//    }
+//    assemble.get().dependsOn(copyAutotestAgentDist)
+    val sharedLibsDir = file("$projectDir/lib-jvm-shared")
+    val sharedLibsRef: String by extra
+    val updateSharedLibs by registering {
+        group = "other"
+        doLast {
+            val gitrepo = Grgit.open { dir = sharedLibsDir }
+            val branches = gitrepo.branch.list { mode = BranchListOp.Mode.LOCAL }
+            val branchToName: (Branch) -> String = { it.name }
+            val branchIsCreate: (String) -> Boolean = { !branches.map(branchToName).contains(it) }
+            gitrepo.fetch()
+            gitrepo.checkout {
+                branch = sharedLibsRef
+                startPoint = sharedLibsRef.takeIf(branchIsCreate)?.prefixIfNot("origin/")
+                createBranch = branchIsCreate(sharedLibsRef)
+            }
+            gitrepo.pull()
         }
     }
-    val copyCommon by registering(DefaultTask::class) {
-        group = "build"
-        copy.forEach { dependsOn(it) }
-    }
-
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile> {
-        dependsOn(copyCommon)
-        dependsOn(generateNativeClasses)
-    }
-    val cleanExtraData by registering(Delete::class) {
-        group = "build"
-        nativeTargets.forEach {
-            val path = "src/${it.name}Main/kotlin/"
-            delete(file("${path}kni"), file("${path}gen"))
+    val tagSharedLibs by registering {
+        group = "other"
+        doLast {
+            val tag = "${project.name}-v${project.version}"
+            val gitrepo = Grgit.open {
+                dir = sharedLibsDir
+                credentials = Credentials(System.getenv("SHARED_LIBS_USER"), System.getenv("SHARED_LIBS_PASSWORD"))
+            }
+            gitrepo.tag.add { name = tag }
+            gitrepo.push { refsOrSpecs = listOf("tags/$tag") }
+            val properties = Configurations().propertiesBuilder(file("gradle.properties"))
+            properties.configuration.setProperty("sharedLibsRef", tag)
+            properties.save()
         }
-    }
-
-    clean {
-        dependsOn(cleanExtraData)
-    }
-}
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile> {
-    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.ExperimentalUnsignedTypes"
-    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.time.ExperimentalTime"
-    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlinx.coroutines.DelicateCoroutinesApi"
-}
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.time.ExperimentalTime"
-    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlinx.coroutines.DelicateCoroutinesApi"
-}
-
-val licenseFormatSettings by tasks.registering(com.hierynomus.gradle.license.tasks.LicenseFormat::class) {
-    source = fileTree(project.projectDir).also {
-        include("**/*.kt", "**/*.java", "**/*.groovy")
-        exclude("**/.idea")
-    }.asFileTree
-    headerURI = URI("https://raw.githubusercontent.com/Drill4J/drill4j/develop/COPYRIGHT")
-}
-
-tasks["licenseFormat"].dependsOn(licenseFormatSettings)
-
-//TODO EPMDJ-8696 remove
-fun KotlinNativeCompilation.setCommonSources(modulePath: String = "src/commonNative") {
-    defaultSourceSet {
-        kotlin.srcDir(file("${modulePath}/kotlin"))
-        resources.setSrcDirs(listOf("${modulePath}/resources"))
     }
 }
