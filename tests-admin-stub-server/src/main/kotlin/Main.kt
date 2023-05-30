@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 EPAM Systems
+ * Copyright 2020 - 2022 EPAM Systems
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.common
+fun main(args: Array<String>) {
+    AdminStub(args[0], args[1]).startServer()
+}
 
-import com.epam.drill.plugins.test2code.api.*
-
-data class ServerDate(
-    val startedSessions: List<String>,
-    val finishedSessions: List<String>,
-    val tests: Map<String, List<TestInfo>>,
-)
-
-data class TestData(
-    val hash: String,
-    val testResult: TestResult,
-)

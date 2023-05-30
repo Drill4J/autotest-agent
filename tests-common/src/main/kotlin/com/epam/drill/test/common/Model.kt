@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 EPAM Systems
+ * Copyright 2020 - 2022 EPAM Systems
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,14 @@
 package com.epam.drill.test.common
 
 import com.epam.drill.plugins.test2code.api.*
-import kotlin.test.*
 
-fun List<TestInfo>.assertTestTime() = forEach {
-    when (it.result) {
-        TestResult.SKIPPED -> assertTrue(it.finishedAt == it.startedAt && it.startedAt == 0L)
-        else -> assertTrue(it.finishedAt >= it.startedAt && it.finishedAt > 0)
-    }
-}
+data class ServerDate(
+    val startedSessions: List<String>,
+    val finishedSessions: List<String>,
+    val tests: Map<String, List<TestInfo>>,
+)
 
-infix fun List<TestInfo>.shouldContainsAllTests(expected: Collection<TestData>) {
-    val actual = map { it.toTestData() }
-    assertEquals(expected.size, actual.size)
-    assertTrue(expected.containsAll(actual))
-    assertEquals(expected.count { it.testResult == TestResult.SKIPPED }, count { it.result == TestResult.SKIPPED })
-}
+data class TestData(
+    val hash: String,
+    val testResult: TestResult,
+)

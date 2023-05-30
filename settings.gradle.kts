@@ -5,6 +5,7 @@ pluginManagement {
     val licenseVersion: String by extra
     val grgitVersion: String by extra
     val shadowPluginVersion: String by extra
+    val psxpaulExecforkVersion: String by extra
     plugins {
         kotlin("multiplatform") version kotlinVersion
         kotlin("plugin.noarg") version kotlinVersion
@@ -12,6 +13,7 @@ pluginManagement {
         id("org.ajoberstar.grgit") version grgitVersion
         id("com.github.hierynomus.license") version licenseVersion
         id("com.github.johnrengelman.shadow") version shadowPluginVersion
+        id("com.github.psxpaul.execfork") version psxpaulExecforkVersion
     }
     repositories {
         mavenLocal()
@@ -39,3 +41,5 @@ includeSharedLib("runtime")
 includeSharedLib("test2code-api")
 include("autotest-agent")
 include("autotest-runtime")
+include("tests-common")
+include("tests-admin-stub-server")
