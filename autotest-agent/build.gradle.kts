@@ -77,7 +77,7 @@ kotlin {
             languageSettings.optIn("kotlin.time.ExperimentalTime")
             languageSettings.optIn("kotlinx.coroutines.DelicateCoroutinesApi")
             languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")
-            languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")
+            languageSettings.optIn("kotlinx.serialization.InternalSerializationApi")
         }
         val commonMain by getting {
             dependencies {
@@ -146,7 +146,9 @@ kotlin {
             it.compilations["main"].compileKotlinTask.dependsOn(copyNativeClasses)
         }
         val jvmMainCompilation = kotlin.targets.withType<KotlinJvmTarget>()["jvm"].compilations["main"]
-        val jvmJar by getting
+        val jvmJar by getting(Jar::class) {
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        }
         val runtimeJar by registering(ShadowJar::class) {
             archiveFileName.set("drillRuntime.jar")
             from(jvmJar)
@@ -157,18 +159,6 @@ kotlin {
             relocate("com.squareup.okhttp3", "drill.com.squareup.okhttp3")
             relocate("okio", "drill.okio")
             relocate("okhttp3", "drill.okhttp3")
-
-
-
-            from(jvmMainCompilation.output, jvmMainCompilation.runtimeDependencyFiles)
-            doLast {
-                val jarFileUri = Paths.get("$buildDir/libs", archiveFileName.get()).toUri()
-                val zipDisk = URI.create("jar:$jarFileUri")
-                val zipProperties = mutableMapOf("create" to "false")
-                FileSystems.newFileSystem(zipDisk, zipProperties).use {
-                    Files.delete(it.getPath(JarFile.MANIFEST_NAME))
-                }
-            }
         }
         val clean by getting
         val cleanGeneratedClasses by registering(Delete::class) {
