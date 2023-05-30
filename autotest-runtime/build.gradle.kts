@@ -5,7 +5,6 @@ import com.hierynomus.gradle.license.tasks.LicenseFormat
 plugins {
     kotlin("jvm")
     id("com.github.hierynomus.license")
-    id("com.github.johnrengelman.shadow")
 }
 
 group = "com.epam.drill.autotest"
@@ -18,21 +17,6 @@ repositories {
 
 dependencies {
     implementation(project(":kni-runtime"))
-}
-
-tasks {
-    jar {
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    }
-    shadowJar {
-        archiveFileName.set("drillRuntime.jar")
-        from(jar)
-        relocate("kotlin", "kruntime")
-        relocate("javassist", "drill.javassist")
-        relocate("org.slf4j", "drill.org.slf4j")
-        relocate("org.java_websocket", "drill.org.java_websocket")
-
-    }
 }
 
 @Suppress("UNUSED_VARIABLE")

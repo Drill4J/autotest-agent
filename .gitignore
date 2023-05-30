@@ -2,4 +2,7 @@ build/
 .gradle/
 .idea/
 *.iml
+**/kotlin/gen/
+**/kotlin/kni/
+kni-meta-info
 /lib-jvm-shared/

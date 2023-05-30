@@ -78,12 +78,12 @@ subprojects {
 
 @Suppress("UNUSED_VARIABLE")
 tasks {
-//    val filterDistTasks: (Task) -> Boolean = { it.name.endsWith("DistTar") || it.name.endsWith("DistZip") }
-//    val copyAutotestAgentDist by registering(Copy::class) {
-//        from(project(":autotest-agent").tasks.filter(filterDistTasks))
-//        into(buildDir.resolve("distributions"))
-//    }
-//    assemble.get().dependsOn(copyAutotestAgentDist)
+    val filterDistTasks: (Task) -> Boolean = { it.name.endsWith("DistTar") || it.name.endsWith("DistZip") }
+    val copyAutotestAgentDist by registering(Copy::class) {
+        from(project(":autotest-agent").tasks.filter(filterDistTasks))
+        into(buildDir.resolve("distributions"))
+    }
+    assemble.get().dependsOn(copyAutotestAgentDist)
     val sharedLibsDir = file("$projectDir/lib-jvm-shared")
     val sharedLibsRef: String by extra
     val updateSharedLibs by registering {

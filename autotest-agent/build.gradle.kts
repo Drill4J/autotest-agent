@@ -1,8 +1,4 @@
 import java.net.URI
-import java.nio.file.Files
-import java.nio.file.FileSystems
-import java.nio.file.Paths
-import java.util.jar.JarFile
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
@@ -146,12 +142,10 @@ kotlin {
             it.compilations["main"].compileKotlinTask.dependsOn(copyNativeClasses)
         }
         val jvmMainCompilation = kotlin.targets.withType<KotlinJvmTarget>()["jvm"].compilations["main"]
-        val jvmJar by getting(Jar::class) {
-            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        }
         val runtimeJar by registering(ShadowJar::class) {
+            isZip64 = true
             archiveFileName.set("drillRuntime.jar")
-            from(jvmJar)
+            from(jvmMainCompilation.output, jvmMainCompilation.runtimeDependencyFiles)
             relocate("kotlin", "kruntime")
             relocate("javassist", "drill.javassist")
             relocate("org.slf4j", "drill.org.slf4j")
