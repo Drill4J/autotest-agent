@@ -10,6 +10,7 @@ import org.ajoberstar.grgit.operation.BranchListOp
 plugins {
     `distribution`
     kotlin("multiplatform").apply(false)
+    kotlin("plugin.noarg").apply(false)
     kotlin("plugin.serialization").apply(false)
     id("org.ajoberstar.grgit")
     id("com.github.hierynomus.license").apply(false)

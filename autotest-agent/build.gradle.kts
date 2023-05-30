@@ -33,8 +33,6 @@ val cdtJavaClientVersion: String by parent!!.extra
 val squareupOkHttpVersion: String by parent!!.extra
 val nativeAgentLibName: String by parent!!.extra
 
-val test2codeApiVersion: String by parent!!.extra
-
 repositories {
     mavenLocal()
     mavenCentral()
@@ -80,11 +78,11 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
-                implementation("com.epam.drill.plugins.test2code:api:$test2codeApiVersion")
                 implementation(project(":logger"))
                 implementation(project(":kni-runtime"))
                 implementation(project(":knasm"))
                 implementation(project(":http-clients-instrumentation"))
+                implementation(project(":test2code-api"))
             }
         }
         val jvmMain by getting {
