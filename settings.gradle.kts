@@ -7,7 +7,7 @@ pluginManagement {
     val shadowPluginVersion: String by extra
     plugins {
         kotlin("multiplatform") version kotlinVersion
-        id("org.jetbrains.kotlin.plugin.serialization") version kotlinVersion
+        kotlin("plugin.serialization") version kotlinVersion
         id("org.ajoberstar.grgit") version grgitVersion
         id("com.github.hierynomus.license") version licenseVersion
         id("com.github.johnrengelman.shadow") version shadowPluginVersion
@@ -23,3 +23,14 @@ val includeSharedLib: Settings.(String) -> Unit = {
     include(it)
     project(":$it").projectDir = file("lib-jvm-shared/$it")
 }
+
+includeSharedLib("http-clients-instrumentation")
+includeSharedLib("jvmapi")
+includeSharedLib("knasm")
+includeSharedLib("kni-runtime")
+includeSharedLib("logger")
+includeSharedLib("logger-api")
+includeSharedLib("logger-test-agent")
+includeSharedLib("runtime")
+include("autotest-agent")
+include("autotest-runtime")
