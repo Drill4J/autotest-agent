@@ -27,12 +27,8 @@ dependencies {
 @Suppress("UNUSED_VARIABLE")
 tasks {
     val (host, port) = ServerSocket(0).use { "127.0.0.1" to it.localPort }
-    val serverShutdown by registering {
-        group = "verification"
-        doFirst {
-            println("Server stopping")
-        }
-    }
+    rootProject.extra["testsAdminStubServerHost"] = host
+    rootProject.extra["testsAdminStubServerPort"] = port
     val serverStart by creating(JavaExecFork::class) {
         group = "verification"
         workingDir = jar.get().archiveFile.get().asFile.parentFile
@@ -40,7 +36,6 @@ tasks {
         main = "MainKt"
         jvmArgs = mutableListOf("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5015")
         args = mutableListOf(host, port.toString())
-        stopAfter = serverShutdown
         waitForPort = port
         killDescendants = false
     }

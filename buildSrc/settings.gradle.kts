@@ -15,5 +15,9 @@ pluginManagement {
 
 include("kni-runtime")
 include("kni-plugin")
+include("agent-runner-common")
+include("agent-runner-gradle")
 project(":kni-runtime").projectDir = file("../lib-jvm-shared/kni-runtime")
 project(":kni-plugin").projectDir = file("../lib-jvm-shared/kni-plugin")
+project(":agent-runner-common").projectDir = file("../lib-jvm-shared/agent-runner-common")
+project(":agent-runner-gradle").projectDir = file("../lib-jvm-shared/agent-runner-gradle")

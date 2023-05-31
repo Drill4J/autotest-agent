@@ -140,10 +140,18 @@ kotlin {
             it.compilations["main"].compileKotlinTask.dependsOn(copyNativeClasses)
         }
         val jvmMainCompilation = kotlin.targets.withType<KotlinJvmTarget>()["jvm"].compilations["main"]
+        val extensionZip by registering(Zip::class) {
+            group = "shadow"
+            archiveFileName.set("header-transmitter.xpi")
+            destinationDirectory.set(temporaryDir)
+            from(rootDir.resolve("drill-header-transmitter"))
+        }
         val runtimeJar by registering(ShadowJar::class) {
+            group = "shadow"
             isZip64 = true
             archiveFileName.set("drillRuntime.jar")
             from(jvmMainCompilation.output, jvmMainCompilation.runtimeDependencyFiles)
+            from(extensionZip)
             relocate("kotlin", "kruntime")
             relocate("javassist", "drill.javassist")
             relocate("org.slf4j", "drill.org.slf4j")
