@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 EPAM Systems
+ * Copyright 2020 - 2022 EPAM Systems
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,20 @@
 package abs
 
 import io.github.bonigarcia.wdm.*
-import org.junit.jupiter.api.*
-import org.openqa.selenium.chrome.*
+import org.openqa.selenium.firefox.*
 import kotlin.reflect.*
 
-//TODO FIX CHECK EPMDJ-6835
-@Disabled
-class ChromiumTest : BasedTest(){
+class FirefoxTest : BasedTest(){
 
     override val testClass: KClass<*> = this::class
 
     override fun setupDriver(){
-        WebDriverManager.chromiumdriver().setup()
-        val options = ChromeOptions()
-        options.setHeadless(true)
-        driver = ChromeDriver(options)
+        WebDriverManager.firefoxdriver().setup()
+        val firefoxProfile = FirefoxProfile()
+        val firefoxOptions = FirefoxOptions()
+        firefoxOptions.setHeadless(true)
+        firefoxOptions.profile = firefoxProfile
+        driver = FirefoxDriver(firefoxOptions)
     }
 
 }

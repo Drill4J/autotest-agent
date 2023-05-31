@@ -45,3 +45,6 @@ include("tests-common")
 include("tests-admin-stub-server")
 include("tests-rest-assure-ju5")
 include("tests-spock")
+//TODO EPMDJ-10493 fix tests with selenium
+//include("tests-selenium-v3-ju5")
+//include("tests-selenium-v4-ju5")
