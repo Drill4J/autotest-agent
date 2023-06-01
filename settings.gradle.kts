@@ -48,3 +48,8 @@ include("tests-spock")
 //TODO EPMDJ-10493 fix tests with selenium
 //include("tests-selenium-v3-ju5")
 //include("tests-selenium-v4-ju5")
+//include("tests-cucumber-common")
+//include("tests-cucumber-v4")
+//include("tests-cucumber-v5")
+//include("tests-cucumber-v6")
+//include("tests-cucumber-v6.7")

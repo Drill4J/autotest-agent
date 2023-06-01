@@ -6,3 +6,4 @@ build/
 **/kotlin/kni/
 kni-meta-info
 /lib-jvm-shared/
+/tests-cucumber-*/target
