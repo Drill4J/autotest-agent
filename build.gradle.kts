@@ -24,6 +24,7 @@ val kotlinVersion: String by extra
 val kotlinxCollectionsVersion: String by extra
 val kotlinxCoroutinesVersion: String by extra
 val kotlinxSerializationVersion: String by extra
+val sharedLibsLocalPath: String by extra
 
 repositories {
     mavenLocal()
@@ -86,7 +87,7 @@ tasks {
         into(buildDir.resolve("distributions"))
     }
     assemble.get().dependsOn(copyAutotestAgentDist)
-    val sharedLibsDir = file("$projectDir/lib-jvm-shared")
+    val sharedLibsDir = projectDir.resolve(sharedLibsLocalPath)
     val sharedLibsRef: String by extra
     val updateSharedLibs by registering {
         group = "other"
