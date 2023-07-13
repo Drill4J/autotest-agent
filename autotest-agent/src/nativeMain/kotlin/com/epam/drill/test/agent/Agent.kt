@@ -17,34 +17,29 @@
 
 package com.epam.drill.test.agent
 
-import com.epam.drill.jvmapi.*
 import com.epam.drill.jvmapi.gen.AddCapabilities
 import com.epam.drill.jvmapi.gen.AddToBootstrapClassLoaderSearch
 import com.epam.drill.jvmapi.gen.JNI_OK
 import com.epam.drill.jvmapi.gen.jvmtiCapabilities
 import com.epam.drill.kni.JvmtiAgent
-import com.epam.drill.logger.Logging
-import com.epam.drill.logger.filename
-import com.epam.drill.logger.logLevel
+import com.epam.drill.logging.LoggingConfiguration
 import com.epam.drill.test.agent.actions.SessionController
 import com.epam.drill.test.agent.config.AgentRawConfig
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
-import kotlin.native.concurrent.SharedImmutable
 import kotlin.native.concurrent.freeze
-
-@SharedImmutable
-val mainLogger = Logging.logger("AutoTestAgentLogger")
+import mu.KotlinLogging
 
 object Agent : JvmtiAgent {
+
+    private val logger = KotlinLogging.logger("com.epam.drill.test.agent.Agent")
 
     override fun agentOnLoad(options: String): Int = memScoped {
         try {
             val config = options.toAgentParams().freeze()
-            loggerCallback = { Logging.logger(it) }
             setUnhandledExceptionHook({ thr: Throwable ->
-                mainLogger.error(thr) { "Unhandled event $thr" }
+                logger.error(thr) { "Unhandled event $thr" }
             }.freeze())
             val jvmtiCapabilities = alloc<jvmtiCapabilities>()
             jvmtiCapabilities.can_retransform_classes = 1.toUInt()
@@ -55,27 +50,27 @@ object Agent : JvmtiAgent {
             callbackRegister()
 
             config.browserProxyAddress?.takeIf { "/" in it }?.let {
-                mainLogger.warn { "Expected format for a browser proxy is hostname.com:1234" }
+                logger.warn { "Expected format for a browser proxy is hostname.com:1234" }
             }
 
             if (config.devToolsProxyAddress.isNullOrBlank()) {
-                mainLogger.error { "UI coverage will be lost. Please specify devToolsProxyAddress" }
+                logger.error { "UI coverage will be lost. Please specify devToolsProxyAddress" }
             }
             AgentConfig.updateConfig(config)
         } catch (ex: Throwable) {
-            mainLogger.error(ex) { "Can't load the agent. Reason:" }
+            logger.error(ex) { "Can't load the agent. Reason:" }
         }
         return JNI_OK
     }
 
     override fun agentOnUnload() {
         try {
-            mainLogger.info { "Shutting the agent down" }
+            logger.info { "Shutting the agent down" }
             val agentConfig = AgentConfig.config
             if (!agentConfig.isManuallyControlled && !agentConfig.sessionForEachTest)
                 SessionController.stopSession()
         } catch (ex: Throwable) {
-            mainLogger.error { "Failed to unload the agent properly. Reason: ${ex.message}" }
+            logger.error { "Failed to unload the agent properly. Reason: ${ex.message}" }
         }
     }
 
@@ -89,8 +84,10 @@ fun String?.toAgentParams() = this.asParams().let { params ->
     if (result.agentId.isBlank() && result.groupId.isBlank()) {
         error(WRONG_PARAMS)
     }
-    Logging.filename = result.logFile
-    Logging.logLevel = result.level
+    LoggingConfiguration.readDefaultConfiguration()
+    LoggingConfiguration.setLoggingFilename(result.logFile)
+    LoggingConfiguration.setLoggingLevels(result.logLevel)
+    LoggingConfiguration.setLogMessageLimit(result.logLimit)
     result
 }
 

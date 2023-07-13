@@ -16,7 +16,6 @@
 package com.epam.drill.test.agent
 
 import com.epam.drill.kni.*
-import com.epam.drill.logger.*
 import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.config.*
 import com.epam.drill.test.agent.instrumentation.http.selenium.*
@@ -26,6 +25,7 @@ import kotlinx.collections.immutable.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.builtins.*
 import kotlin.time.*
+import mu.KotlinLogging
 
 @Kni
 actual object TestListener {
@@ -33,7 +33,7 @@ actual object TestListener {
     const val methodParamsKey = "methodParams"
     const val classParamsKey = "classParams"
 
-    private val logger = Logging.logger(TestListener::class.java.simpleName)
+    private val logger = KotlinLogging.logger {}
 
     private val _testInfo = atomic(persistentHashMapOf<TestDetails, PersistentMap<String, Any>>())
 

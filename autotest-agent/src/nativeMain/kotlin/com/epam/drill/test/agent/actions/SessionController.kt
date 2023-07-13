@@ -20,18 +20,19 @@ import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.config.*
 import com.epam.drill.test.agent.http.*
-import com.epam.drill.test.agent.js.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.*
 import kotlin.native.concurrent.*
 import kotlin.time.*
+import mu.KotlinLogging
 
 object SessionController {
     private val agentConfig = AgentConfig.config
     val testHash = AtomicReference("undefined")
     val sessionId = AtomicReference("")
     private val token = AtomicReference("")
+    private val logger = KotlinLogging.logger("com.epam.drill.test.agent.actions.SessionController")
 
     private val dispatchActionPath: String
         get() = if (agentConfig.groupId.isBlank()) {
@@ -49,7 +50,7 @@ object SessionController {
                     if (tests.any()) {
                         sendTests(tests)
                     }
-                }.onFailure { mainLogger.error(it) { "Can't parse tests. Reason:" } }
+                }.onFailure { logger.error(it) { "Can't parse tests. Reason:" } }
             }
         }
     }
@@ -59,7 +60,7 @@ object SessionController {
             payload = AddTestsPayload(ThreadStorage.sessionId() ?: "", tests)
         )
         val result = dispatchAction(payload)
-        mainLogger.trace { "Count of tests sent: ${tests.size}, received status ${result.code}" }
+        logger.trace { "Count of tests sent: ${tests.size}, received status ${result.code}" }
     }
 
     fun startSession(
@@ -70,7 +71,7 @@ object SessionController {
         isGlobal: Boolean = agentConfig.isGlobal,
         labels: Set<Label> = agentConfig.labelCollection,
     ) = runCatching {
-        mainLogger.debug { "Attempting to start a Drill4J test session..." }
+        logger.debug { "Attempting to start a Drill4J test session..." }
         val sessionId = customSessionId ?: uuid4().toString()
         val payload = Action.serializer() stringify StartNewSession(
             payload = StartPayload(
@@ -84,12 +85,12 @@ object SessionController {
         )
         this.sessionId.value = sessionId
         val response = dispatchAction(payload)
-        mainLogger.debug { "Received response: ${response.body}" }
-        mainLogger.info { "Started a test session with ID $sessionId" }
-    }.onFailure { mainLogger.warn(it) { "Can't startSession '${sessionId.value}'" } }.getOrNull()
+        logger.debug { "Received response: ${response.body}" }
+        logger.info { "Started a test session with ID $sessionId" }
+    }.onFailure { logger.warn(it) { "Can't startSession '${sessionId.value}'" } }.getOrNull()
 
     fun stopSession(sessionIds: String? = null) = runCatching {
-        mainLogger.debug { "Attempting to stop a Drill4J test session..." }
+        logger.debug { "Attempting to stop a Drill4J test session..." }
         val payload = Action.serializer() stringify StopSession(
             payload = StopSessionPayload(
                 sessionId = sessionIds ?: sessionId.value,
@@ -99,18 +100,18 @@ object SessionController {
             )
         )
         val response = dispatchAction(payload)
-        mainLogger.debug { "Received response: ${response.body}" }
-        mainLogger.info { "Stopped a test session with ID ${sessionId.value}" }
+        logger.debug { "Received response: ${response.body}" }
+        logger.info { "Stopped a test session with ID ${sessionId.value}" }
     }.onFailure {
-        mainLogger.warn(it) { "Can't stopSession ${sessionId.value}" }
+        logger.warn(it) { "Can't stopSession ${sessionId.value}" }
     }.getOrNull().also { TestListener.reset() }
 
     private fun dispatchAction(payload: String): HttpResponse {
         val token = token.value.takeIf { it.isNotBlank() } ?: getToken().also {
             token.value = it
         }
-        mainLogger.debug { "Auth token: $token" }
-        mainLogger.debug {
+        logger.debug { "Auth token: $token" }
+        logger.debug {
             """Dispatch action: 
                                 |path:$dispatchActionPath
                                 |payload:${payload.toString().substring(0, 4000)}
@@ -127,7 +128,7 @@ object SessionController {
     }
 
     fun sendSessionData(data: String) = runCatching {
-        mainLogger.debug { "Attempting to send session data ..." }
+        logger.debug { "Attempting to send session data ..." }
         val payload = Action.serializer() stringify AddSessionData(
             payload = SessionDataPayload(
                 sessionId = sessionId.value,
@@ -135,9 +136,9 @@ object SessionController {
             )
         )
         val response = dispatchAction(payload)
-        mainLogger.debug { "Received response: ${response.body}" }
+        logger.debug { "Received response: ${response.body}" }
     }.onFailure {
-        mainLogger.warn(it) { "Can't send session data ${sessionId.value}" }
+        logger.warn(it) { "Can't send session data ${sessionId.value}" }
     }.getOrNull().also { TestListener.reset() }
 
     private fun getToken(): String {

@@ -17,13 +17,14 @@
 
 package com.epam.drill.test.agent
 
+import mu.KotlinLogging
 import com.epam.drill.kni.*
-import com.epam.drill.logger.*
 import com.epam.drill.test.agent.instrumentation.StrategyManager.process
 
 @Kni
 actual object AgentClassTransformer {
-    private val logger = Logging.logger(AgentClassTransformer::class.java.name)
+
+    private val logger = KotlinLogging.logger {}
 
     const val CLASS_NAME = "AgentClassTransformer"
 

@@ -20,7 +20,6 @@ import com.epam.drill.agent.instrument.http.apache.*
 import com.epam.drill.agent.instrument.http.java.*
 import com.epam.drill.agent.instrument.http.ok.*
 import com.epam.drill.kni.*
-import com.epam.drill.logger.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.http.selenium.*
 import com.epam.drill.test.agent.instrumentation.kafka.*
@@ -30,10 +29,12 @@ import org.objectweb.asm.*
 import java.io.*
 import java.security.*
 import java.util.jar.*
+import mu.KotlinLogging
 
 @Kni
 actual object StrategyManager {
-    private val logger = Logging.logger(StrategyManager::class.java.name)
+
+    private val logger = KotlinLogging.logger {}
 
     internal var allStrategies: MutableMap<String, MutableSet<TransformStrategy>> = mutableMapOf()
     private var strategies: MutableSet<TransformStrategy> = HashSet()

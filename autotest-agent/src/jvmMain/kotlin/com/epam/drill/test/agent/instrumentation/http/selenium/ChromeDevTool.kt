@@ -15,7 +15,6 @@
  */
 package com.epam.drill.test.agent.instrumentation.http.selenium
 
-import com.epam.drill.logger.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.config.*
 import com.epam.drill.test.agent.http.*
@@ -25,6 +24,7 @@ import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 import java.net.*
 import java.util.*
+import mu.KotlinLogging
 
 private const val DEBUGGER_ADDRESS = "debuggerAddress"
 private const val DEV_TOOL_DEBUGGER_URL = "webSocketDebuggerUrl"
@@ -33,7 +33,7 @@ private val JS_TOGGLES = listOf("Debugger", "Profiler").takeIf { AgentConfig.wit
 private val REPLACE_LOCALHOST = AgentConfig.devtoolsAddressReplaceLocalhost()
 
 object DevToolStorage {
-    private val logger = Logging.logger(DevToolStorage::class.java.name)
+    private val logger = KotlinLogging.logger {}
     private val storage: InheritableThreadLocal<ChromeDevTool> = InheritableThreadLocal()
 
     fun set(devtool: ChromeDevTool) {
@@ -53,7 +53,7 @@ class ChromeDevTool(
     private val capabilities: Map<*, *>?,
     private val remoteHost: String?
 ) {
-    private val logger = Logging.logger(ChromeDevTool::class.java.name)
+    private val logger = KotlinLogging.logger {}
     private val launchType = AgentConfig.launchType()
     private val devToolsProxyAddress = AgentConfig.devToolsProxyAddress()?.let {
         if (it.startsWith("http")) it else "http://$it"

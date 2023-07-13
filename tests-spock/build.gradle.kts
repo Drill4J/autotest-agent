@@ -23,7 +23,6 @@ dependencies {
     implementation("org.javassist:javassist:$javassistVersion")
     implementation(project(":http-clients-instrumentation"))
     implementation(project(":knasm"))
-    implementation(project(":logger-api"))
     implementation(project(":autotest-runtime"))
     implementation(project(":tests-common"))
 

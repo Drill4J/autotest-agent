@@ -21,6 +21,7 @@ import javassist.*
 import org.objectweb.asm.*
 import java.io.*
 import java.security.*
+import mu.KotlinLogging
 
 @Suppress("PrivatePropertyName")
 object Selenium : TransformStrategy() {
@@ -40,7 +41,7 @@ object Selenium : TransformStrategy() {
     internal const val addDrillCookiesMethod = "addDrillCookies"
     private const val isFirefoxBrowser = "isFirefoxBrowser"
 
-
+    private val logger = KotlinLogging.logger {}
 
     init {
         val extension = this::class.java.getResource("/$EXTENSION_NAME")

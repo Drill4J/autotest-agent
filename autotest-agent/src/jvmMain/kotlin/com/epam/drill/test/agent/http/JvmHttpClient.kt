@@ -16,14 +16,15 @@
 package com.epam.drill.test.agent.http
 
 import com.epam.drill.kni.*
-import com.epam.drill.logger.*
 import com.epam.drill.test.agent.config.*
 import java.net.*
+import mu.KotlinLogging
 
 
 @Kni
 actual object JvmHttpClient {
-    private val logger = Logging.logger(JvmHttpClient::class.java.name)
+
+    private val logger = KotlinLogging.logger {}
 
     actual fun httpCall(endpoint: String, request: String): String {
         val httpRequest = HttpRequest.serializer() parse request

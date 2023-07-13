@@ -78,7 +78,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
-                implementation(project(":logger"))
+                implementation(project(":logging"))
                 implementation(project(":kni-runtime"))
                 implementation(project(":knasm"))
                 implementation(project(":http-clients-instrumentation"))
@@ -93,7 +93,6 @@ kotlin {
                 implementation("org.java-websocket:Java-WebSocket:$javaWebsocketVersion")
                 implementation("com.github.kklisura.cdt:cdt-java-client:$cdtJavaClientVersion")
                 implementation("com.squareup.okhttp3:okhttp:$squareupOkHttpVersion")
-                implementation(project(":logger"))
                 implementation(project(":kni-runtime"))
                 implementation(project(":knasm"))
                 implementation(project(":http-clients-instrumentation"))
@@ -109,13 +108,18 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:$kotlinxSerializationVersion")
                 implementation("com.benasher44:uuid:$uuidVersion")
                 implementation(project(":jvmapi"))
-                implementation(project(":logger"))
                 implementation(project(":kni-runtime"))
             }
         }
         val linuxX64Main by getting(configuration = configureNativeDependencies)
         val mingwX64Main by getting(configuration = configureNativeDependencies)
         val macosX64Main by getting(configuration = configureNativeDependencies)
+        mingwX64Main.dependencies {
+            implementation(project(":logging-native"))
+        }
+        macosX64Main.dependencies {
+            implementation(project(":logging-native"))
+        }
     }
     val copyNativeClassesForTarget: TaskContainer.(KotlinNativeTarget) -> Task = {
         val copyNativeClasses:TaskProvider<Copy> = register("copyNativeClasses${it.targetName.capitalize()}", Copy::class) {
