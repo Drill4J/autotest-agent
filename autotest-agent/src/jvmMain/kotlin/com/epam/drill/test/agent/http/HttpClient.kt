@@ -15,19 +15,20 @@
  */
 package com.epam.drill.test.agent.http
 
-import com.epam.drill.logger.*
 import com.epam.drill.test.agent.util.*
 import java.io.*
 import java.net.*
 import java.security.*
 import java.security.cert.*
 import javax.net.ssl.*
+import mu.KotlinLogging
 
 private const val CONTENT_TYPE = "Content-Type"
 private const val APPLICATION_JSON = "application/json"
 
 object HttpClient {
-    val logger = Logging.logger(HttpClient::class.java.name)
+
+    private val logger = KotlinLogging.logger {}
 
     init {
         // Create a trust manager that does not validate certificate chains
@@ -89,6 +90,8 @@ data class HttpUrlConnectionBuilder(
     var body: String = "",
     var timeout: Int = 15_000,
 ) {
+
+    private val logger = KotlinLogging.logger {}
 
     fun build(): HttpURLConnection = (URL(url + queryParamString()).openConnection() as HttpURLConnection).apply {
         requestMethod = method.name

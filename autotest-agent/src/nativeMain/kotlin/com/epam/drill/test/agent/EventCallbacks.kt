@@ -17,12 +17,18 @@
 
 package com.epam.drill.test.agent
 
+import com.epam.drill.jvmapi.callObjectVoidMethod
+import com.epam.drill.jvmapi.callObjectVoidMethodWithInt
+import com.epam.drill.jvmapi.callObjectVoidMethodWithString
 import com.epam.drill.jvmapi.gen.*
+import com.epam.drill.logging.LoggingConfiguration
 import com.epam.drill.test.agent.actions.SessionController
 import com.epam.drill.test.agent.instrumentation.StrategyManager
 import com.epam.drill.test.agent.instrumenting.classFileLoadHookEvent
 import kotlinx.cinterop.*
-import kotlin.native.concurrent.freeze
+import mu.KotlinLogging
+
+private val logger = KotlinLogging.logger("com.epam.drill.test.agent.EventCallbacks")
 
 fun enableJvmtiEventVmDeath(thread: jthread? = null) {
     SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_VM_DEATH, thread)
@@ -38,7 +44,7 @@ fun enableJvmtiEventClassFileLoadHook(thread: jthread? = null) {
 
 @Suppress("UNUSED_PARAMETER")
 fun vmDeathEvent(jvmtiEnv: CPointer<jvmtiEnvVar>?, jniEnv: CPointer<JNIEnvVar>?) {
-    mainLogger.debug { "vmDeathEvent" }
+    logger.debug { "vmDeathEvent" }
 }
 
 fun callbackRegister() = memScoped {
@@ -54,13 +60,17 @@ fun callbackRegister() = memScoped {
 private const val isHttpHookEnabled = false // based on args
 
 fun jvmtiEventVMInitEvent(env: CPointer<jvmtiEnvVar>?, jniEnv: CPointer<JNIEnvVar>?, thread: jthread?) {
-    mainLogger.debug { "Init event" }
+    logger.debug { "Init event" }
     initRuntimeIfNeeded()
     val agentConfig = AgentConfig.config
     if (!agentConfig.isManuallyControlled && !agentConfig.sessionForEachTest)
         SessionController.startSession(agentConfig.sessionId)
     agentConfig.run {
         StrategyManager.initialize(rawFrameworkPlugins, isManuallyControlled)
+        callObjectVoidMethod(LoggingConfiguration::class, LoggingConfiguration::readDefaultConfiguration.name)
+        callObjectVoidMethodWithString(LoggingConfiguration::class, "setLoggingLevels", logLevel)
+        callObjectVoidMethodWithString(LoggingConfiguration::class, LoggingConfiguration::setLoggingFilename, logFile)
+        callObjectVoidMethodWithInt(LoggingConfiguration::class, LoggingConfiguration::setLogMessageLimit, logLimit)
     }
     SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, null)
     if (isHttpHookEnabled)
@@ -68,6 +78,6 @@ fun jvmtiEventVMInitEvent(env: CPointer<jvmtiEnvVar>?, jniEnv: CPointer<JNIEnvVa
 }
 
 fun configureHooks() {
-    mainLogger.debug { "Drill interceptor is unavailable" }
+    logger.debug { "Drill interceptor is unavailable" }
 
 }

@@ -15,7 +15,6 @@
  */
 package com.epam.drill.test.agent.config
 
-import com.epam.drill.logger.api.*
 import com.epam.drill.plugins.test2code.api.*
 import kotlinx.serialization.*
 
@@ -27,7 +26,8 @@ data class AgentRawConfig(
     val adminAddress: String = "",
     val drillInstallationDir: String = "",
     val logFile: String? = null,
-    val logLevel: String = LogLevel.ERROR.name,
+    val logLevel: String = "ERROR",
+    val logLimit: Int = 512,
     val rawFrameworkPlugins: String = "",
     val labels: String = "",
     val sessionId: String? = null,
@@ -43,8 +43,6 @@ data class AgentRawConfig(
     val launchType: String? = null,
     val devtoolsAddressReplaceLocalhost: String? = null,
 ) {
-    val level: LogLevel
-        get() = LogLevel.valueOf(logLevel)
 
     val labelCollection
         get() = labels.takeIf { it.isNotBlank() }?.split(";")?.map {

@@ -21,6 +21,9 @@ import com.epam.drill.jvmapi.gen.*
 import com.epam.drill.test.agent.*
 import io.ktor.utils.io.bits.*
 import kotlinx.cinterop.*
+import mu.KotlinLogging
+
+private val logger = KotlinLogging.logger("com.epam.drill.test.agent.instrumenting.Instrumenting")
 
 fun classFileLoadHookEvent(
     jvmtiEnv: CPointer<jvmtiEnvVar>?,
@@ -44,15 +47,15 @@ fun classFileLoadHookEvent(
     }
     val instrumentedBytes = AgentClassTransformer.transform(className, classBytes, loader, protection_domain) ?: return
     val instrumentedSize = instrumentedBytes.size
-    mainLogger.debug { "Class '$className' was transformed" }
-    mainLogger.debug { "Applying instrumenting (old: $classDataLen to new: $instrumentedSize)" }
+    logger.debug { "Class '$className' was transformed" }
+    logger.debug { "Applying instrumenting (old: $classDataLen to new: $instrumentedSize)" }
     Allocate(instrumentedSize.toLong(), newData)
     val newBytes = newData!!.pointed.value!!
     instrumentedBytes.forEachIndexed { index, byte ->
         newBytes[index] = byte.toUByte()
     }
     newClassDataLen?.pointed?.value = instrumentedSize
-    mainLogger.info { "Successfully instrumented class $className" }
+    logger.info { "Successfully instrumented class $className" }
 }
 
 private fun notSuitableClass(

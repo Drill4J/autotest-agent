@@ -15,13 +15,12 @@
  */
 package com.epam.drill.test.agent.util
 
-import com.epam.drill.logger.*
 import kotlin.time.*
-
-val logger = Logging.logger("Perf")
+import mu.KotlinLogging
 
 inline fun <T> trackTime(tag: String = "", debug: Boolean = false, block: () -> T) =
     measureTimedValue { block() }.apply {
+        val logger = KotlinLogging.logger {}
         val message = "[$tag] took: $duration"
         when {
             duration.toDouble(DurationUnit.SECONDS) > 1 -> {
