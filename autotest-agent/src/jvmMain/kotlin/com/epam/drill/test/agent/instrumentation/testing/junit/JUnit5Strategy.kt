@@ -26,8 +26,8 @@ object JUnit5Strategy : AbstractTestStrategy() {
     override val id: String
         get() = "junit"
 
-    override fun permit(classReader: ClassReader): Boolean {
-        return classReader.className == "org/junit/platform/engine/support/hierarchical/NodeTestTaskContext"
+    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
+        return className == "org/junit/platform/engine/support/hierarchical/NodeTestTaskContext"
     }
 
     /*

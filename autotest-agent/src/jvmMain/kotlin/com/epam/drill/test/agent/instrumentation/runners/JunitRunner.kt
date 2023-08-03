@@ -23,8 +23,8 @@ import java.security.*
 import java.util.*
 
 class JunitRunner : TransformStrategy() {
-    override fun permit(classReader: ClassReader): Boolean {
-        return classReader.className == "org/junit/runner/JUnitCore"
+    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
+        return className == "org/junit/runner/JUnitCore"
     }
 
     override fun instrument(

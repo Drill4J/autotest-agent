@@ -104,7 +104,7 @@ actual object StrategyManager {
         val transformedClassBytes = mutableListOf<ByteArray?>()
         val classReader = ClassReader(classBytes)
         for (strategy in strategies) {
-            if (strategy.permit(classReader)) {
+            if (strategy.permit(classReader.className, classReader.superName, classReader.interfaces)) {
                 transformedClassBytes.add(strategy.transform(className, classBytes, loader, protectionDomain))
             }
         }
@@ -113,9 +113,9 @@ actual object StrategyManager {
 }
 //TODO EPMDJ-8916 Replace with [com.epam.drill.agent.instrument.http.ok.OkHttpClient]
 object OkHttpClientStub : TransformStrategy() {
-    override fun permit(classReader: ClassReader): Boolean {
+    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
         //todo EPMDJ-10494 no need drill suffix after removing dependency
-        return classReader.interfaces.any { "drill/$it" == "okhttp3/internal/http/HttpCodec" }
+        return interfaces.any { "drill/$it" == "okhttp3/internal/http/HttpCodec" }
     }
     override fun instrument(
         ctClass: CtClass,

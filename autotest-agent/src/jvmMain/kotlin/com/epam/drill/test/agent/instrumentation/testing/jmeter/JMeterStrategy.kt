@@ -26,8 +26,8 @@ object JMeterStrategy : AbstractTestStrategy() {
     override val id: String
         get() = "jmeter"
 
-    override fun permit(classReader: ClassReader): Boolean {
-        return classReader.className == "org/apache/jmeter/protocol/http/sampler/HTTPHC4Impl"
+    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
+        return className == "org/apache/jmeter/protocol/http/sampler/HTTPHC4Impl"
     }
 
     override fun instrument(

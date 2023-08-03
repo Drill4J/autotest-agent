@@ -51,8 +51,8 @@ object Selenium : TransformStrategy() {
         }
     }
 
-    override fun permit(classReader: ClassReader): Boolean {
-        return classReader.className == "org/openqa/selenium/remote/RemoteWebDriver"
+    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
+        return className == "org/openqa/selenium/remote/RemoteWebDriver"
     }
 
     override fun instrument(

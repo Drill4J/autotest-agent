@@ -29,8 +29,8 @@ object JUnitStrategy : AbstractTestStrategy() {
     override val id: String
         get() = "junit"
 
-    override fun permit(classReader: ClassReader): Boolean {
-        return classReader.className == "org/junit/runner/notification/RunNotifier"
+    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
+        return className == "org/junit/runner/notification/RunNotifier"
     }
 
     override fun instrument(
