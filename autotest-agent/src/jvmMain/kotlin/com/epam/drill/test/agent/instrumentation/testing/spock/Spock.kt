@@ -29,7 +29,7 @@ object Spock : AbstractTestStrategy() {
     private val baseRunner = "org.spockframework.runtime.BaseSpecRunner"
     private val platformRunner = "org.spockframework.runtime.PlatformSpecRunner"
 
-    override fun permit(classReader: ClassReader): Boolean {
+    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
 //        return ctClass.name == baseRunner || ctClass.name == platformRunner
         return false
     }

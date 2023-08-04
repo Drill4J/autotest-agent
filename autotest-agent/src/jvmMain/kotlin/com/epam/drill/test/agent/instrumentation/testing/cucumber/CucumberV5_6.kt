@@ -31,8 +31,8 @@ abstract class CucumberV5_6 : CucumberStrategy() {
     /**
      * From cucumber 5 TestStep class location doesn't change
      */
-    override fun permit(classReader: ClassReader): Boolean {
-        return classReader.className == "io/cucumber/core/runner/TestStep"
+    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
+        return className == "io/cucumber/core/runner/TestStep"
     }
 
     override fun getFeaturePath(): String = """

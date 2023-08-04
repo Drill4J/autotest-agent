@@ -28,8 +28,8 @@ object CucumberV4 : CucumberStrategy() {
     override val Event = "cucumber.api.event.Event"
     override val PickleStepDefinitionMatch = "cucumber.runner.PickleStepDefinitionMatch"
 
-    override fun permit(classReader: ClassReader): Boolean {
-        return classReader.className == /*4.x.x*/"cucumber/runner/TestStep"
+    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
+        return className == /*4.x.x*/"cucumber/runner/TestStep"
     }
 
     override fun getFeaturePath(): String = """

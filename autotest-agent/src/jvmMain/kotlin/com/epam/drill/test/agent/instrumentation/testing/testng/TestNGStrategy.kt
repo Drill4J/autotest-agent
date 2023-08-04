@@ -37,8 +37,8 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
     override val id: String
         get() = "testng"
 
-    override fun permit(classReader: ClassReader): Boolean {
-        return classReader.className == "org/testng/TestRunner"
+    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
+        return className == "org/testng/TestRunner"
     }
 
     override fun instrument(

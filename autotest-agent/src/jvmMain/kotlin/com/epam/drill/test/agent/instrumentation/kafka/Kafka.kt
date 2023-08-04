@@ -26,7 +26,7 @@ object Kafka : TransformStrategy() {
 
     private const val KAFKA_PRODUCER_INTERFACE = "org/apache/kafka/clients/producer/Producer"
 
-    override fun permit(classReader: ClassReader) = classReader.interfaces.any { it == KAFKA_PRODUCER_INTERFACE }
+    override fun permit(className: String?, superName: String?, interfaces: Array<String?>) = interfaces.any { it == KAFKA_PRODUCER_INTERFACE }
 
     override fun instrument(
         ctClass: CtClass,

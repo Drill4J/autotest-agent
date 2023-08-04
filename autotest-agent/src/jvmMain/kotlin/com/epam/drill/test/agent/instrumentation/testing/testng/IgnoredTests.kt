@@ -28,8 +28,8 @@ object IgnoredTests : AbstractTestStrategy() {
         get() = "testng"
     private const val IIgnoreAnnotation = "org.testng.annotations.IIgnoreAnnotation"
 
-    override fun permit(classReader: ClassReader): Boolean {
-        return classReader.className == "org/testng/internal/annotations/AnnotationHelper"
+    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
+        return className == "org/testng/internal/annotations/AnnotationHelper"
     }
 
     /**
