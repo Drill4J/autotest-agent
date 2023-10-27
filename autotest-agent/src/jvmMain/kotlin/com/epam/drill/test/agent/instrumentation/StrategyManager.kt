@@ -15,10 +15,8 @@
  */
 package com.epam.drill.test.agent.instrumentation
 
-import com.epam.drill.agent.instrument.*
-import com.epam.drill.agent.instrument.http.apache.*
-import com.epam.drill.agent.instrument.http.java.*
-import com.epam.drill.agent.instrument.http.ok.*
+import com.epam.drill.instrument.*
+import com.epam.drill.instrument.http.*
 import com.epam.drill.kni.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.http.selenium.*
@@ -111,7 +109,7 @@ actual object StrategyManager {
         return transformedClassBytes.firstOrNull { it != null }
     }
 }
-//TODO EPMDJ-8916 Replace with [com.epam.drill.agent.instrument.http.ok.OkHttpClient]
+//TODO EPMDJ-8916 Replace with [com.epam.drill.instrument.http.ok.OkHttpClient]
 object OkHttpClientStub : TransformStrategy() {
     override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
         //todo EPMDJ-10494 no need drill suffix after removing dependency

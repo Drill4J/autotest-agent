@@ -15,7 +15,7 @@
  */
 package com.epam.drill.test.agent.instrumentation.http.selenium
 
-import com.epam.drill.agent.instrument.*
+import com.epam.drill.instrument.*
 import com.epam.drill.test.agent.*
 import javassist.*
 import org.objectweb.asm.*
