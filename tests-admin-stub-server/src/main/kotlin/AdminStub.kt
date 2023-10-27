@@ -45,7 +45,7 @@ class AdminStub(private val host: String, private val port: String) {
                 it.write(response)
             }
         }
-        httpServer.createContext("/api/login") { httpExchange ->
+        httpServer.createContext("/api/sign-in") { httpExchange ->
             if (httpExchange.requestMethod == "POST") {
                 val response = "OK".toByteArray()
                 httpExchange.responseHeaders.add("authorization", "token")

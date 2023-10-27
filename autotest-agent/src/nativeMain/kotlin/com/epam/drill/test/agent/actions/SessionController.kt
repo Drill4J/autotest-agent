@@ -143,11 +143,11 @@ object SessionController {
 
     private fun getToken(): String {
         val httpCall = httpCall(
-            agentConfig.adminAddress + "/api/login", HttpRequest(
+            agentConfig.adminAddress + "/api/sign-in", HttpRequest(
                 "POST",
                 body = UserData.serializer() stringify UserData(
-                    agentConfig.adminUserName ?: "guest",
-                    agentConfig.adminPassword ?: ""
+                    agentConfig.adminUserName ?: "user",
+                    agentConfig.adminPassword ?: "user"
                 )
             )
         )
@@ -158,6 +158,6 @@ object SessionController {
 
 @Serializable
 data class UserData(
-    val name: String,
+    val username: String,
     val password: String,
 )
