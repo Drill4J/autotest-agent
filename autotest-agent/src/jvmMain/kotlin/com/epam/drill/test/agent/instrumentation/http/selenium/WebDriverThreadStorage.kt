@@ -20,6 +20,10 @@ object WebDriverThreadStorage {
 
     fun set(obj: Any) = webDriver.set(obj)
 
+    /**
+     * Add drill cookies to the browser
+     * @features Running tests
+     */
     fun addCookies() {
         runCatching {
             webDriver.get()?.let {
