@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("UNUSED_PARAMETER", "UNUSED")
-
 package com.epam.drill.test.agent
 
 import com.epam.drill.jvmapi.gen.AddCapabilities
 import com.epam.drill.jvmapi.gen.AddToBootstrapClassLoaderSearch
 import com.epam.drill.jvmapi.gen.JNI_OK
 import com.epam.drill.jvmapi.gen.jvmtiCapabilities
-import com.epam.drill.kni.JvmtiAgent
 import com.epam.drill.logging.LoggingConfiguration
 import com.epam.drill.test.agent.actions.SessionController
 import com.epam.drill.test.agent.config.AgentRawConfig
@@ -31,11 +28,11 @@ import kotlinx.cinterop.ptr
 import kotlin.native.concurrent.freeze
 import mu.KotlinLogging
 
-object Agent : JvmtiAgent {
+object Agent {
 
     private val logger = KotlinLogging.logger("com.epam.drill.test.agent.Agent")
 
-    override fun agentOnLoad(options: String): Int = memScoped {
+    fun agentOnLoad(options: String): Int = memScoped {
         try {
             val config = options.toAgentParams().freeze()
             setUnhandledExceptionHook({ thr: Throwable ->
@@ -63,7 +60,7 @@ object Agent : JvmtiAgent {
         return JNI_OK
     }
 
-    override fun agentOnUnload() {
+    fun agentOnUnload() {
         try {
             logger.info { "Shutting the agent down" }
             val agentConfig = AgentConfig.config

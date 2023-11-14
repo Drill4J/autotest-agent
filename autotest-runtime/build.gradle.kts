@@ -15,10 +15,6 @@ repositories {
     mavenCentral()
 }
 
-dependencies {
-    implementation(project(":kni-runtime"))
-}
-
 @Suppress("UNUSED_VARIABLE")
 license {
     headerURI = URI("https://raw.githubusercontent.com/Drill4J/drill4j/develop/COPYRIGHT")

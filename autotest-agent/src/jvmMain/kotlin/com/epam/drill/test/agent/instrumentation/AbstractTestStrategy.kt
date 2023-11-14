@@ -17,7 +17,7 @@
 
 package com.epam.drill.test.agent.instrumentation
 
-import com.epam.drill.agent.instrument.*
+import com.epam.drill.instrument.*
 
 abstract class AbstractTestStrategy : TransformStrategy() {
     init {

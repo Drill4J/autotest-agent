@@ -15,9 +15,6 @@
  */
 package com.epam.drill
 
-import com.epam.drill.kni.Kni
-
-@Kni
 object SessionProvider {
 
     external fun startSession(
@@ -32,6 +29,3 @@ object SessionProvider {
 
     external fun setTestName(testName: String?)
 }
-
-
-

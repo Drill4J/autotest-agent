@@ -15,11 +15,8 @@
  */
 package com.epam.drill.test.agent.instrumentation
 
-import com.epam.drill.agent.instrument.*
-import com.epam.drill.agent.instrument.http.apache.*
-import com.epam.drill.agent.instrument.http.java.*
-import com.epam.drill.agent.instrument.http.ok.*
-import com.epam.drill.kni.*
+import com.epam.drill.instrument.*
+import com.epam.drill.instrument.http.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.http.selenium.*
 import com.epam.drill.test.agent.instrumentation.kafka.*
@@ -31,7 +28,6 @@ import java.security.*
 import java.util.jar.*
 import mu.KotlinLogging
 
-@Kni
 actual object StrategyManager {
 
     private val logger = KotlinLogging.logger {}

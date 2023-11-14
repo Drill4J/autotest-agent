@@ -13,15 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("MemberVisibilityCanBePrivate")
-
 package com.epam.drill.test.agent
 
 import mu.KotlinLogging
-import com.epam.drill.kni.*
 import com.epam.drill.test.agent.instrumentation.StrategyManager.process
 
-@Kni
 actual object AgentClassTransformer {
 
     private val logger = KotlinLogging.logger {}
@@ -41,4 +37,5 @@ actual object AgentClassTransformer {
             logger.warn(it) { "Can't instrument '${className}' class." }
         }.getOrNull()
     }
+
 }
