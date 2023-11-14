@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("UNUSED_PARAMETER", "UNUSED")
-
 package com.epam.drill.test.agent
 
 import com.epam.drill.jvmapi.callObjectVoidMethod
@@ -28,6 +26,7 @@ import com.epam.drill.test.agent.instrumenting.classFileLoadHookEvent
 import kotlinx.cinterop.*
 import mu.KotlinLogging
 
+@SharedImmutable
 private val logger = KotlinLogging.logger("com.epam.drill.test.agent.EventCallbacks")
 
 fun enableJvmtiEventVmDeath(thread: jthread? = null) {
@@ -38,6 +37,7 @@ fun enableJvmtiEventVmInit(thread: jthread? = null) {
     SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_VM_INIT, thread)
 }
 
+@Suppress("UNUSED")
 fun enableJvmtiEventClassFileLoadHook(thread: jthread? = null) {
     SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread)
 }
@@ -59,20 +59,24 @@ fun callbackRegister() = memScoped {
 
 private const val isHttpHookEnabled = false // based on args
 
+@Suppress("UNUSED_PARAMETER")
 fun jvmtiEventVMInitEvent(env: CPointer<jvmtiEnvVar>?, jniEnv: CPointer<JNIEnvVar>?, thread: jthread?) {
-    logger.debug { "Init event" }
+    logger.debug { "jvmtiEventVMInitEvent: Init event" }
     initRuntimeIfNeeded()
     val agentConfig = AgentConfig.config
     if (!agentConfig.isManuallyControlled && !agentConfig.sessionForEachTest)
         SessionController.startSession(agentConfig.sessionId)
     agentConfig.run {
+        logger.trace { "jvmtiEventVMInitEvent: Initializing StrategyManager" }
         StrategyManager.initialize(rawFrameworkPlugins, isManuallyControlled)
+        logger.trace { "jvmtiEventVMInitEvent: Configuring logging" }
         callObjectVoidMethod(LoggingConfiguration::class, LoggingConfiguration::readDefaultConfiguration.name)
         callObjectVoidMethodWithString(LoggingConfiguration::class, "setLoggingLevels", logLevel)
         callObjectVoidMethodWithString(LoggingConfiguration::class, LoggingConfiguration::setLoggingFilename, logFile)
         callObjectVoidMethodWithInt(LoggingConfiguration::class, LoggingConfiguration::setLogMessageLimit, logLimit)
     }
     SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, null)
+    logger.trace { "jvmtiEventVMInitEvent: Configuring HTTP hook (isHttpHookEnabled=$isHttpHookEnabled)" }
     if (isHttpHookEnabled)
         configureHooks()
 }
