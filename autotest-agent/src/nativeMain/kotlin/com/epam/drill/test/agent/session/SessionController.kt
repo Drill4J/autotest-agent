@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.agent.actions
+package com.epam.drill.test.agent.session
 
 import com.benasher44.uuid.*
 import com.epam.drill.plugins.test2code.api.*
@@ -21,7 +21,6 @@ import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.configuration.*
 import com.epam.drill.test.agent.http.*
 import com.epam.drill.test.agent.serialization.*
-import com.epam.drill.test.agent.session.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.*
@@ -119,7 +118,7 @@ object SessionController {
         logger.debug {
             """Dispatch action: 
                                 |path:$dispatchActionPath
-                                |payload:${payload.toString().substring(0, 4000)}
+                                |payload:${payload.substring(0, 4000)}
                                 |""".trimMargin()
         }
         return httpCall(
@@ -160,7 +159,7 @@ object SessionController {
 }
 
 @Serializable
-data class UserData(
+private data class UserData(
     val name: String,
     val password: String,
 )

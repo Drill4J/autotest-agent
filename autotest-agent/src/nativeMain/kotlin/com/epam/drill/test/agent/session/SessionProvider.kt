@@ -17,7 +17,6 @@ package com.epam.drill.test.agent.session
 
 import com.epam.drill.jvmapi.callObjectVoidMethodWithString
 import com.epam.drill.test.agent.TestListener
-import com.epam.drill.test.agent.actions.SessionController
 
 object SessionProvider {
 

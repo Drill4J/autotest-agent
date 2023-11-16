@@ -15,7 +15,6 @@
  */
 package com.epam.drill.test.agent.session
 
-import com.epam.drill.test.agent.actions.*
 import com.epam.drill.test.agent.configuration.*
 import com.epam.drill.test.agent.serialization.*
 
