@@ -21,7 +21,8 @@ import com.epam.drill.jvmapi.callObjectVoidMethodWithString
 import com.epam.drill.jvmapi.gen.*
 import com.epam.drill.logging.LoggingConfiguration
 import com.epam.drill.test.agent.actions.SessionController
-import com.epam.drill.test.agent.instrumentation.StrategyManager
+import com.epam.drill.test.agent.configuration.AgentConfig
+import com.epam.drill.test.agent.instrument.StrategyManager
 import com.epam.drill.test.agent.instrumenting.classFileLoadHookEvent
 import kotlinx.cinterop.*
 import mu.KotlinLogging

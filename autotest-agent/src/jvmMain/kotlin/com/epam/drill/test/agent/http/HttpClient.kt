@@ -23,9 +23,6 @@ import java.security.cert.*
 import javax.net.ssl.*
 import mu.KotlinLogging
 
-private const val CONTENT_TYPE = "Content-Type"
-private const val APPLICATION_JSON = "application/json"
-
 object HttpClient {
 
     private val logger = KotlinLogging.logger {}
@@ -80,44 +77,4 @@ object HttpClient {
             urlConnection.disconnect()
         }
     }
-}
-
-data class HttpUrlConnectionBuilder(
-    var url: String,
-    val queryParams: MutableMap<String, String> = mutableMapOf(),
-    var method: HttpMethod = HttpMethod.GET,
-    val headers: MutableMap<String, String> = mutableMapOf(),
-    var body: String = "",
-    var timeout: Int = 15_000,
-) {
-
-    private val logger = KotlinLogging.logger {}
-
-    fun build(): HttpURLConnection = (URL(url + queryParamString()).openConnection() as HttpURLConnection).apply {
-        requestMethod = method.name
-        doOutput = true
-        connectTimeout = timeout
-        readTimeout = 30_000
-        setRequestProperty(CONTENT_TYPE, APPLICATION_JSON)
-        headers.forEach { (key, value) ->
-            setRequestProperty(key, value)
-        }
-        if (body.isNotBlank()) {
-            outputStream.use { it.write(body.toByteArray()) }
-        }
-        logger.trace {
-            """Trying to execute request $method
-            | path: $url
-            | body: $body     
-        """.trimMargin()
-        }
-    }
-
-    private fun queryParamString() = queryParams.entries.joinToString(separator = "&", prefix = "?") {
-        "${it.key.urlEncode()}=${it.value.urlEncode()}"
-    }
-}
-
-enum class HttpMethod {
-    GET, POST, DELETE, PUT, PATCH
 }

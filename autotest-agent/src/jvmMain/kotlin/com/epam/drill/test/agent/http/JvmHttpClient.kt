@@ -15,27 +15,27 @@
  */
 package com.epam.drill.test.agent.http
 
-import com.epam.drill.test.agent.config.*
 import java.net.*
 import mu.KotlinLogging
+import com.epam.drill.test.agent.serialization.*
 
 actual object JvmHttpClient {
 
     private val logger = KotlinLogging.logger {}
 
     actual fun httpCall(endpoint: String, request: String): String {
-        val httpRequest = HttpRequest.serializer() parse request
+        val httpRequest = json.decodeFromString(HttpRequest.serializer(), request)
         return runCatching {
             val httpResponse = HttpClient.request(if (endpoint.startsWith("http")) endpoint else "http://$endpoint") {
                 method = HttpMethod.valueOf(httpRequest.method)
                 headers += httpRequest.headers
                 body = httpRequest.body
             }
-            HttpResponse.serializer() stringify httpResponse
+            json.encodeToString(HttpResponse.serializer(), httpResponse)
         }.onFailure {
             if (it is SocketTimeoutException) {
                 logger.warn { "Can't get response to request: $request. Read time out" }
             } else logger.error(it) { "Can't get response. Reason:" }
-        }.getOrDefault(HttpResponse.serializer() stringify HttpResponse(500))
+        }.getOrDefault(json.encodeToString(HttpResponse.serializer(), HttpResponse(500)))
     }
 }

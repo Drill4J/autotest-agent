@@ -21,7 +21,9 @@ import com.epam.drill.jvmapi.gen.JNI_OK
 import com.epam.drill.jvmapi.gen.jvmtiCapabilities
 import com.epam.drill.logging.LoggingConfiguration
 import com.epam.drill.test.agent.actions.SessionController
-import com.epam.drill.test.agent.config.AgentRawConfig
+import com.epam.drill.test.agent.configuration.AgentConfig
+import com.epam.drill.test.agent.configuration.AgentRawConfig
+import com.epam.drill.test.agent.serialization.StringPropertyDecoder
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr

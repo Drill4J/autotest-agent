@@ -18,8 +18,10 @@ package com.epam.drill.test.agent.actions
 import com.benasher44.uuid.*
 import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.*
-import com.epam.drill.test.agent.config.*
+import com.epam.drill.test.agent.configuration.*
 import com.epam.drill.test.agent.http.*
+import com.epam.drill.test.agent.serialization.*
+import com.epam.drill.test.agent.session.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.*
@@ -45,7 +47,7 @@ object SessionController {
                 delay(Duration.seconds(3))
                 runCatching {
                     val tests = runCatching {
-                        ListSerializer(TestInfo.serializer()) parse TestListener.getData()
+                        json.decodeFromString(ListSerializer(TestInfo.serializer()), TestListener.getData())
                     }.getOrNull() ?: emptyList()
                     if (tests.any()) {
                         sendTests(tests)
@@ -56,8 +58,9 @@ object SessionController {
     }
 
     private fun sendTests(tests: List<TestInfo>) {
-        val payload = Action.serializer() stringify AddTests(
-            payload = AddTestsPayload(ThreadStorage.sessionId() ?: "", tests)
+        val payload = json.encodeToString(
+            Action.serializer(),
+            AddTests(payload = AddTestsPayload(ThreadStorage.sessionId() ?: "", tests))
         )
         val result = dispatchAction(payload)
         logger.trace { "Count of tests sent: ${tests.size}, received status ${result.code}" }
@@ -73,15 +76,16 @@ object SessionController {
     ) = runCatching {
         logger.debug { "Attempting to start a Drill4J test session..." }
         val sessionId = customSessionId ?: uuid4().toString()
-        val payload = Action.serializer() stringify StartNewSession(
-            payload = StartPayload(
+        val payload = json.encodeToString(
+            Action.serializer(),
+            StartNewSession(payload = StartPayload(
                 sessionId = sessionId,
                 testType = testType,
                 testName = testName,
                 isRealtime = isRealtime,
                 isGlobal = isGlobal,
                 labels = labels,
-            )
+            ))
         )
         this.sessionId.value = sessionId
         val response = dispatchAction(payload)
@@ -91,13 +95,14 @@ object SessionController {
 
     fun stopSession(sessionIds: String? = null) = runCatching {
         logger.debug { "Attempting to stop a Drill4J test session..." }
-        val payload = Action.serializer() stringify StopSession(
-            payload = StopSessionPayload(
+        val payload = json.encodeToString(
+            Action.serializer(),
+            StopSession(payload = StopSessionPayload(
                 sessionId = sessionIds ?: sessionId.value,
                 tests = runCatching {
-                    ListSerializer(TestInfo.serializer()) parse TestListener.getData()
+                    json.decodeFromString(ListSerializer(TestInfo.serializer()), TestListener.getData())
                 }.getOrNull() ?: emptyList()
-            )
+            ))
         )
         val response = dispatchAction(payload)
         logger.debug { "Received response: ${response.body}" }
@@ -129,11 +134,9 @@ object SessionController {
 
     fun sendSessionData(data: String) = runCatching {
         logger.debug { "Attempting to send session data ..." }
-        val payload = Action.serializer() stringify AddSessionData(
-            payload = SessionDataPayload(
-                sessionId = sessionId.value,
-                data = data
-            )
+        val payload = json.encodeToString(
+            Action.serializer(),
+            AddSessionData(payload = SessionDataPayload(sessionId = sessionId.value, data = data))
         )
         val response = dispatchAction(payload)
         logger.debug { "Received response: ${response.body}" }
@@ -145,9 +148,9 @@ object SessionController {
         val httpCall = httpCall(
             agentConfig.adminAddress + "/api/login", HttpRequest(
                 "POST",
-                body = UserData.serializer() stringify UserData(
-                    agentConfig.adminUserName ?: "guest",
-                    agentConfig.adminPassword ?: ""
+                body = json.encodeToString(
+                    UserData.serializer(),
+                    UserData(agentConfig.adminUserName ?: "guest", agentConfig.adminPassword ?: "")
                 )
             )
         )

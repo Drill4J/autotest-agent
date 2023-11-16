@@ -16,7 +16,7 @@
 package com.epam.drill.test.agent.instrumenting
 
 import com.epam.drill.jvmapi.gen.*
-import com.epam.drill.test.agent.*
+import com.epam.drill.test.agent.instrument.*
 import io.ktor.utils.io.bits.*
 import kotlinx.cinterop.*
 import mu.KotlinLogging

@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import com.epam.drill.*
 import com.epam.drill.plugins.test2code.api.*
-import com.epam.drill.test.agent.instrumentation.testing.junit.*
+import com.epam.drill.test.agent.instrument.strategy.testing.junit.*
+import com.epam.drill.test.agent.session.*
 import com.epam.drill.test.common.*
 import org.junit.*
 import pack.*
-import java.util.*
 import kotlin.test.Ignore
 import kotlin.test.Test
 

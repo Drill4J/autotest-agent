@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import com.epam.drill.*
+import com.epam.drill.test.agent.session.*
 import com.epam.drill.test.common.*
 import org.slf4j.*
 import org.testng.annotations.*

@@ -16,8 +16,10 @@
 package com.epam.drill.test.agent
 
 import com.epam.drill.plugins.test2code.api.*
-import com.epam.drill.test.agent.config.*
-import com.epam.drill.test.agent.instrumentation.http.selenium.*
+import com.epam.drill.test.agent.configuration.*
+import com.epam.drill.test.agent.instrument.strategy.selenium.*
+import com.epam.drill.test.agent.serialization.*
+import com.epam.drill.test.agent.session.*
 import com.epam.drill.test.agent.util.*
 import kotlinx.atomicfu.*
 import kotlinx.collections.immutable.*
@@ -200,7 +202,7 @@ actual object TestListener {
         }
         _testInfo.update { tests -> tests - finished.map { it.details } }
 
-        return ListSerializer(TestInfo.serializer()) stringify finished
+        return json.encodeToString(ListSerializer(TestInfo.serializer()), finished)
     }
 
     actual fun reset() {

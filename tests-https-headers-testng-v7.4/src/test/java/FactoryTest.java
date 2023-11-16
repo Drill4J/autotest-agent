@@ -15,7 +15,7 @@
  */
 import com.epam.drill.plugins.test2code.api.*;
 import com.epam.drill.test.agent.*;
-import com.epam.drill.test.agent.instrumentation.testing.testng.*;
+import com.epam.drill.test.agent.instrument.strategy.testing.testng.*;
 import com.epam.drill.test.agent.util.*;
 import com.epam.drill.test.common.TestData;
 import org.testng.annotations.*;
@@ -59,7 +59,7 @@ public class FactoryTest extends BaseTest {
         HashMap<String, String> params = new HashMap<>();
         params.put(TestListener.classParamsKey, "(" + param.getClass().getSimpleName() + "," + value.getClass().getSimpleName() + ",FactoryTest$$Lambda)[" + param + "]");
         params.put("methodParams", "()");
-        return new TestData(UtilKt.hash(new TestDetails(
+        return new TestData(TestDetailsHashKt.hash(new TestDetails(
                 TestNGStrategy.engineSegment,
                 getClass().getSimpleName(),
                 method,
