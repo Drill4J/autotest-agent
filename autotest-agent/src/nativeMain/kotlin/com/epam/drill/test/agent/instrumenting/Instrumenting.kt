@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("UNUSED_PARAMETER")
-
 package com.epam.drill.test.agent.instrumenting
 
 import com.epam.drill.jvmapi.gen.*
@@ -23,8 +21,10 @@ import io.ktor.utils.io.bits.*
 import kotlinx.cinterop.*
 import mu.KotlinLogging
 
+@SharedImmutable
 private val logger = KotlinLogging.logger("com.epam.drill.test.agent.instrumenting.Instrumenting")
 
+@Suppress("UNUSED_PARAMETER")
 fun classFileLoadHookEvent(
     jvmtiEnv: CPointer<jvmtiEnvVar>?,
     jniEnv: CPointer<JNIEnvVar>?,
@@ -47,15 +47,15 @@ fun classFileLoadHookEvent(
     }
     val instrumentedBytes = AgentClassTransformer.transform(className, classBytes, loader, protection_domain) ?: return
     val instrumentedSize = instrumentedBytes.size
-    logger.debug { "Class '$className' was transformed" }
-    logger.debug { "Applying instrumenting (old: $classDataLen to new: $instrumentedSize)" }
+    logger.debug { "classFileLoadHookEvent: Class $className has been transformed" }
+    logger.debug { "classFileLoadHookEvent: Applying instrumenting (old: $classDataLen to new: $instrumentedSize)" }
     Allocate(instrumentedSize.toLong(), newData)
     val newBytes = newData!!.pointed.value!!
     instrumentedBytes.forEachIndexed { index, byte ->
         newBytes[index] = byte.toUByte()
     }
     newClassDataLen?.pointed?.value = instrumentedSize
-    logger.info { "Successfully instrumented class $className" }
+    logger.info { "classFileLoadHookEvent: Successfully instrumented class $className" }
 }
 
 private fun notSuitableClass(
