@@ -17,14 +17,15 @@ package com.epam.drill.agent.runner
 
 open class AppAgentConfiguration : Configuration() {
     override val repositoryName: String = "java-agent"
-
     var buildVersion: String? = null
     var instanceId: String? = null
+    var webAppNames: List<String>? = null
 
     override fun jvmArgs(): Map<String, String> {
         val args = mutableMapOf<String, String>()
         buildVersion?.let { args[AppAgentConfiguration::buildVersion.name] = it }
         instanceId?.let { args[AppAgentConfiguration::instanceId.name] = it }
+        webAppNames?.let { args[AppAgentConfiguration::webAppNames.name] = it.joinToString(separator = ":") }
         return args
     }
 

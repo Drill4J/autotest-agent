@@ -29,6 +29,8 @@ abstract class Configuration {
     var logFile: File? = null
     var additionalParams: Map<String, String>? = null
     var jvmArgs: Set<String> = mutableSetOf()
+    var directUrlToZip: String? = null
+    var directLocalPathToZip: String? = null
     val artifactId: String = "agent"
     abstract val repositoryName: String
     fun toJvmArgs(): List<String> {
@@ -37,6 +39,8 @@ abstract class Configuration {
         args["adminAddress"] = "$adminHost:$adminPort"
         args[Configuration::agentId.name] = agentId
         args[Configuration::logLevel.name] = logLevel.name
+        args[Configuration::directUrlToZip.name] = directUrlToZip
+        args[Configuration::directLocalPathToZip.name] = directLocalPathToZip
         groupId?.let { args[Configuration::groupId.name] = it }
         logFile?.let { args[Configuration::logFile.name] = it.absolutePath }
         additionalParams?.let { args.putAll(it) }

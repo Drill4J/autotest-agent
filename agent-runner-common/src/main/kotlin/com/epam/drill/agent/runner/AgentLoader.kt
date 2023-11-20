@@ -37,16 +37,32 @@ object AgentLoader {
     fun downloadAgent(
         config: Configuration,
         dir: File
-    ) = run {
-        val artName = "${config.artifactId}-$presetName-${config.version}.zip"
-        val artPath = "${config.repositoryName}/releases/download/v${config.version}/$artName"
-        val agent = "${GITHUB_URL.replace("api.", "")}/$DRILL_OWNER/$artPath"
-        println("Download url is: $agent")
-        val file = dir.resolve(artName).apply { createNewFile() }
-        file.writeBytes(URL(agent).openStream().readBytes())
-        unzip(file, dir)
+    ) = runCatching {
+        val zipPath: File
+        val directLocalPathToZip = config.directLocalPathToZip
+        if (directLocalPathToZip != null) {
+            zipPath = dir.resolve(directLocalPathToZip)
+        } else {
+            val url = config.directUrlToZip ?: getDefaultRepositoryUrl(config)
+            val bytes = URL(url).openStream().readBytes()
+            zipPath = dir.resolve(getArtifactName(config))
+            zipPath.createNewFile()
+            zipPath.writeBytes(bytes)
+        }
+        unzip(zipPath, dir)
+    }.onFailure {
+        println(
+            "Failed to locate or download autotest agent zip file. Reason: ${it.message}." +
+                    "Stacktrace: ${it.stackTrace.joinToString(separator = System.lineSeparator())}"
+        )
     }
 
+    private fun getDefaultRepositoryUrl(config: Configuration) =
+        "${GITHUB_URL.replace("api.", "")}/$DRILL_OWNER/" +
+                "${config.repositoryName}/releases/download/v" +
+                "${config.version}/${getArtifactName(config)}"
+
+    private fun getArtifactName(config: Configuration) = "${config.artifactId}-$presetName-${config.version}.zip"
 
     private fun unzip(file: File, dir: File) {
         ZipFile(file).use { zip ->

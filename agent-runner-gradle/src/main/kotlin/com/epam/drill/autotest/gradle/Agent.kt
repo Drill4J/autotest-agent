@@ -74,6 +74,8 @@ abstract class Agent : Plugin<Project> {
                 AgentLoader.downloadAgent(config, drillDist)
             }
             config.runtimePath = extractedDir
+            // TODO this check seems dubious - check for more specific files?
+            // negative case triggers when wrong platform release is used (e.g. linux instead of mingw), but throws uninformative error 
             config.agentPath = extractedDir.listFiles()?.first { file ->
                 dynamicLibExtensions.any { it == file.extension }
             } ?: throw GradleException("can't find agent")
