@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill
+package com.epam.drill.agent.runner
 
-object SessionProvider {
+open class AppAgentConfiguration : Configuration() {
+    override val repositoryName: String = "java-agent"
 
-    external fun startSession(
-        sessionId: String,
-        testType: String = "AUTO",
-        isRealtime: Boolean = false,
-        testName: String? = null,
-        isGlobal: Boolean = false
-    )
+    var buildVersion: String? = null
+    var instanceId: String? = null
 
-    external fun stopSession(sessionId: String? = null)
+    override fun jvmArgs(): Map<String, String> {
+        val args = mutableMapOf<String, String>()
+        buildVersion?.let { args[AppAgentConfiguration::buildVersion.name] = it }
+        instanceId?.let { args[AppAgentConfiguration::instanceId.name] = it }
+        return args
+    }
 
-    external fun setTestName(testName: String?)
 }
+

@@ -13,14 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package kotlinx.cinterop
+@file:Suppress("unused")
 
-import com.epam.drill.jvmapi.env
-import com.epam.drill.jvmapi.gen.jobject
-import com.epam.drill.jvmapi.jni
-import kotlinx.cinterop.invoke
-import kotlinx.cinterop.toKString
+package com.epam.drill.autotest.gradle
 
-fun jobject.toKString(): String? {
-    return jni.GetStringUTFChars!!(env, this, null)?.toKString()
+import com.epam.drill.agent.runner.AgentConfiguration
+import com.epam.drill.agent.runner.Configuration
+import org.gradle.api.tasks.JavaExec
+import org.gradle.api.tasks.testing.Test
+import org.gradle.process.JavaForkOptions
+import kotlin.reflect.KClass
+
+open class AutoTestAgent : Agent(){
+    override val extensionClass: KClass<out Configuration> = AgentConfiguration::class
+    override val taskType: Set<KClass<out JavaForkOptions>> = setOf(Test::class, JavaExec::class)
+
 }

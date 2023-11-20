@@ -15,8 +15,9 @@
  */
 package com.epam.drill
 
+import com.epam.drill.jvmapi.callObjectVoidMethodWithString
 import com.epam.drill.test.agent.TestListener
-import com.epam.drill.test.agent.ThreadStorageStub
+import com.epam.drill.test.agent.ThreadStorage
 import com.epam.drill.test.agent.actions.SessionController
 
 object SessionProvider {
@@ -37,6 +38,7 @@ object SessionProvider {
     }
 
     fun setTestName(testName: String?) {
-        ThreadStorageStub.memorizeTestName(testName ?: "unspecified")
+        callObjectVoidMethodWithString(ThreadStorage::class, "memorizeTestName", testName ?: "unspecified")
     }
+
 }

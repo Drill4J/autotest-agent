@@ -13,19 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill
+package com.epam.drill.agent.runner
 
-object SessionProvider {
+import java.util.*
 
-    external fun startSession(
-        sessionId: String,
-        testType: String = "AUTO",
-        isRealtime: Boolean = false,
-        testName: String? = null,
-        isGlobal: Boolean = false
-    )
+object OS {
+    const val FAMILY_MAC = "mac"
+    const val FAMILY_WINDOWS = "windows"
+    const val FAMILY_UNIX = "unix"
 
-    external fun stopSession(sessionId: String? = null)
+    private var OS_NAME: String = System.getProperty("os.name").lowercase(Locale.ENGLISH)
 
-    external fun setTestName(testName: String?)
+
+    fun isFamily(st: String): Boolean {
+        return OS_NAME.contains(st)
+    }
 }
+
+
+val presetName: String =
+    when {
+        OS.isFamily(OS.FAMILY_MAC) -> "macosX64"
+        OS.isFamily(OS.FAMILY_WINDOWS) -> "mingwX64"
+        else -> "linuxX64"
+    }
+
+val dynamicLibExtensions = setOf(
+    "dylib",
+    "so",
+    "dll",
+    "wasm"
+)

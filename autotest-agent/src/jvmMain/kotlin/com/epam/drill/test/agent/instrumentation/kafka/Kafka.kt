@@ -15,7 +15,7 @@
  */
 package com.epam.drill.test.agent.instrumentation.kafka
 
-import com.epam.drill.agent.instrument.*
+import com.epam.drill.instrument.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrumentation.http.*
 import javassist.*

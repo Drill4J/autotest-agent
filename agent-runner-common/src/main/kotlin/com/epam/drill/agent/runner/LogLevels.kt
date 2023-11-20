@@ -13,19 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill
+package com.epam.drill.agent.runner
 
-object SessionProvider {
-
-    external fun startSession(
-        sessionId: String,
-        testType: String = "AUTO",
-        isRealtime: Boolean = false,
-        testName: String? = null,
-        isGlobal: Boolean = false
-    )
-
-    external fun stopSession(sessionId: String? = null)
-
-    external fun setTestName(testName: String?)
+enum class LogLevels {
+    TRACE, DEBUG, INFO, WARN, ERROR
 }

@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill
+@file:Suppress("unused")
 
-object SessionProvider {
+package com.epam.drill.autotest.gradle
 
-    external fun startSession(
-        sessionId: String,
-        testType: String = "AUTO",
-        isRealtime: Boolean = false,
-        testName: String? = null,
-        isGlobal: Boolean = false
-    )
+import com.epam.drill.agent.runner.AppAgentConfiguration
+import com.epam.drill.agent.runner.Configuration
+import org.gradle.api.tasks.JavaExec
+import org.gradle.process.JavaForkOptions
+import kotlin.reflect.KClass
 
-    external fun stopSession(sessionId: String? = null)
-
-    external fun setTestName(testName: String?)
+class AppAgent : Agent() {
+    override val extensionClass: KClass<out Configuration> = AppAgentConfiguration::class
+    override val taskType: Set<KClass<out JavaForkOptions>> = setOf(JavaExec::class)
 }
+
