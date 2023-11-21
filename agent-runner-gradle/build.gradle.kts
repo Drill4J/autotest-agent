@@ -1,5 +1,4 @@
 import java.net.URI
-import java.util.Properties
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.hierynomus.gradle.license.tasks.LicenseCheck
 import com.hierynomus.gradle.license.tasks.LicenseFormat
@@ -7,6 +6,7 @@ import com.hierynomus.gradle.license.tasks.LicenseFormat
 plugins {
     `java-gradle-plugin`
     `kotlin-dsl`
+    `maven-publish`
     id("com.github.hierynomus.license")
 }
 
@@ -49,6 +49,14 @@ tasks {
     val compileKotlin by getting(KotlinCompile::class) {
         kotlinOptions.jvmTarget = "1.8"
         kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.ExperimentalUnsignedTypes"
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("drill-gradle") {
+            from(components["java"])
+        }
     }
 }
 
