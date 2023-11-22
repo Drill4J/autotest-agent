@@ -50,7 +50,7 @@ tasks {
 
 publishing {
     publications {
-        create<MavenPublication>("drill-gradle") {
+        create<MavenPublication>("agent-runner-plugin-gradle") {
             from(components["java"])
         }
     }

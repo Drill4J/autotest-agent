@@ -42,13 +42,16 @@ tasks {
         standardOutput = System.out
     }
     assemble.get().dependsOn(install)
+    clean {
+        delete("target")
+    }
 }
 
 publishing {
     publications {
-        create<MavenPublication>("drill-maven") {
+        create<MavenPublication>("agent-runner-plugin-maven") {
             artifact(tasks["sourcesJar"])
-            artifact(file("target/maven-$version.jar"))
+            artifact(file("target/agent-runner-plugin-maven-$version.jar"))
             pom.withXml {
                 this.asNode().appendNode("dependencies").appendNode("dependency").apply {
                     appendNode("groupId", "org.jetbrains.kotlin")

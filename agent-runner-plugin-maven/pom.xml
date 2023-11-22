@@ -2,13 +2,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.epam.drill.autotest</groupId>
-    <artifactId>maven</artifactId>
+    <artifactId>agent-runner-plugin-maven</artifactId>
     <packaging>maven-plugin</packaging>
-
     <properties>
         <kotlin.version>1.6.0</kotlin.version>
         <drill.plugin.version>unspecified</drill.plugin.version>
     </properties>
+    <name>Autotest agent runner</name>
+    <url>http://maven.apache.org</url>
     <version>${drill.plugin.version}</version>
     <build>
         <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
@@ -47,7 +48,6 @@
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <version>${kotlin.version}</version>
-
                 <executions>
                     <execution>
                         <id>compile</id>
@@ -55,7 +55,6 @@
                             <goal>compile</goal>
                         </goals>
                     </execution>
-
                     <execution>
                         <id>test-compile</id>
                         <goals>
@@ -66,8 +65,6 @@
             </plugin>
         </plugins>
     </build>
-    <name>Autotest agent runner</name>
-    <url>http://maven.apache.org</url>
     <dependencies>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
