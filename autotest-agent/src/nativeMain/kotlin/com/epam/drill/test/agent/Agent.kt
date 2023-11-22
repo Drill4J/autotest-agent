@@ -13,29 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("UNUSED_PARAMETER", "UNUSED")
-
 package com.epam.drill.test.agent
 
 import com.epam.drill.jvmapi.gen.AddCapabilities
 import com.epam.drill.jvmapi.gen.AddToBootstrapClassLoaderSearch
 import com.epam.drill.jvmapi.gen.JNI_OK
+import com.epam.drill.jvmapi.gen.SetEventCallbacks
 import com.epam.drill.jvmapi.gen.jvmtiCapabilities
-import com.epam.drill.kni.JvmtiAgent
+import com.epam.drill.jvmapi.gen.jvmtiEventCallbacks
 import com.epam.drill.logging.LoggingConfiguration
-import com.epam.drill.test.agent.actions.SessionController
-import com.epam.drill.test.agent.config.AgentRawConfig
+import com.epam.drill.test.agent.configuration.AgentConfig
+import com.epam.drill.test.agent.configuration.AgentRawConfig
+import com.epam.drill.test.agent.jvmti.enableJvmtiEventVmDeath
+import com.epam.drill.test.agent.jvmti.enableJvmtiEventVmInit
+import com.epam.drill.test.agent.jvmti.event.classFileLoadHook
+import com.epam.drill.test.agent.jvmti.event.vmDeathEvent
+import com.epam.drill.test.agent.jvmti.event.vmInitEvent
+import com.epam.drill.test.agent.serialization.StringPropertyDecoder
+import com.epam.drill.test.agent.session.SessionController
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
+import kotlinx.cinterop.sizeOf
+import kotlinx.cinterop.staticCFunction
 import kotlin.native.concurrent.freeze
 import mu.KotlinLogging
 
-object Agent : JvmtiAgent {
+object Agent {
 
     private val logger = KotlinLogging.logger("com.epam.drill.test.agent.Agent")
 
-    override fun agentOnLoad(options: String): Int = memScoped {
+    fun agentOnLoad(options: String): Int = memScoped {
         try {
             val config = options.toAgentParams().freeze()
             setUnhandledExceptionHook({ thr: Throwable ->
@@ -63,7 +71,7 @@ object Agent : JvmtiAgent {
         return JNI_OK
     }
 
-    override fun agentOnUnload() {
+    fun agentOnUnload() {
         try {
             logger.info { "Shutting the agent down" }
             val agentConfig = AgentConfig.config
@@ -74,30 +82,38 @@ object Agent : JvmtiAgent {
         }
     }
 
-}
-
-const val WRONG_PARAMS = "Agent parameters are not specified correctly."
-
-fun String?.toAgentParams() = this.asParams().let { params ->
-    val result = AgentRawConfig.serializer().deserialize(StringPropertyDecoder(params))
-    println(result)
-    if (result.agentId.isBlank() && result.groupId.isBlank()) {
-        error(WRONG_PARAMS)
+    private fun callbackRegister() = memScoped {
+        val eventCallbacks = alloc<jvmtiEventCallbacks>()
+        eventCallbacks.VMInit = staticCFunction(::vmInitEvent)
+        eventCallbacks.VMDeath = staticCFunction(::vmDeathEvent)
+        eventCallbacks.ClassFileLoadHook = staticCFunction(::classFileLoadHook)
+        SetEventCallbacks(eventCallbacks.ptr, sizeOf<jvmtiEventCallbacks>().toInt())
+        enableJvmtiEventVmInit()
+        enableJvmtiEventVmDeath()
     }
-    LoggingConfiguration.readDefaultConfiguration()
-    LoggingConfiguration.setLoggingFilename(result.logFile)
-    LoggingConfiguration.setLoggingLevels(result.logLevel)
-    LoggingConfiguration.setLogMessageLimit(result.logLimit)
-    result
+
 }
 
-fun String?.asParams(): Map<String, String> = try {
-    this?.split(",")?.filter { it.isNotEmpty() }?.associate {
-        val (key, value) = it.split("=")
-        key to value
-    } ?: emptyMap()
-} catch (parseException: Exception) {
-    throw IllegalArgumentException(WRONG_PARAMS)
-}
+private const val WRONG_PARAMS = "Agent parameters are not specified correctly."
 
+private fun String?.toAgentParams() =
+    AgentRawConfig.serializer().deserialize(StringPropertyDecoder(this.asParams())).also {
+        println(it)
+        if (it.agentId.isBlank() && it.groupId.isBlank()) {
+            error(WRONG_PARAMS)
+        }
+        LoggingConfiguration.readDefaultConfiguration()
+        LoggingConfiguration.setLoggingFilename(it.logFile)
+        LoggingConfiguration.setLoggingLevels(it.logLevel)
+        LoggingConfiguration.setLogMessageLimit(it.logLimit)
+    }
 
+private fun String?.asParams(): Map<String, String> =
+    try {
+        this?.split(",")?.filter(String::isNotEmpty)?.associate {
+            val (key, value) = it.split("=")
+            key to value
+        } ?: emptyMap()
+    } catch (parseException: Exception) {
+        throw IllegalArgumentException(WRONG_PARAMS)
+    }

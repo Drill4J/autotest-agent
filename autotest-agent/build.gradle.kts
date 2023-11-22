@@ -16,7 +16,6 @@ plugins {
     kotlin("plugin.serialization")
     id("com.github.hierynomus.license")
     id("com.github.johnrengelman.shadow")
-    id("com.epam.drill.gradle.plugin.kni")
 }
 
 group = "com.epam.drill.autotest"
@@ -46,22 +45,17 @@ kotlin {
         targets.withType<KotlinNativeTarget>()[HostManager.host.presetName]
     }
     targets {
-        val jvm = jvm()
-        val linuxX64 = linuxX64(configure = configureNativeTarget)
-        val mingwX64 = mingwX64(configure = configureNativeTarget).apply {
+        jvm()
+        linuxX64(configure = configureNativeTarget)
+        mingwX64(configure = configureNativeTarget).apply {
             binaries.all {
                 linkerOpts("-lpsapi", "-lwsock32", "-lws2_32", "-lmswsock")
             }
         }
-        val macosX64 = macosX64(configure = configureNativeTarget)
+        macosX64(configure = configureNativeTarget)
         currentPlatformTarget().compilations["main"].defaultSourceSet {
             kotlin.srcDir("src/nativeMain/kotlin")
             resources.srcDir("src/nativeMain/resources")
-        }
-        kni {
-            jvmTargets = sequenceOf(jvm)
-            jvmtiAgentObjectPath = "com.epam.drill.test.agent.Agent"
-            nativeCrossCompileTarget = sequenceOf(linuxX64, mingwX64, macosX64)
         }
     }
     @Suppress("UNUSED_VARIABLE")
@@ -79,7 +73,6 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
                 implementation(project(":logging"))
-                implementation(project(":kni-runtime"))
                 implementation(project(":knasm"))
                 implementation(project(":http-clients-instrumentation"))
                 implementation(project(":test2code-api"))
@@ -93,7 +86,6 @@ kotlin {
                 implementation("org.java-websocket:Java-WebSocket:$javaWebsocketVersion")
                 implementation("com.github.kklisura.cdt:cdt-java-client:$cdtJavaClientVersion")
                 implementation("com.squareup.okhttp3:okhttp:$squareupOkHttpVersion")
-                implementation(project(":kni-runtime"))
                 implementation(project(":knasm"))
                 implementation(project(":http-clients-instrumentation"))
                 implementation(project(":autotest-runtime"))
@@ -108,7 +100,6 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:$kotlinxSerializationVersion")
                 implementation("com.benasher44:uuid:$uuidVersion")
                 implementation(project(":jvmapi"))
-                implementation(project(":kni-runtime"))
             }
         }
         val linuxX64Main by getting(configuration = configureNativeDependencies)
@@ -134,13 +125,8 @@ kotlin {
     }
     @Suppress("UNUSED_VARIABLE")
     tasks {
-        val generateNativeClasses by getting
-        val jvmProcessResources by getting
-        jvmProcessResources.dependsOn(generateNativeClasses)
-        currentPlatformTarget().compilations["main"].compileKotlinTask.dependsOn(generateNativeClasses)
         targets.withType<KotlinNativeTarget>().filter(filterOutCurrentPlatform).forEach {
             val copyNativeClasses = copyNativeClassesForTarget(it)
-            copyNativeClasses.dependsOn(generateNativeClasses)
             it.compilations["main"].compileKotlinTask.dependsOn(copyNativeClasses)
         }
         val jvmMainCompilation = kotlin.targets.withType<KotlinJvmTarget>()["jvm"].compilations["main"]
@@ -167,10 +153,7 @@ kotlin {
         val clean by getting
         val cleanGeneratedClasses by registering(Delete::class) {
             group = "build"
-            delete("src/jvmMain/resources/kni-meta-info")
-            delete("src/nativeMain/kotlin/kni")
             targets.withType<KotlinNativeTarget> {
-                delete("src/${name}Main/kotlin/kni")
                 delete("src/${name}Main/kotlin/gen")
             }
         }

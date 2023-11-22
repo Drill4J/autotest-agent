@@ -15,11 +15,11 @@
  */
 
 
-import com.epam.drill.SessionProvider
 import com.epam.drill.plugins.test2code.api.TestDetails
 import com.epam.drill.plugins.test2code.api.TestInfo
 import com.epam.drill.plugins.test2code.api.TestResult
-import com.epam.drill.test.agent.instrumentation.testing.junit.JUnitStrategy
+import com.epam.drill.test.agent.instrument.strategy.testing.junit.JUnitStrategy
+import com.epam.drill.test.agent.session.SessionProvider
 import com.epam.drill.test.common.AssertKt
 import com.epam.drill.test.common.ServerDate
 import com.epam.drill.test.common.TestData
@@ -78,6 +78,6 @@ class MessageServiceSpec extends Specification {
         def params = new HashMap<String, String>()
         params.put("classParams", "")
         params.put("methodParams", "()")
-        return com.epam.drill.test.agent.util.UtilKt.hash(new TestDetails(JUnitStrategy.engineSegment, MessageServiceSpec.class.getName(), name, params))
+        return com.epam.drill.test.agent.util.TestDetailsHashKt.hash(new TestDetails(JUnitStrategy.engineSegment, MessageServiceSpec.class.getName(), name, params))
     }
 }

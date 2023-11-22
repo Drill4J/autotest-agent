@@ -15,19 +15,17 @@
  */
 package com.epam.drill.test.agent
 
-import com.epam.drill.kni.*
 import com.epam.drill.plugins.test2code.api.*
-import com.epam.drill.test.agent.config.*
-import com.epam.drill.test.agent.instrumentation.http.selenium.*
+import com.epam.drill.test.agent.configuration.*
+import com.epam.drill.test.agent.instrument.strategy.selenium.*
+import com.epam.drill.test.agent.serialization.*
+import com.epam.drill.test.agent.session.*
 import com.epam.drill.test.agent.util.*
 import kotlinx.atomicfu.*
 import kotlinx.collections.immutable.*
-import kotlinx.coroutines.*
 import kotlinx.serialization.builtins.*
-import kotlin.time.*
 import mu.KotlinLogging
 
-@Kni
 actual object TestListener {
 
     const val methodParamsKey = "methodParams"
@@ -204,7 +202,7 @@ actual object TestListener {
         }
         _testInfo.update { tests -> tests - finished.map { it.details } }
 
-        return ListSerializer(TestInfo.serializer()) stringify finished
+        return json.encodeToString(ListSerializer(TestInfo.serializer()), finished)
     }
 
     actual fun reset() {
@@ -218,9 +216,10 @@ actual object TestListener {
 
     private fun sendSessionData(testId: String) = DevToolStorage.get()?.run {
         val coverage = takePreciseCoverage()
-        if (coverage.isNullOrBlank()) return null
+        if (coverage.isBlank()) return null
         val scripts = scriptParsed()
-        if (scripts.isNullOrBlank()) return null
+        if (scripts.isBlank()) return null
         ThreadStorage.sendSessionData(coverage, scripts, testId)
     }
+
 }
