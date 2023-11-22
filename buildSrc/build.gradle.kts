@@ -39,5 +39,5 @@ configurations.all {
 }
 
 dependencies {
-    implementation(project(":agent-runner-gradle"))
+    implementation(project(":agent-runner-plugin-gradle"))
 }

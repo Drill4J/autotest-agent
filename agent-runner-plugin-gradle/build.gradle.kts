@@ -4,7 +4,9 @@ import com.hierynomus.gradle.license.tasks.LicenseCheck
 import com.hierynomus.gradle.license.tasks.LicenseFormat
 
 plugins {
-    kotlin("jvm")
+    `java-gradle-plugin`
+    `kotlin-dsl`
+    `maven-publish`
     id("com.github.hierynomus.license")
 }
 
@@ -22,8 +24,20 @@ java {
     withSourcesJar()
 }
 
+gradlePlugin {
+    plugins {
+        create("runner") {
+            id = "$group.runner"
+            implementationClass = "com.epam.drill.test.agent.runner.AutoTestAgent"
+        }
+    }
+}
+
 dependencies {
+    compileOnly(gradleApi())
     compileOnly(kotlin("stdlib-jdk8"))
+    compileOnly(kotlin("gradle-plugin"))
+    implementation(project(":agent-runner-common"))
 }
 
 @Suppress("UNUSED_VARIABLE")
@@ -34,6 +48,13 @@ tasks {
     }
 }
 
+publishing {
+    publications {
+        create<MavenPublication>("drill-gradle") {
+            from(components["java"])
+        }
+    }
+}
 
 @Suppress("UNUSED_VARIABLE")
 license {

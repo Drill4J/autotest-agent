@@ -1,11 +1,11 @@
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.konan.target.presetName
-import com.epam.drill.agent.runner.LogLevels
+import com.epam.drill.test.agent.runner.LogLevels
 
 plugins {
     groovy
     kotlin("jvm")
-    id("com.epam.drill.agent.runner.autotest")
+    id("com.epam.drill.autotest.runner")
 }
 
 group = "com.epam.drill.autotest"

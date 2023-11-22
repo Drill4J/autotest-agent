@@ -3,12 +3,12 @@ import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.konan.target.presetName
 import com.hierynomus.gradle.license.tasks.LicenseCheck
 import com.hierynomus.gradle.license.tasks.LicenseFormat
-import com.epam.drill.agent.runner.LogLevels
+import com.epam.drill.test.agent.runner.LogLevels
 
 plugins {
     kotlin("jvm")
     id("com.github.hierynomus.license")
-    id("com.epam.drill.agent.runner.autotest")
+    id("com.epam.drill.autotest.runner")
 }
 
 group = "com.epam.drill.autotest"
