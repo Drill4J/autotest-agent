@@ -1,6 +1,3 @@
-import java.util.Properties
-import java.nio.file.Paths
-
 pluginManagement {
     val kotlinVersion: String by extra
     val licenseVersion: String by extra
@@ -16,24 +13,7 @@ pluginManagement {
     }
 }
 
-val sharedLibsLocal = rootDir.parentFile.resolve("gradle.properties").reader().use {
-    val path = Properties().run {
-        load(it)
-        getProperty("sharedLibsLocalPath")
-    }
-    if(Paths.get(path).isAbsolute) {
-        file(path)
-    }
-    else {
-        rootDir.parentFile.resolve(path)
-    }
-}
-
-include("kni-runtime")
-include("kni-plugin")
 include("agent-runner-common")
 include("agent-runner-gradle")
-project(":kni-runtime").projectDir = sharedLibsLocal.resolve("kni-runtime")
-project(":kni-plugin").projectDir = sharedLibsLocal.resolve("kni-plugin")
-project(":agent-runner-common").projectDir = sharedLibsLocal.resolve("agent-runner-common")
-project(":agent-runner-gradle").projectDir = sharedLibsLocal.resolve("agent-runner-gradle")
+project(":agent-runner-common").projectDir = rootDir.parentFile.resolve("agent-runner-common")
+project(":agent-runner-gradle").projectDir = rootDir.parentFile.resolve("agent-runner-gradle")

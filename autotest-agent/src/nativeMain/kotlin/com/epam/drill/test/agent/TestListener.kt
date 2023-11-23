@@ -15,13 +15,13 @@
  */
 package com.epam.drill.test.agent
 
+import com.epam.drill.jvmapi.callObjectStringMethod
+import com.epam.drill.jvmapi.callObjectVoidMethod
 
 actual object TestListener {
-    actual fun getData(): String {
-        return TestListenerStub.getData()
-    }
 
-    actual fun reset() {
-        TestListenerStub.reset()
-    }
+    actual fun getData(): String = callObjectStringMethod(TestListener::class, TestListener::getData)!!
+
+    actual fun reset(): Unit = callObjectVoidMethod(TestListener::class, TestListener::reset)
+
 }

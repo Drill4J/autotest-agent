@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import com.epam.drill.plugins.test2code.api.*
-import com.epam.drill.test.agent.instrumentation.testing.testng.*
+import com.epam.drill.test.agent.instrument.strategy.testing.testng.*
 import com.epam.drill.test.common.*
 import org.testng.annotations.*
 import pack.*
