@@ -3,7 +3,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.hierynomus.gradle.license.tasks.LicenseCheck
 import com.hierynomus.gradle.license.tasks.LicenseFormat
 
+@Suppress("RemoveRedundantBackticks")
 plugins {
+    `signing`
     `java-gradle-plugin`
     `kotlin-dsl`
     `maven-publish`
@@ -49,9 +51,10 @@ tasks {
 }
 
 publishing {
-    publications {
-        create<MavenPublication>("agent-runner-plugin-gradle") {
-            from(components["java"])
+    publications.withType<MavenPublication> {
+        pom {
+            name.set("Runner-plugin for Gradle")
+            description.set("Autotest-agent runner-plugin for Gradle")
         }
     }
 }

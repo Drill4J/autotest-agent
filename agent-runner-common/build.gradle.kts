@@ -3,7 +3,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.hierynomus.gradle.license.tasks.LicenseCheck
 import com.hierynomus.gradle.license.tasks.LicenseFormat
 
+@Suppress("RemoveRedundantBackticks")
 plugins {
+    `signing`
+    `maven-publish`
     kotlin("jvm")
     id("com.github.hierynomus.license")
 }
@@ -34,6 +37,15 @@ tasks {
     }
 }
 
+publishing {
+    publications.create<MavenPublication>("agent-runner-common") {
+        from(components["java"])
+        pom {
+            name.set("Runner-plugin common library")
+            description.set("Autotest-agent runner-plugin common library")
+        }
+    }
+}
 
 @Suppress("UNUSED_VARIABLE")
 license {

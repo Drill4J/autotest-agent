@@ -3,7 +3,9 @@ import org.jetbrains.kotlin.konan.target.HostManager
 import com.hierynomus.gradle.license.tasks.LicenseCheck
 import com.hierynomus.gradle.license.tasks.LicenseFormat
 
+@Suppress("RemoveRedundantBackticks")
 plugins {
+    `signing`
     `maven-publish`
     kotlin("jvm")
     id("com.github.hierynomus.license")
@@ -33,6 +35,7 @@ dependencies {
 tasks {
     val sourcesJar by registering(Jar::class) {
         from(sourceSets.main.get().allSource)
+        from(project(":agent-runner-common").sourceSets.main.get().allSource)
         archiveClassifier.set("sources")
     }
     val install by registering(Exec::class) {
@@ -48,12 +51,14 @@ tasks {
 }
 
 publishing {
-    publications {
-        create<MavenPublication>("agent-runner-plugin-maven") {
-            artifact(tasks["sourcesJar"])
-            artifact(file("target/agent-runner-plugin-maven-$version.jar"))
-            pom.withXml {
-                this.asNode().appendNode("dependencies").appendNode("dependency").apply {
+    publications.create<MavenPublication>("agent-runner-plugin-maven") {
+        artifact(tasks["sourcesJar"])
+        artifact(file("target/agent-runner-plugin-maven-$version.jar"))
+        pom {
+            name.set("Runner-plugin for Maven")
+            description.set("Autotest-agent runner-plugin for Maven")
+            withXml {
+                asNode().appendNode("dependencies").appendNode("dependency").apply {
                     appendNode("groupId", "org.jetbrains.kotlin")
                     appendNode("artifactId", "kotlin-stdlib")
                     appendNode("version", kotlinVersion)
