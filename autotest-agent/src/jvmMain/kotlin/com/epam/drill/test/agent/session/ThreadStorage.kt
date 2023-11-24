@@ -38,9 +38,5 @@ actual object ThreadStorage {
 
     actual external fun sessionId(): String?
 
-    actual external fun startSession(testName: String?)
-
-    actual external fun stopSession()
-
     actual external fun sendSessionData(preciseCoverage: String, scriptParsed: String, testId: String)
 }

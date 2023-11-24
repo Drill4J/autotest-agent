@@ -41,8 +41,6 @@ fun vmInitEvent(env: CPointer<jvmtiEnvVar>?, jniEnv: CPointer<JNIEnvVar>?, threa
     logger.debug { "Init event" }
     initRuntimeIfNeeded()
     val agentConfig = AgentConfig.config
-    if (!agentConfig.isManuallyControlled && !agentConfig.sessionForEachTest)
-        SessionController.startSession(agentConfig.sessionId)
     agentConfig.run {
         logger.trace { "Initializing StrategyManager" }
         StrategyManager.initialize(rawFrameworkPlugins, isManuallyControlled)

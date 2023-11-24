@@ -174,7 +174,6 @@ actual object TestListener {
     }
 
     private fun addDrillHeaders(testHash: String) {
-        ThreadStorage.startSession(testHash)
         ThreadStorage.memorizeTestName(testHash)
         DevToolStorage.get()?.startIntercept()
         WebDriverThreadStorage.addCookies()
@@ -185,7 +184,6 @@ actual object TestListener {
      */
     private fun clearDrillHeaders(test: TestDetails) {
         if (test in _testInfo.value) {
-            ThreadStorage.stopSession()
             DevToolStorage.get()?.stopIntercept()
             ThreadStorage.clear()
         }
