@@ -14,6 +14,6 @@ pluginManagement {
 }
 
 include("agent-runner-common")
-include("agent-runner-gradle")
+include("agent-runner-plugin-gradle")
 project(":agent-runner-common").projectDir = rootDir.parentFile.resolve("agent-runner-common")
-project(":agent-runner-gradle").projectDir = rootDir.parentFile.resolve("agent-runner-gradle")
+project(":agent-runner-plugin-gradle").projectDir = rootDir.parentFile.resolve("agent-runner-plugin-gradle")

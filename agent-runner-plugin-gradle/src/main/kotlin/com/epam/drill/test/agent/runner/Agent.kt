@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 @file:Suppress("unused")
+package com.epam.drill.test.agent.runner
 
-package com.epam.drill.autotest.gradle
-
-import com.epam.drill.agent.runner.*
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskContainer
-import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.maven
-import org.gradle.kotlin.dsl.repositories
 import org.gradle.process.JavaForkOptions
 import kotlin.reflect.KClass
 
@@ -74,6 +69,8 @@ abstract class Agent : Plugin<Project> {
                 AgentLoader.downloadAgent(config, drillDist)
             }
             config.runtimePath = extractedDir
+            // TODO this check seems dubious - check for more specific files?
+            // negative case triggers when wrong platform release is used (e.g. linux instead of mingw), but throws uninformative error 
             config.agentPath = extractedDir.listFiles()?.first { file ->
                 dynamicLibExtensions.any { it == file.extension }
             } ?: throw GradleException("can't find agent")
@@ -83,4 +80,3 @@ abstract class Agent : Plugin<Project> {
 
 private val Project.config: Configuration
     get() = extensions.findByName(EXTENSION_NAME) as Configuration
-

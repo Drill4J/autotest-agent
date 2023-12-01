@@ -6,6 +6,7 @@ pluginManagement {
     val grgitVersion: String by extra
     val shadowPluginVersion: String by extra
     val psxpaulExecforkVersion: String by extra
+    val nexusPublishPluginVersion: String by extra
     plugins {
         kotlin("multiplatform") version kotlinVersion
         kotlin("plugin.noarg") version kotlinVersion
@@ -14,6 +15,7 @@ pluginManagement {
         id("com.github.hierynomus.license") version licenseVersion
         id("com.github.johnrengelman.shadow") version shadowPluginVersion
         id("com.github.psxpaul.execfork") version psxpaulExecforkVersion
+        id("io.github.gradle-nexus.publish-plugin") version nexusPublishPluginVersion
     }
     repositories {
         mavenLocal()
@@ -40,7 +42,8 @@ includeSharedLib("test2code-api")
 include("autotest-agent")
 include("autotest-runtime")
 include("agent-runner-common")
-include("agent-runner-gradle")
+include("agent-runner-plugin-gradle")
+include("agent-runner-plugin-maven")
 include("tests-common")
 include("tests-admin-stub-server")
 include("tests-rest-assure-ju5")

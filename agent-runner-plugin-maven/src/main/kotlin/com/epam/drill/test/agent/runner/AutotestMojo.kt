@@ -14,17 +14,24 @@
  * limitations under the License.
  */
 @file:Suppress("unused")
+package com.epam.drill.test.agent.runner
 
-package com.epam.drill.autotest.gradle
+import org.apache.maven.plugins.annotations.LifecyclePhase
+import org.apache.maven.plugins.annotations.Mojo
+import org.apache.maven.plugins.annotations.Parameter
+import org.apache.maven.plugins.annotations.ResolutionScope
 
-import com.epam.drill.agent.runner.AppAgentConfiguration
-import com.epam.drill.agent.runner.Configuration
-import org.gradle.api.tasks.JavaExec
-import org.gradle.process.JavaForkOptions
-import kotlin.reflect.KClass
+@Mojo(
+    name = "autotest",
+    defaultPhase = LifecyclePhase.INITIALIZE, requiresDependencyResolution = ResolutionScope.RUNTIME, threadSafe = true
+)
+class AutotestMojo : AgentMojo() {
 
-class AppAgent : Agent() {
-    override val extensionClass: KClass<out Configuration> = AppAgentConfiguration::class
-    override val taskType: Set<KClass<out JavaForkOptions>> = setOf(JavaExec::class)
+    @Parameter(required = true, property = "drill")
+    lateinit var drill: AgentConfiguration
+
+    override val config: Configuration
+        get() = drill
+
+
 }
-

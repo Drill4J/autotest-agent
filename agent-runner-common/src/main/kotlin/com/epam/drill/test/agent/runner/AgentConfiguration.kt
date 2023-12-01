@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.agent.runner
+package com.epam.drill.test.agent.runner
 
 open class AgentConfiguration : Configuration() {
     var pluginId: String = "test2code"

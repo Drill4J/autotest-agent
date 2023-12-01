@@ -15,10 +15,8 @@
  */
 @file:Suppress("unused")
 
-package com.epam.drill.autotest.gradle
+package com.epam.drill.test.agent.runner
 
-import com.epam.drill.agent.runner.AgentConfiguration
-import com.epam.drill.agent.runner.Configuration
 import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.testing.Test
 import org.gradle.process.JavaForkOptions

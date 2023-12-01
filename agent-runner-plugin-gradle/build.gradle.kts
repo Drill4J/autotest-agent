@@ -1,16 +1,18 @@
 import java.net.URI
-import java.util.Properties
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.hierynomus.gradle.license.tasks.LicenseCheck
 import com.hierynomus.gradle.license.tasks.LicenseFormat
 
+@Suppress("RemoveRedundantBackticks")
 plugins {
+    `signing`
     `java-gradle-plugin`
     `kotlin-dsl`
+    `maven-publish`
     id("com.github.hierynomus.license")
 }
 
-group = "com.epam.drill.agent.runner"
+group = "com.epam.drill.autotest"
 version = rootProject.version
 
 repositories {
@@ -26,13 +28,9 @@ java {
 
 gradlePlugin {
     plugins {
-        create("autotest") {
-            id = "$group.autotest"
-            implementationClass = "com.epam.drill.autotest.gradle.AutoTestAgent"
-        }
-        create("app") {
-            id = "$group.app"
-            implementationClass = "com.epam.drill.autotest.gradle.AppAgent"
+        create("runner") {
+            id = "$group.runner"
+            implementationClass = "com.epam.drill.test.agent.runner.AutoTestAgent"
         }
     }
 }
@@ -49,6 +47,15 @@ tasks {
     val compileKotlin by getting(KotlinCompile::class) {
         kotlinOptions.jvmTarget = "1.8"
         kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.ExperimentalUnsignedTypes"
+    }
+}
+
+publishing {
+    publications.withType<MavenPublication> {
+        pom {
+            name.set("Runner-plugin for Gradle")
+            description.set("Autotest-agent runner-plugin for Gradle")
+        }
     }
 }
 
