@@ -28,6 +28,10 @@ actual object AgentConfig {
 
     actual fun adminAddress(): String? = config.adminAddress
 
+    actual fun adminUserName(): String? = config.adminUserName
+
+    actual fun adminPassword(): String? = config.adminPassword
+
     actual fun agentId(): String? = config.agentId
 
     actual fun groupId(): String? = config.groupId

@@ -34,6 +34,14 @@ fun adminAddress(env: JNIEnv, thiz: jobject) = callNativeStringMethod(env, thiz,
 fun agentId(env: JNIEnv, thiz: jobject) = callNativeStringMethod(env, thiz, AgentConfig::agentId)
 
 @Suppress("UNUSED")
+@CName("Java_com_epam_drill_test_agent_configuration_AgentConfig_adminUserName")
+fun adminUserName(env: JNIEnv, thiz: jobject) = callNativeStringMethod(env, thiz, AgentConfig::adminUserName)
+
+@Suppress("UNUSED")
+@CName("Java_com_epam_drill_test_agent_configuration_AgentConfig_adminPassword")
+fun adminPassword(env: JNIEnv, thiz: jobject) = callNativeStringMethod(env, thiz, AgentConfig::adminPassword)
+
+@Suppress("UNUSED")
 @CName("Java_com_epam_drill_test_agent_configuration_AgentConfig_groupId")
 fun groupId(env: JNIEnv, thiz: jobject) = callNativeStringMethod(env, thiz, AgentConfig::groupId)
 

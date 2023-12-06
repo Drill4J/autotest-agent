@@ -25,6 +25,10 @@ actual object AgentConfig {
 
     actual external fun groupId(): String?
 
+    actual external fun adminUserName(): String?
+
+    actual external fun adminPassword(): String?
+
     actual external fun devToolsProxyAddress(): String?
 
     actual external fun withJsCoverage(): Boolean
