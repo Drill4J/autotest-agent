@@ -72,7 +72,7 @@ object HttpClient {
             )
         } catch (ex: IOException) {
             logger.error(ex) { "Can't get response from $url" }
-            HttpResponse(500)
+            HttpResponse(urlConnection.responseCode)
         } finally {
             urlConnection.disconnect()
         }

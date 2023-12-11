@@ -144,12 +144,26 @@ object SessionController {
     }.getOrNull().also { TestListener.reset() }
 
     private fun getToken(): String {
+        if (agentConfig.adminUserName.isNullOrEmpty() || agentConfig.adminPassword.isNullOrEmpty()) {
+            val hostPort = agentConfig.adminAddress?.split(":")
+            throw Error(
+                """
+                    Missing credentials to authorize in Drill4J Admin Backend.
+                    Please provide username and password in agent config section.
+                    Current values:
+                    adminHost = ${hostPort[0]}
+                    adminPort = ${hostPort[1]}
+                    adminUserName = ${agentConfig.adminUserName}
+                    adminPassword = ${agentConfig.adminPassword}
+                """.trimIndent()
+            )
+        }
         val httpCall = httpCall(
-            agentConfig.adminAddress + "/api/login", HttpRequest(
+            agentConfig.adminAddress + "/api/sign-in", HttpRequest(
                 "POST",
                 body = json.encodeToString(
                     UserData.serializer(),
-                    UserData(agentConfig.adminUserName ?: "guest", agentConfig.adminPassword ?: "")
+                    UserData(agentConfig.adminUserName, agentConfig.adminPassword)
                 )
             )
         )
@@ -160,6 +174,6 @@ object SessionController {
 
 @Serializable
 private data class UserData(
-    val name: String,
+    val username: String,
     val password: String,
 )
