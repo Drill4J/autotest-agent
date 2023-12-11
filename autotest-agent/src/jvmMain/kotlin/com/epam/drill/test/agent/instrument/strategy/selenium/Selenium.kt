@@ -159,43 +159,6 @@ object Selenium : TransformStrategy() {
             )
         )
 
-        val startSession = ctClass.getDeclaredMethod("startSession")
-
-        /**
-         * Browser proxy is needed only for Firefox browser
-         */
-        startSession.insertBefore(
-            """
-                if (${AgentConfig::class.java.name}.INSTANCE.${AgentConfig::proxyUrl.name}() != null && $isFirefoxBrowser($1)) {
-                    $DesiredCapabilities dCap = new $DesiredCapabilities();
-                    $Proxy dProxy = new $Proxy();
-                    dProxy.setHttpProxy(${AgentConfig::class.java.name}.INSTANCE.${AgentConfig::proxyUrl.name}());
-                    dProxy.setSslProxy(${AgentConfig::class.java.name}.INSTANCE.${AgentConfig::proxyUrl.name}());
-                    dCap.setCapability("proxy", dProxy);
-                    $1 = $1.merge(dCap);
-                }
-                ${WebDriverThreadStorage::class.java.name}.INSTANCE.${WebDriverThreadStorage::set.name}(this);
-                """
-        )
-        startSession.insertAfter(
-            """
-                    if (${AgentConfig::class.java.name}.INSTANCE.${AgentConfig::devToolsProxyAddress.name}() != null){
-                        ${ChromeDevTool::class.java.name} drillDevTools = new ${ChromeDevTool::class.java.name}(
-                            ((java.util.Map)getCapabilities().getCapability("goog:chromeOptions")),
-                            drillRemoteAddress
-                        );
-                       drillDevTools.${ChromeDevTool::connect.name}(sessionId.toString(), getCurrentUrl());
-                    }
-                    try {
-                        if (this instanceof $FirefoxDriver) {
-                            java.util.HashMap hashMapq = new java.util.HashMap();
-                            hashMapq.put("path", "${extensionFile.replace("\\", "\\\\")}");
-                            hashMapq.put("temporary", Boolean.TRUE);
-                            this.execute("installExtension", hashMapq).getValue();
-                        }
-                    } catch (Exception e){}
-            """
-        )
         ctClass.addMethod(
             CtMethod.make(
                 """
