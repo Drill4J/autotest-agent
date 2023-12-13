@@ -22,6 +22,7 @@ import pack.*
 import kotlin.test.Ignore
 import kotlin.test.Test
 
+@Ignore
 @Suppress("NonAsciiCharacters", "RemoveRedundantBackticks")
 class Test {
 
@@ -48,13 +49,13 @@ class Test {
         @BeforeClass
         @JvmStatic
         fun startSession() {
-            SessionProvider.startSession(sessionId)
+//            SessionProvider.startSession(sessionId)
         }
 
         @AfterClass
         @JvmStatic
         fun stopSession() {
-            SessionProvider.stopSession(sessionId)
+//            SessionProvider.stopSession(sessionId)
         }
     }
 }

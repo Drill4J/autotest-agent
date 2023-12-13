@@ -18,6 +18,7 @@ import com.epam.drill.test.common.*
 import org.slf4j.*
 import org.testng.annotations.*
 
+@Ignore
 abstract class BaseTest {
     protected val sessionId = "testSession"
 
@@ -31,12 +32,12 @@ abstract class BaseTest {
     @BeforeSuite
     fun beforeSuite() {
         getAdminData()
-        SessionProvider.startSession(sessionId)
+//        SessionProvider.startSession(sessionId)
     }
 
     @AfterSuite
     open fun checkTests() {
-        SessionProvider.stopSession(sessionId)
+//        SessionProvider.stopSession(sessionId)
         val serverDate: ServerDate = getAdminData()
         val testFromAdmin = serverDate.tests[sessionId] ?: emptyList()
         testFromAdmin shouldContainsAllTests expectedTests

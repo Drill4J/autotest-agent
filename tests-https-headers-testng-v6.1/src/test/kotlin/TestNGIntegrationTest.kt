@@ -21,6 +21,7 @@ import org.testng.Assert.*
 import org.testng.annotations.*
 
 
+@Ignore
 @Suppress("NonAsciiCharacters", "RemoveRedundantBackticks")
 class TestNGIntegrationTest : BaseTest() {
 

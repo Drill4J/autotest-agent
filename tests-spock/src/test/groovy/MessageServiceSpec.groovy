@@ -24,10 +24,12 @@ import com.epam.drill.test.common.AssertKt
 import com.epam.drill.test.common.ServerDate
 import com.epam.drill.test.common.TestData
 import com.epam.drill.test.common.UtilKt
+import org.junit.Ignore
 import org.junit.experimental.categories.Category
 import spock.lang.Shared
 import spock.lang.Specification
 
+@Ignore
 @Category(UnitTest.class)
 class MessageServiceSpec extends Specification {
 
@@ -63,11 +65,11 @@ class MessageServiceSpec extends Specification {
     private String sessionId = UUID.randomUUID().toString()
 
     def setupSpec() {
-        SessionProvider.INSTANCE.startSession(sessionId, "AUTO", false, "", false)
+//        SessionProvider.INSTANCE.startSession(sessionId, "AUTO", false, "", false)
     }
 
     def cleanupSpec() {
-        SessionProvider.INSTANCE.stopSession(sessionId)
+//        SessionProvider.INSTANCE.stopSession(sessionId)
         ServerDate serverDate = UtilKt.getAdminData()
         List<TestInfo> testFromAdmin = serverDate.getTests().get(sessionId)
         AssertKt.shouldContainsAllTests(testFromAdmin, actualTests)

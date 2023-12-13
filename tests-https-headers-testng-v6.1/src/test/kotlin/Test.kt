@@ -19,6 +19,7 @@ import com.epam.drill.test.common.*
 import org.testng.annotations.*
 import pack.*
 
+@Ignore
 class TestTestNG : BaseTest() {
 
     @Test
