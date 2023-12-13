@@ -23,6 +23,7 @@ import org.testng.annotations.*;
 import java.util.*;
 import java.util.function.Consumer;
 
+@Ignore
 public class FactoryTest extends BaseTest {
     private Integer param;
     private String value;

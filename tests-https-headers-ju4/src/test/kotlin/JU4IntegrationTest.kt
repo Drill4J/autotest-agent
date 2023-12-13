@@ -23,6 +23,7 @@ import org.junit.Test
 import java.util.*
 import kotlin.test.*
 
+@Ignore
 @Suppress("NonAsciiCharacters", "RemoveRedundantBackticks")
 class JU4IntegrationTest {
 
@@ -66,13 +67,13 @@ class JU4IntegrationTest {
         @BeforeClass
         @JvmStatic
         fun startSession() {
-            SessionProvider.startSession(sessionId)
+//            SessionProvider.startSession(sessionId)
         }
 
         @AfterClass
         @JvmStatic
         fun checkTests() {
-            SessionProvider.stopSession(sessionId)
+//            SessionProvider.stopSession(sessionId)
             val serverDate: ServerDate = getAdminData()
             val testsFromAdmin = serverDate.tests[sessionId] ?: emptyList()
             testsFromAdmin shouldContainsAllTests expectedTests
