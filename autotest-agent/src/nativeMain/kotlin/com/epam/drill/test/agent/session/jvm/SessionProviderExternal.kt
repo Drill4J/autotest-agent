@@ -16,10 +16,42 @@
 package com.epam.drill.test.agent.session.jvm
 
 import com.epam.drill.jvmapi.callNativeVoidMethodWithString
+import com.epam.drill.jvmapi.ex
 import com.epam.drill.jvmapi.gen.JNIEnv
 import com.epam.drill.jvmapi.gen.jobject
 import com.epam.drill.jvmapi.gen.jstring
+import com.epam.drill.jvmapi.withJString
 import com.epam.drill.test.agent.session.SessionProvider
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.reinterpret
+
+@Suppress("UNUSED", "UNUSED_PARAMETER")
+@CName("Java_com_epam_drill_test_agent_session_SessionProvider_startSession")
+fun startSession(
+    env: JNIEnv,
+    thiz: jobject,
+    sessionId: jstring,
+    testType: jstring,
+    isRealtime: UByte,
+    testName: jstring?,
+    isGlobal: UByte
+) = memScoped {
+    withJString {
+        ex = env.getPointer(this@memScoped).reinterpret()
+        SessionProvider.startSession(
+            sessionId.toKString(),
+            testType.toKString(),
+            isRealtime == 1.toUByte(),
+            testName?.toKString(),
+            isGlobal == 1.toUByte()
+        )
+    }
+}
+
+@Suppress("UNUSED")
+@CName("Java_com_epam_drill_test_agent_session_SessionProvider_stopSession")
+fun stopSession(env: JNIEnv, thiz: jobject, sessionId: jstring?) =
+    callNativeVoidMethodWithString(env, thiz, SessionProvider::stopSession, sessionId)
 
 @Suppress("UNUSED")
 @CName("Java_com_epam_drill_test_agent_session_SessionProvider_setTestName")

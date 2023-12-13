@@ -31,6 +31,10 @@ class JunitRunner : TransformStrategy() {
         classLoader: ClassLoader?,
         protectionDomain: ProtectionDomain?,
     ): ByteArray? {
+        val sessionId = UUID.randomUUID()
+        val method = ctClass.getMethod("run", "(Lorg/junit/runner/Runner;)Lorg/junit/runner/Result;")
+        method.insertBefore("com.epam.drill.test.agent.Drill.startSession(\"$sessionId\");")
+        method.insertAfter("com.epam.drill.test.agent.Drill.stopSession(\"$sessionId\");")
         return ctClass.toBytecode()
     }
 }

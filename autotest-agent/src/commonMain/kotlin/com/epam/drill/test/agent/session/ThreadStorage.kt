@@ -19,6 +19,7 @@ expect object ThreadStorage {
     fun memorizeTestNameNative(testName: String?)
 
     fun sessionId(): String?
-
+    fun startSession(testName: String?)
+    fun stopSession()
     fun sendSessionData(preciseCoverage: String, scriptParsed: String, testId: String)
 }

@@ -15,15 +15,12 @@
  */
 package com.epam.drill.test.agent.session.jvm
 
+import com.epam.drill.jvmapi.*
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.reinterpret
-import com.epam.drill.jvmapi.callNativeStringMethod
-import com.epam.drill.jvmapi.callNativeVoidMethodWithString
-import com.epam.drill.jvmapi.ex
 import com.epam.drill.jvmapi.gen.JNIEnv
 import com.epam.drill.jvmapi.gen.jobject
 import com.epam.drill.jvmapi.gen.jstring
-import com.epam.drill.jvmapi.withJString
 import com.epam.drill.test.agent.session.ThreadStorage
 
 @Suppress("UNUSED")
@@ -34,6 +31,15 @@ fun memorizeTestNameNative(env: JNIEnv, thiz: jobject, testName: jstring?) =
 @Suppress("UNUSED")
 @CName("Java_com_epam_drill_test_agent_session_ThreadStorage_sessionId")
 fun sessionId(env: JNIEnv, thiz: jobject) = callNativeStringMethod(env, thiz, ThreadStorage::sessionId)
+
+@Suppress("UNUSED")
+@CName("Java_com_epam_drill_test_agent_session_ThreadStorage_startSession")
+fun startSession(env: JNIEnv, thiz: jobject, testName: jstring?) =
+    callNativeVoidMethodWithString(env, thiz, ThreadStorage::startSession, testName)
+
+@Suppress("UNUSED")
+@CName("Java_com_epam_drill_test_agent_session_ThreadStorage_stopSession")
+fun stopSession(env: JNIEnv, thiz: jobject) = callNativeVoidMethod(env, thiz, ThreadStorage::stopSession)
 
 @Suppress("UNUSED", "UNUSED_PARAMETER")
 @CName("Java_com_epam_drill_test_agent_session_ThreadStorage_sendSessionData")

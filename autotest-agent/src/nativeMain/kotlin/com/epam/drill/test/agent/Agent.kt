@@ -72,6 +72,14 @@ object Agent {
     }
 
     fun agentOnUnload() {
+        try {
+            logger.info { "Shutting the agent down" }
+            val agentConfig = AgentConfig.config
+            if (!agentConfig.isManuallyControlled && !agentConfig.sessionForEachTest)
+                SessionController.stopSession()
+        } catch (ex: Throwable) {
+            logger.error { "Failed to unload the agent properly. Reason: ${ex.message}" }
+        }
     }
 
     private fun callbackRegister() = memScoped {

@@ -27,7 +27,20 @@ actual object ThreadStorage {
     actual fun sessionId(): String? {
         return SessionController.sessionId.value
     }
+    actual fun startSession(testName: String?) {
+        if (AgentConfig.config.sessionForEachTest) {
+            SessionController.startSession(
+                customSessionId = AgentConfig.config.sessionId,
+                testName = testName
+            )
+        }
+    }
 
+    actual fun stopSession() = SessionController.run {
+        if (AgentConfig.config.sessionForEachTest) {
+            stopSession(sessionIds = sessionId.value)
+        }
+    }
     actual fun sendSessionData(preciseCoverage: String, scriptParsed: String, testId: String) {
         val data = SessionData(preciseCoverage, scriptParsed, testId)
         SessionController.sendSessionData(json.encodeToString(SessionData.serializer(), data))
