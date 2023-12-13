@@ -8,27 +8,26 @@
 ![Lines of code](https://img.shields.io/tokei/lines/github/Drill4J/autotest-agent)
 ![YouTube Channel Views](https://img.shields.io/youtube/channel/views/UCJtegUnUHr0bO6icF1CYjKw?style=social)
 
-# Drill native autotest agent
+# Drill4J Java Auto Test Agent
 
-This module contains the native agent for JVM autotest - [list of frameworks](https://drill4j.github.io/docs/supported-frameworks).
+This agent is intended to be integrated with tests written in either Java or other JVM languages.
 
-These autotest-agents add Drill headers to HTTP requests in order to track coverage. See more in [core concepts](https://drill4j.github.io/docs/core-concepts).
+For setup guide see [respective docs page](https://drill4j.github.io/docs/installation/setup-java-autotest-agent)
 
-## Modules
+## Purpose
+Drill4J Auto Test Java Agent does 3 things:
+- instruments test framework to figure out _which test_ is running at the moment
+- sends metadata about test to Drill4J Admin Backend
+- injects _test id_ (unique identifier generated for each test) into transport layer messages (e.g. headers in case of HTTP transport) for Drill4J Java Agent to detect and associate coverage with the respective test. See more in-depth explanation at [data collection docs section](https://drill4j.github.io/docs/basic-concepts/data-collection).
+
+## Support
+- For list supported frameworks [docs page](https://drill4j.github.io/docs/supported-frameworks).
+
+## For development
+### Modules
 
 - **autotest-agent**: Autotest agent classes
 - **autotest-runtime**: Autotest agent SessionProvider classes
 - **tests-common**: Common classes for tests-* modules
 - **tests-admin-stub-server**: Stub server (emulating test2code-plugin) for agent communications during testing
 - **tests-***: Modules contains the tests for autotest agent
-
-
-## Test workflow
-1. Before the tests are started, the stub server emulating test2code plugin the work is started
-2. Before starting the tests, we manually start the session
-3. During the tests, we send information about completed tests to the stub server
-4. After the tests have passed, we send a request to the stop session
-5. Then we send a request to get all the data that was sent to the server during the tests
-6. Then we compare the expected data with the received data with stub server
-
-![workflow.png](workflow.png)
