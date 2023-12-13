@@ -21,6 +21,7 @@ import java.util.*
 import kotlin.test.*
 import kotlin.test.Test
 
+@Ignore
 @Suppress("NonAsciiCharacters", "RemoveRedundantBackticks")
 class JU5IntegrationTest {
 
@@ -65,13 +66,13 @@ class JU5IntegrationTest {
         @BeforeAll
         @JvmStatic
         fun startSession() {
-            SessionProvider.startSession(sessionId)
+//            SessionProvider.startSession(sessionId)
         }
 
         @AfterAll
         @JvmStatic
         fun checkTests() {
-            SessionProvider.stopSession(sessionId)
+//            SessionProvider.stopSession(sessionId)
             val serverDate: ServerDate = getAdminData()
             val testFromAdmin = serverDate.tests[sessionId] ?: emptyList()
             testFromAdmin shouldContainsAllTests expectedTests

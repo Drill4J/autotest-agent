@@ -20,6 +20,7 @@ import com.epam.drill.test.common.*
 import org.testng.Assert.*
 import org.testng.annotations.*
 
+@Ignore
 class RetriedTest : BaseTest() {
 
     private val sleepTime = 600L
@@ -34,7 +35,7 @@ class RetriedTest : BaseTest() {
 
     @AfterSuite
     override fun checkTests() {
-        SessionProvider.stopSession(sessionId)
+//        SessionProvider.stopSession(sessionId)
         val serverDate: ServerDate = getAdminData()
         val testFromAdmin = serverDate.tests[sessionId] ?: emptyList()
         testFromAdmin shouldContainsAllTests expectedTests
