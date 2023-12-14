@@ -123,7 +123,7 @@ nexusPublishing {
                 findProperty(property)?.toString() ?: System.getenv(env)
             }
             username.set(propertyOrEnv("ossrhUserName", "OSSRH_USERNAME"))
-            username.set(propertyOrEnv("ossrhToken", "OSSRH_TOKEN"))
+            password.set(propertyOrEnv("ossrhToken", "OSSRH_TOKEN"))
         }
     }
 }
