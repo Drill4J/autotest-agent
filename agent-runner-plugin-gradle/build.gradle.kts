@@ -24,6 +24,7 @@ java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
     withSourcesJar()
+    withJavadocJar()
 }
 
 gradlePlugin {
@@ -31,6 +32,8 @@ gradlePlugin {
         create("runner") {
             id = "$group.runner"
             implementationClass = "com.epam.drill.test.agent.runner.AutoTestAgent"
+            displayName = "Runner-plugin for Gradle"
+            description = "Autotest-agent runner-plugin for Gradle"
         }
     }
 }

@@ -38,13 +38,22 @@ tasks {
         from(project(":agent-runner-common").sourceSets.main.get().allSource)
         archiveClassifier.set("sources")
     }
-    val install by registering(Exec::class) {
+    val javadocJar by registering(Jar::class) {
+        dependsOn(project(":agent-runner-common").tasks.javadoc)
+        from(javadoc.get().destinationDir)
+        from(project(":agent-runner-common").tasks.javadoc.get().destinationDir)
+        archiveClassifier.set("javadoc")
+    }
+    val mvnInstall by registering(Exec::class) {
         val args = if (HostManager.hostIsMingw) arrayOf("cmd", "/c", "mvnw.cmd") else arrayOf("sh", "./mvnw")
         commandLine(*args, "install", "-Ddrill.plugin.version=$version", "-Dkotlin.version=$kotlinVersion")
         workingDir(project.projectDir)
         standardOutput = System.out
+        outputs.file("target/agent-runner-plugin-maven-$version.jar")
     }
-    assemble.get().dependsOn(install)
+    assemble.get().dependsOn(sourcesJar)
+    assemble.get().dependsOn(javadocJar)
+    assemble.get().dependsOn(mvnInstall)
     clean {
         delete("target")
     }
@@ -53,7 +62,8 @@ tasks {
 publishing {
     publications.create<MavenPublication>("agent-runner-plugin-maven") {
         artifact(tasks["sourcesJar"])
-        artifact(file("target/agent-runner-plugin-maven-$version.jar"))
+        artifact(tasks["javadocJar"])
+        artifact(tasks["mvnInstall"].outputs.files.singleFile).builtBy(tasks["mvnInstall"])
         pom {
             name.set("Runner-plugin for Maven")
             description.set("Autotest-agent runner-plugin for Maven")

@@ -30,7 +30,7 @@
                         </goals>
                         <configuration>
                             <sources>
-                                <source>../agent-runner-common/src/main/kotlin</source>
+                                <source>${project.basedir}/../agent-runner-common/src/main/kotlin</source>
                             </sources>
                         </configuration>
                     </execution>
