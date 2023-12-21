@@ -20,8 +20,7 @@ expect object AgentConfig {
     fun adminAddress(): String?
     fun agentId(): String?
     fun groupId(): String?
-    fun adminUserName(): String?
-    fun adminPassword(): String?
+    fun apiKey(): String?
     fun devToolsProxyAddress(): String?
     fun withJsCoverage(): Boolean
     fun launchType(): String?

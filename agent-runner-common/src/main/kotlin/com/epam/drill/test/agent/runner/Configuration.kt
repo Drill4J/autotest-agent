@@ -22,8 +22,7 @@ abstract class Configuration {
     var agentId: String? = null
     var groupId: String? = null
     var adminPort: Int = 8080
-    var adminUserName: String? = null
-    var adminPassword: String? = null
+    var apiKey: String? = null
     var version: String = "+"
     var agentPath: File? = null
     var runtimePath: File? = null
@@ -43,8 +42,7 @@ abstract class Configuration {
         args[Configuration::logLevel.name] = logLevel.name
         args[Configuration::directUrlToZip.name] = directUrlToZip
         args[Configuration::directLocalPathToZip.name] = directLocalPathToZip
-        adminUserName?.let { args[Configuration::adminUserName.name] = it }
-        adminPassword?.let { args[Configuration::adminPassword.name] = it }
+        apiKey?.let { args[Configuration::apiKey.name] = it }
         groupId?.let { args[Configuration::groupId.name] = it }
         logFile?.let { args[Configuration::logFile.name] = it.absolutePath }
         additionalParams?.let { args.putAll(it) }
