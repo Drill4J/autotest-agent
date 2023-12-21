@@ -136,6 +136,23 @@ kotlin {
             destinationDirectory.set(temporaryDir)
             from(rootDir.resolve("drill-header-transmitter"))
         }
+        val relocatePackages = setOf(
+            "javax.websocket",
+            "javassist",
+            "ch.qos.logback",
+            "com.fasterxml",
+            "com.github.kklisura",
+            "io.ktor",
+            "okhttp3",
+            "okio",
+            "org.glassfish.grizzly",
+            "org.glassfish.tyrus",
+            "org.intellij.lang.annotations",
+            "org.jetbrains.annotations",
+            "org.java_websocket",
+            "org.objectweb.asm",
+            "org.slf4j"
+        )
         val runtimeJar by registering(ShadowJar::class) {
             group = "shadow"
             isZip64 = true
@@ -143,12 +160,16 @@ kotlin {
             from(jvmMainCompilation.output, jvmMainCompilation.runtimeDependencyFiles)
             from(extensionZip)
             relocate("kotlin", "kruntime")
-            relocate("javassist", "drill.javassist")
-            relocate("org.slf4j", "drill.org.slf4j")
-            relocate("org.java_websocket", "drill.org.java_websocket")
-            relocate("com.squareup.okhttp3", "drill.com.squareup.okhttp3")
-            relocate("okio", "drill.okio")
-            relocate("okhttp3", "drill.okhttp3")
+            relocate("kotlinx", "kruntimex")
+            relocatePackages.forEach {
+                relocate(it, "${project.group}.shadow.$it")
+            }
+            dependencies {
+                exclude("/META-INF/services/javax.servlet.ServletContainerInitializer")
+                exclude("/module-info.class")
+                exclude("/ch/qos/logback/classic/servlet/*")
+                exclude("/target/classes/*")
+            }
         }
         val clean by getting
         val cleanGeneratedClasses by registering(Delete::class) {

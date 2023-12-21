@@ -106,11 +106,12 @@ subprojects {
                 val propertyOrEnv: (String, String) -> String? = { property, env ->
                     findProperty(property)?.toString() ?: System.getenv(env)
                 }
-                useInMemoryPgpKeys(
-                    propertyOrEnv("gpgSigningKey", "GPG_SIGNING_KEY"),
-                    propertyOrEnv("gpgPassphrase", "GPG_PASSPHRASE")
-                )
-                sign(this@withType)
+                val signingKey = propertyOrEnv("gpgSigningKey", "GPG_SIGNING_KEY")
+                val passphrase = propertyOrEnv("gpgPassphrase", "GPG_PASSPHRASE")
+                if(signingKey != null && passphrase != null) {
+                    useInMemoryPgpKeys(signingKey, passphrase)
+                    sign(this@withType)
+                }
             }
         }
     }
