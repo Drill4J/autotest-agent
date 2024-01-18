@@ -16,13 +16,11 @@
 package com.epam.drill.test.agent.session.jvm
 
 import kotlinx.cinterop.memScoped
-import kotlinx.cinterop.reinterpret
 import com.epam.drill.jvmapi.callNativeVoidMethodWithString
-import com.epam.drill.jvmapi.ex
 import com.epam.drill.jvmapi.gen.JNIEnv
 import com.epam.drill.jvmapi.gen.jobject
 import com.epam.drill.jvmapi.gen.jstring
-import com.epam.drill.jvmapi.withJString
+import com.epam.drill.jvmapi.withStringsRelease
 import com.epam.drill.test.agent.session.SessionProvider
 
 @Suppress("UNUSED", "UNUSED_PARAMETER")
@@ -36,13 +34,12 @@ fun startSession(
     testName: jstring?,
     isGlobal: UByte
 ) = memScoped {
-    withJString {
-        ex = env.getPointer(this@memScoped).reinterpret()
+    withStringsRelease {
         SessionProvider.startSession(
-            sessionId.toKString(),
-            testType.toKString(),
+            toKString(sessionId),
+            toKString(testType),
             isRealtime == 1.toUByte(),
-            testName?.toKString(),
+            testName?.let(this::toKString),
             isGlobal == 1.toUByte()
         )
     }

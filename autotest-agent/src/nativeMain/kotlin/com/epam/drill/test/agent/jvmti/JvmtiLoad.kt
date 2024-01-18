@@ -31,7 +31,8 @@ import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.reinterpret
-import com.epam.drill.jvmapi.JNIEnvPointer
+import com.epam.drill.jvmapi.checkEx
+import com.epam.drill.jvmapi.env
 import com.epam.drill.jvmapi.gen.JVMTI_VERSION
 import com.epam.drill.jvmapi.gen.JavaVMVar
 import com.epam.drill.jvmapi.gen.jvmtiEnvVar
@@ -57,33 +58,17 @@ fun agentOnLoad(vmPointer: CPointer<JavaVMVar>, options: String, reservedPtr: Lo
 fun agentOnUnload(vmPointer: CPointer<JavaVMVar>) = Agent.agentOnUnload()
 
 @Suppress("UNUSED")
+@CName("checkEx")
+fun checkEx(errCode: jvmtiError, funName: String) = checkEx(errCode, funName)
+
+@Suppress("UNUSED")
 @CName("currentEnvs")
-fun currentEnvs(): JNIEnvPointer = com.epam.drill.jvmapi.currentEnvs()
+fun currentEnvs() = env
 
 @Suppress("UNUSED")
 @CName("jvmtii")
-fun jvmtii(): CPointer<jvmtiEnvVar>? = com.epam.drill.jvmapi.jvmtii()
+fun jvmtii() = jvmti.value
 
 @Suppress("UNUSED")
 @CName("getJvm")
-fun getJvm(): CPointer<JavaVMVar>? = vmGlobal.value
-
-@Suppress("UNUSED")
-@CName("checkEx")
-fun checkEx(errCode: jvmtiError, funName: String): jvmtiError = com.epam.drill.jvmapi.checkEx(errCode, funName)
-
-@Suppress("UNUSED")
-@CName("JNI_OnUnload")
-fun jniOnUnload() = Unit
-
-@Suppress("UNUSED")
-@CName("JNI_GetCreatedJavaVMs")
-fun jniGetCreatedJavaVMs() = Unit
-
-@Suppress("UNUSED")
-@CName("JNI_CreateJavaVM")
-fun jniCreateJavaVM() = Unit
-
-@Suppress("UNUSED")
-@CName("JNI_GetDefaultJavaVMInitArgs")
-fun jniGetDefaultJavaVMInitArgs() = Unit
+fun getJvm() = vmGlobal.value
