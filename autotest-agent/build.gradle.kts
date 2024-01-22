@@ -1,13 +1,13 @@
-import java.net.URI
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.hierynomus.gradle.license.tasks.LicenseCheck
+import com.hierynomus.gradle.license.tasks.LicenseFormat
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.konan.target.presetName
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import com.hierynomus.gradle.license.tasks.LicenseCheck
-import com.hierynomus.gradle.license.tasks.LicenseFormat
+import java.net.URI
 
 @Suppress("RemoveRedundantBackticks")
 plugins {
@@ -52,11 +52,12 @@ kotlin {
                 linkerOpts("-lpsapi", "-lwsock32", "-lws2_32", "-lmswsock")
             }
         }
-        macosX64(configure = configureNativeTarget).apply {
-            binaries.all {
-                linkerOpts("-ld64")
-            }
-        }
+//        macosX64(configure = configureNativeTarget).apply {
+//            binaries.all {
+//                linkerOpts("-ld64")
+//            }
+//        }
+        macosX64(configure = configureNativeTarget)
         currentPlatformTarget().compilations["main"].defaultSourceSet {
             kotlin.srcDir("src/nativeMain/kotlin")
             resources.srcDir("src/nativeMain/resources")
@@ -117,11 +118,12 @@ kotlin {
         }
     }
     val copyNativeClassesForTarget: TaskContainer.(KotlinNativeTarget) -> Task = {
-        val copyNativeClasses:TaskProvider<Copy> = register("copyNativeClasses${it.targetName.capitalize()}", Copy::class) {
-            group = "build"
-            from("src/nativeMain/kotlin")
-            into("src/${it.targetName}Main/kotlin/gen")
-        }
+        val copyNativeClasses: TaskProvider<Copy> =
+            register("copyNativeClasses${it.targetName.capitalize()}", Copy::class) {
+                group = "build"
+                from("src/nativeMain/kotlin")
+                into("src/${it.targetName}Main/kotlin/gen")
+            }
         copyNativeClasses.get()
     }
     val filterOutCurrentPlatform: (KotlinNativeTarget) -> Boolean = {
@@ -193,7 +195,8 @@ distributions {
     val enabledNativeTargets = kotlin.targets.withType<KotlinNativeTarget>().filter(filterEnabledNativeTargets)
     enabledNativeTargets.forEach {
         val runtimeJarTask = tasks["runtimeJar"]
-        val nativeAgentLinkTask = tasks["link${nativeAgentLibName.capitalize()}DebugShared${it.targetName.capitalize()}"]
+        val nativeAgentLinkTask =
+            tasks["link${nativeAgentLibName.capitalize()}DebugShared${it.targetName.capitalize()}"]
         create(it.targetName) {
             distributionBaseName.set(it.targetName)
             contents {
