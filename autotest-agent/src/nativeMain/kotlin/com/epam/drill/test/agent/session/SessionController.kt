@@ -32,7 +32,6 @@ object SessionController {
     private val agentConfig = AgentConfig.config
     val testHash = AtomicReference("undefined")
     val sessionId = AtomicReference("")
-    private val token = AtomicReference("")
     private val logger = KotlinLogging.logger("com.epam.drill.test.agent.actions.SessionController")
 
     private val dispatchActionPath: String
@@ -111,24 +110,28 @@ object SessionController {
     }.getOrNull().also { TestListener.reset() }
 
     private fun dispatchAction(payload: String): HttpResponse {
-        val token = token.value.takeIf { it.isNotBlank() } ?: getToken().also {
-            token.value = it
+        val headers = mutableMapOf(
+            "Content-Type" to "application/json"
+        ).also {
+            addApiKey(it)
         }
-        logger.debug { "Auth token: $token" }
         logger.debug {
             """Dispatch action: 
                                 |path:$dispatchActionPath
                                 |payload:${payload.substring(0, 4000)}
+                                |headers:$headers
                                 |""".trimMargin()
         }
         return httpCall(
             agentConfig.adminAddress + dispatchActionPath, HttpRequest(
-                "POST", mapOf(
-                    "Authorization" to "Bearer $token",
-                    "Content-Type" to "application/json"
-                ), payload
+                "POST", headers, payload
             )
         ).apply { if (code != 200) error("Can't perform request: $this") }
+    }
+
+    private fun addApiKey(headers: MutableMap<String, String>) {
+        if (agentConfig.apiKey != null)
+            headers += "X-Api-Key" to agentConfig.apiKey
     }
 
     fun sendSessionData(data: String) = runCatching {
@@ -142,34 +145,6 @@ object SessionController {
     }.onFailure {
         logger.warn(it) { "Can't send session data ${sessionId.value}" }
     }.getOrNull().also { TestListener.reset() }
-
-    private fun getToken(): String {
-        if (agentConfig.adminUserName.isNullOrEmpty() || agentConfig.adminPassword.isNullOrEmpty()) {
-            val hostPort = agentConfig.adminAddress?.split(":")
-            throw Error(
-                """
-                    Missing credentials to authorize in Drill4J Admin Backend.
-                    Please provide username and password in agent config section.
-                    Current values:
-                    adminHost = ${hostPort[0]}
-                    adminPort = ${hostPort[1]}
-                    adminUserName = ${agentConfig.adminUserName}
-                    adminPassword = ${agentConfig.adminPassword}
-                """.trimIndent()
-            )
-        }
-        val httpCall = httpCall(
-            agentConfig.adminAddress + "/api/sign-in", HttpRequest(
-                "POST",
-                body = json.encodeToString(
-                    UserData.serializer(),
-                    UserData(agentConfig.adminUserName, agentConfig.adminPassword)
-                )
-            )
-        )
-        if (httpCall.code != 200) error("Can't perform request: $httpCall")
-        return httpCall.headers["Authorization"] ?: error("No token received during login")
-    }
 }
 
 @Serializable
