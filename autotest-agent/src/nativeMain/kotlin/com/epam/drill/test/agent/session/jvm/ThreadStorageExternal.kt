@@ -20,11 +20,10 @@ import kotlinx.cinterop.reinterpret
 import com.epam.drill.jvmapi.callNativeStringMethod
 import com.epam.drill.jvmapi.callNativeVoidMethod
 import com.epam.drill.jvmapi.callNativeVoidMethodWithString
-import com.epam.drill.jvmapi.ex
 import com.epam.drill.jvmapi.gen.JNIEnv
 import com.epam.drill.jvmapi.gen.jobject
 import com.epam.drill.jvmapi.gen.jstring
-import com.epam.drill.jvmapi.withJString
+import com.epam.drill.jvmapi.withStringsRelease
 import com.epam.drill.test.agent.session.ThreadStorage
 
 @Suppress("UNUSED")
@@ -54,12 +53,11 @@ fun sendSessionData(
     scriptParsed: jstring?,
     testId: jstring?
 ) = memScoped {
-    withJString {
-        ex = env.getPointer(this@memScoped).reinterpret()
+    withStringsRelease {
         ThreadStorage.sendSessionData(
-            preciseCoverage?.toKString() ?: "",
-            scriptParsed?.toKString() ?: "",
-            testId?.toKString() ?: ""
+            preciseCoverage?.let(this::toKString) ?: "",
+            scriptParsed?.let(this::toKString) ?: "",
+            testId?.let(this::toKString) ?: ""
         )
     }
 }
