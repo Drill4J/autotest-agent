@@ -21,7 +21,8 @@ repositories {
 
 dependencies {
     implementation("org.javassist:javassist:$javassistVersion")
-    implementation(project(":http-clients-instrumentation"))
+    implementation(project(":agent-instrumentation"))
+    implementation(project(":logging"))
     implementation(project(":knasm"))
     implementation(project(":autotest-runtime"))
     implementation(project(":tests-common"))

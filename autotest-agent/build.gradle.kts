@@ -78,7 +78,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
                 implementation(project(":logging"))
                 implementation(project(":knasm"))
-                implementation(project(":http-clients-instrumentation"))
+                implementation(project(":agent-instrumentation"))
                 implementation(project(":test2code-api"))
             }
         }
@@ -91,7 +91,7 @@ kotlin {
                 implementation("com.github.kklisura.cdt:cdt-java-client:$cdtJavaClientVersion")
                 implementation("com.squareup.okhttp3:okhttp:$squareupOkHttpVersion")
                 implementation(project(":knasm"))
-                implementation(project(":http-clients-instrumentation"))
+                implementation(project(":agent-instrumentation"))
                 implementation(project(":autotest-runtime"))
 
                 api("org.javassist:javassist:$javassistVersion")

@@ -15,35 +15,34 @@
  */
 package com.epam.drill.test.agent.instrument.strategy.kafka
 
-import com.epam.drill.instrument.*
+import com.epam.drill.agent.instrument.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrument.strategy.*
 import javassist.*
-import java.security.*
+import mu.KotlinLogging
 
-object Kafka : TransformStrategy() {
+object Kafka : AbstractTransformerObject() {
 
     private const val KAFKA_PRODUCER_INTERFACE = "org/apache/kafka/clients/producer/Producer"
 
+    override val logger = KotlinLogging.logger {}
+
     override fun permit(className: String?, superName: String?, interfaces: Array<String?>) = interfaces.any { it == KAFKA_PRODUCER_INTERFACE }
 
-    override fun instrument(
-        ctClass: CtClass,
-        pool: ClassPool,
-        classLoader: ClassLoader?,
-        protectionDomain: ProtectionDomain?,
-    ): ByteArray? {
+    override fun transform(className: String, ctClass: CtClass) {
         ctClass.getDeclaredMethods("send").forEach {
             it.insertBefore("""
                 if ($ARE_DRILL_HEADERS_PRESENT) {
-                    ${Log::class.java.name}.INSTANCE.${Log::injectHeaderLog.name}($TEST_NAME_VALUE_CALC_LINE,$SESSION_ID_VALUE_CALC_LINE);
+                    ${this::class.java.name}.INSTANCE.${this::injectHeaderLog.name}($TEST_NAME_VALUE_CALC_LINE,$SESSION_ID_VALUE_CALC_LINE);
                     $1.headers().add("$SESSION_ID_HEADER", $SESSION_ID_VALUE_CALC_LINE.getBytes());
                     $1.headers().add("$TEST_ID_HEADER", $TEST_NAME_VALUE_CALC_LINE.getBytes());
                 }
             """.trimIndent())
         }
-        return ctClass.toBytecode()
     }
 
+    fun injectHeaderLog(header: String?, session: String?) {
+        if (header != null && session != null) logger.debug { "Adding headers: $header to $session" }
+    }
 
 }
