@@ -15,7 +15,7 @@
  */
 package com.epam.drill.test.agent.instrument.strategy.selenium
 
-import com.epam.drill.instrument.*
+import com.epam.drill.agent.instrument.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.configuration.*
 import javassist.*
@@ -25,7 +25,7 @@ import java.security.*
 import mu.KotlinLogging
 
 @Suppress("PrivatePropertyName")
-object Selenium : TransformStrategy() {
+object Selenium : AbstractTransformerObject() {
 
     private const val Command = "org.openqa.selenium.remote.Command"
     private const val ImmutableMap = "com.google.common.collect.ImmutableMap"
@@ -42,7 +42,7 @@ object Selenium : TransformStrategy() {
     internal const val addDrillCookiesMethod = "addDrillCookies"
     private const val isFirefoxBrowser = "isFirefoxBrowser"
 
-    private val logger = KotlinLogging.logger {}
+    override val logger = KotlinLogging.logger {}
 
     init {
         val extension = this::class.java.getResource("/$EXTENSION_NAME")
@@ -56,12 +56,7 @@ object Selenium : TransformStrategy() {
         return className == "org/openqa/selenium/remote/RemoteWebDriver"
     }
 
-    override fun instrument(
-        ctClass: CtClass,
-        pool: ClassPool,
-        classLoader: ClassLoader?,
-        protectionDomain: ProtectionDomain?,
-    ): ByteArray? {
+    override fun transform(className: String, ctClass: CtClass) {
         logger.debug { "starting instrument ${ctClass.name}..." }
 
         var remoteWebDriverConstructorInstrumented = false;
@@ -264,7 +259,6 @@ object Selenium : TransformStrategy() {
                 ${WebDriverThreadStorage::class.java.name}.INSTANCE.${WebDriverThreadStorage::clear.name}();
             """.trimIndent()
         )
-        return ctClass.toBytecode()
     }
 
     private fun getChromeDevTool() = "${DevToolStorage::class.java.name}.INSTANCE.${DevToolStorage::get.name}()"

@@ -24,7 +24,7 @@ repositories {
 
 dependencies {
     implementation("org.slf4j:slf4j-simple:$slf4jVersion")
-    implementation(project(":http-clients-instrumentation"))
+    implementation(project(":agent-instrumentation"))
     implementation(project(":autotest-runtime"))
     implementation(project(":tests-common"))
 

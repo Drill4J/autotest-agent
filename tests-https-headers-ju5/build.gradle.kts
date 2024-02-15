@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":http-clients-instrumentation"))
+    implementation(project(":agent-instrumentation"))
     implementation(project(":autotest-runtime"))
     implementation(project(":tests-common"))
 
