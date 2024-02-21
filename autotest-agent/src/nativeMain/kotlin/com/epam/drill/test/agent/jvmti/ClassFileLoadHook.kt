@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.agent.jvmti.event
+package com.epam.drill.test.agent.jvmti
 
 import com.epam.drill.jvmapi.gen.*
 import com.epam.drill.test.agent.instrument.*

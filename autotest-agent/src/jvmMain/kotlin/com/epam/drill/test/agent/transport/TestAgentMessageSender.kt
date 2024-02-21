@@ -53,6 +53,7 @@ object TestAgentMessageSender : AgentMessageSender {
 //            Configuration.agentMetadata.id,
 //            Configuration.agentMetadata.buildVersion
             AgentConfig.agentId()!!,
+            AgentConfig.groupId() ?: "",
             null
         )
         val queue = InMemoryAgentMessageQueue(
