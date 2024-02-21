@@ -15,20 +15,12 @@
  */
 package com.epam.drill.test.agent
 
-import com.epam.drill.jvmapi.gen.AddCapabilities
-import com.epam.drill.jvmapi.gen.AddToBootstrapClassLoaderSearch
-import com.epam.drill.jvmapi.gen.JNI_OK
-import com.epam.drill.jvmapi.gen.SetEventCallbacks
-import com.epam.drill.jvmapi.gen.jvmtiCapabilities
-import com.epam.drill.jvmapi.gen.jvmtiEventCallbacks
 import com.epam.drill.logging.LoggingConfiguration
 import com.epam.drill.test.agent.configuration.AgentConfig
 import com.epam.drill.test.agent.configuration.AgentRawConfig
-import com.epam.drill.test.agent.jvmti.enableJvmtiEventVmDeath
-import com.epam.drill.test.agent.jvmti.enableJvmtiEventVmInit
-import com.epam.drill.test.agent.jvmti.event.classFileLoadHook
-import com.epam.drill.test.agent.jvmti.event.vmDeathEvent
-import com.epam.drill.test.agent.jvmti.event.vmInitEvent
+import com.epam.drill.test.agent.jvmti.classFileLoadHook
+import com.epam.drill.test.agent.jvmti.vmInitEvent
+import com.epam.drill.test.agent.jvmti.vmDeathEvent
 import com.epam.drill.test.agent.serialization.StringPropertyDecoder
 import com.epam.drill.test.agent.session.SessionController
 import kotlinx.cinterop.alloc
@@ -37,6 +29,11 @@ import kotlinx.cinterop.ptr
 import kotlinx.cinterop.sizeOf
 import kotlinx.cinterop.staticCFunction
 import kotlin.native.concurrent.freeze
+import com.epam.drill.jvmapi.callObjectVoidMethod
+import com.epam.drill.jvmapi.callObjectVoidMethodWithInt
+import com.epam.drill.jvmapi.callObjectVoidMethodWithString
+import com.epam.drill.jvmapi.gen.*
+import com.epam.drill.test.agent.instrument.StrategyManager
 import mu.KotlinLogging
 
 object Agent {
@@ -82,14 +79,36 @@ object Agent {
         }
     }
 
+    fun agentOnVmInit() {
+        logger.debug { "Init event" }
+        initRuntimeIfNeeded()
+        val agentConfig = AgentConfig.config
+        if (!agentConfig.isManuallyControlled && !agentConfig.sessionForEachTest)
+            SessionController.startSession(agentConfig.sessionId)
+        agentConfig.run {
+            logger.trace { "Initializing StrategyManager" }
+            StrategyManager.initialize(rawFrameworkPlugins, isManuallyControlled)
+            logger.trace { "Configuring logging" }
+            callObjectVoidMethod(LoggingConfiguration::class, LoggingConfiguration::readDefaultConfiguration.name)
+            callObjectVoidMethodWithString(LoggingConfiguration::class, "setLoggingLevels", logLevel)
+            callObjectVoidMethodWithString(LoggingConfiguration::class, LoggingConfiguration::setLoggingFilename, logFile)
+            callObjectVoidMethodWithInt(LoggingConfiguration::class, LoggingConfiguration::setLogMessageLimit, logLimit)
+        }
+        SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, null)
+    }
+
+    fun agentOnVmDeath() {
+        logger.debug { "Death Event" }
+    }
+
     private fun callbackRegister() = memScoped {
         val eventCallbacks = alloc<jvmtiEventCallbacks>()
         eventCallbacks.VMInit = staticCFunction(::vmInitEvent)
         eventCallbacks.VMDeath = staticCFunction(::vmDeathEvent)
         eventCallbacks.ClassFileLoadHook = staticCFunction(::classFileLoadHook)
         SetEventCallbacks(eventCallbacks.ptr, sizeOf<jvmtiEventCallbacks>().toInt())
-        enableJvmtiEventVmInit()
-        enableJvmtiEventVmDeath()
+        SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_VM_INIT, null)
+        SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_VM_DEATH, null)
     }
 
 }

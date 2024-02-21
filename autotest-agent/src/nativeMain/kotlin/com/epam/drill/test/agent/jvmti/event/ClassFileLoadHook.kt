@@ -21,47 +21,46 @@ import io.ktor.utils.io.bits.*
 import kotlinx.cinterop.*
 import mu.KotlinLogging
 
-@SharedImmutable
-private val logger = KotlinLogging.logger("com.epam.drill.test.agent.instrumenting.ClassFileLoadHook")
+object ClassFileLoadHook {
 
-@Suppress("UNUSED_PARAMETER")
-fun classFileLoadHook(
-    jvmtiEnv: CPointer<jvmtiEnvVar>?,
-    jniEnv: CPointer<JNIEnvVar>?,
-    classBeingRedefined: jclass?,
-    loader: jobject?,
-    kClassName: CPointer<ByteVar>?,
-    protection_domain: jobject?,
-    classDataLen: jint,
-    classData: CPointer<UByteVar>?,
-    newClassDataLen: CPointer<jintVar>?,
-    newData: CPointer<CPointerVar<UByteVar>>?
-) {
-    initRuntimeIfNeeded()
-    val className = kClassName?.toKString() ?: return
-    if (notSuitableClass(loader, protection_domain, className, classData)
-        && !className.contains("Http") // raw hack for http(s) classes
-    ) return
-    val classBytes = ByteArray(classDataLen).apply {
-        Memory.of(classData!!, classDataLen).loadByteArray(0, this)
+    private val logger = KotlinLogging.logger("com.epam.drill.test.agent.instrumenting.ClassFileLoadHook")
+
+    operator fun invoke(
+        loader: jobject?,
+        kClassName: CPointer<ByteVar>?,
+        protectionDomain: jobject?,
+        classDataLen: jint,
+        classData: CPointer<UByteVar>?,
+        newClassDataLen: CPointer<jintVar>?,
+        newData: CPointer<CPointerVar<UByteVar>>?
+    ) {
+        initRuntimeIfNeeded()
+        val className = kClassName?.toKString() ?: return
+        if (notSuitableClass(loader, protectionDomain, className, classData)
+            && !className.contains("Http") // raw hack for http(s) classes
+        ) return
+        val classBytes = ByteArray(classDataLen).apply {
+            Memory.of(classData!!, classDataLen).loadByteArray(0, this)
+        }
+        val instrumentedBytes = AgentClassTransformer.transform(className, classBytes, loader, protectionDomain) ?: return
+        val instrumentedSize = instrumentedBytes.size
+        logger.debug { "Class $className has been transformed" }
+        logger.debug { "Applying instrumenting (old: $classDataLen to new: $instrumentedSize)" }
+        Allocate(instrumentedSize.toLong(), newData)
+        val newBytes = newData!!.pointed.value!!
+        instrumentedBytes.forEachIndexed { index, byte ->
+            newBytes[index] = byte.toUByte()
+        }
+        newClassDataLen?.pointed?.value = instrumentedSize
+        logger.info { "Successfully instrumented class $className" }
     }
-    val instrumentedBytes = AgentClassTransformer.transform(className, classBytes, loader, protection_domain) ?: return
-    val instrumentedSize = instrumentedBytes.size
-    logger.debug { "Class $className has been transformed" }
-    logger.debug { "Applying instrumenting (old: $classDataLen to new: $instrumentedSize)" }
-    Allocate(instrumentedSize.toLong(), newData)
-    val newBytes = newData!!.pointed.value!!
-    instrumentedBytes.forEachIndexed { index, byte ->
-        newBytes[index] = byte.toUByte()
-    }
-    newClassDataLen?.pointed?.value = instrumentedSize
-    logger.info { "Successfully instrumented class $className" }
+
+    private fun notSuitableClass(
+        loader: jobject?,
+        protectionDomain: jobject?,
+        className: String?,
+        classData: CPointer<UByteVar>?
+    ): Boolean =
+        loader == null || protectionDomain == null || className == null || classData == null
+
 }
-
-private fun notSuitableClass(
-    loader: jobject?,
-    protection_domain: jobject?,
-    className: String?,
-    classData: CPointer<UByteVar>?
-): Boolean =
-    loader == null || protection_domain == null || className == null || classData == null
