@@ -33,6 +33,8 @@ val includeSharedLib: Settings.(String) -> Unit = {
 includeSharedLib("common")
 includeSharedLib("jvmapi")
 includeSharedLib("agent-instrumentation")
+includeSharedLib("agent-transport")
+includeSharedLib("agent-config")
 includeSharedLib("knasm")
 includeSharedLib("kt2dts")
 includeSharedLib("kt2dts-api-sample")

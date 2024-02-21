@@ -22,7 +22,6 @@ import com.epam.drill.test.agent.configuration.*
 import com.epam.drill.test.agent.http.*
 import com.epam.drill.test.agent.serialization.*
 import kotlinx.coroutines.*
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.*
 import kotlin.native.concurrent.*
 import kotlin.time.*
@@ -146,9 +145,3 @@ object SessionController {
         logger.warn(it) { "Can't send session data ${sessionId.value}" }
     }.getOrNull().also { TestListener.reset() }
 }
-
-@Serializable
-private data class UserData(
-    val username: String,
-    val password: String,
-)
