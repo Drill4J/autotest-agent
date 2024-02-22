@@ -26,7 +26,6 @@ dependencies {
     implementation("org.seleniumhq.selenium:selenium-java:4.0.0-alpha-4")
     implementation("io.github.bonigarcia:webdrivermanager:3.8.1")
     implementation(project(":http-clients-instrumentation"))
-    implementation(project(":autotest-runtime"))
     implementation(project(":tests-common"))
 
     api(project(":autotest-agent")) { isTransitive = false }

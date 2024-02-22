@@ -86,7 +86,6 @@ kotlin {
                 implementation("io.aesy:datasize:$aesyDatasizeVersion")
                 implementation(project(":agent-transport"))
                 implementation(project(":knasm"))
-                implementation(project(":autotest-runtime"))
             }
         }
         val configureNativeDependencies: KotlinSourceSet.() -> Unit = {

@@ -24,7 +24,6 @@ repositories {
 
 dependencies {
     implementation(project(":agent-instrumentation"))
-    implementation(project(":autotest-runtime"))
     implementation(project(":tests-common"))
 
     api(project(":autotest-agent")) { isTransitive = false }

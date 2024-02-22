@@ -25,7 +25,6 @@ dependencies {
     implementation(project(":logging"))
     implementation(project(":common"))
     implementation(project(":knasm"))
-    implementation(project(":autotest-runtime"))
     implementation(project(":tests-common"))
 
     api(project(":autotest-agent")) { isTransitive = false }
