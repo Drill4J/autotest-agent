@@ -28,15 +28,17 @@ import kotlin.time.*
 import mu.KotlinLogging
 
 object SessionController {
-    private val agentConfig = AgentConfig.config
     val testHash = AtomicReference("undefined")
     val sessionId = AtomicReference("")
     private val logger = KotlinLogging.logger("com.epam.drill.test.agent.actions.SessionController")
 
     private val dispatchActionPath: String
-        get() = if (agentConfig.groupId.isBlank()) {
-            "/api/agents/${agentConfig.agentId}/plugins/${agentConfig.pluginId}/dispatch-action"
-        } else "/api/groups/${agentConfig.groupId}/plugins/${agentConfig.pluginId}/dispatch-action"
+        get() =
+            if (Configuration.agentMetadata.serviceGroupId.isBlank()) {
+                "/api/agents/${Configuration.agentMetadata.id}/plugins/${Configuration.parameters[ParameterDefinitions.PLUGIN_ID]}/dispatch-action"
+            } else {
+                "/api/groups/${Configuration.agentMetadata.serviceGroupId}/plugins/${Configuration.parameters[ParameterDefinitions.PLUGIN_ID]}/dispatch-action"
+            }
 
     init {
         GlobalScope.launch {
@@ -66,10 +68,10 @@ object SessionController {
     fun startSession(
         customSessionId: String?,
         testType: String = "AUTO",
-        isRealtime: Boolean = agentConfig.isRealtimeEnable,
+        isRealtime: Boolean = Configuration.parameters[ParameterDefinitions.IS_REALTIME_ENABLED],
         testName: String? = null,
-        isGlobal: Boolean = agentConfig.isGlobal,
-        labels: Set<Label> = agentConfig.labelCollection,
+        isGlobal: Boolean = Configuration.parameters[ParameterDefinitions.IS_GLOBAL],
+        labels: Set<Label> = Configuration.parameters[ParameterDefinitions.LABELS],
     ) = runCatching {
         logger.debug { "Attempting to start a Drill4J test session..." }
         val sessionId = customSessionId ?: uuid4().toString()
@@ -122,15 +124,15 @@ object SessionController {
                                 |""".trimMargin()
         }
         return httpCall(
-            agentConfig.adminAddress + dispatchActionPath, HttpRequest(
+            Configuration.parameters[ParameterDefinitions.ADMIN_ADDRESS] + dispatchActionPath, HttpRequest(
                 "POST", headers, payload
             )
         ).apply { if (code != 200) error("Can't perform request: $this") }
     }
 
     private fun addApiKey(headers: MutableMap<String, String>) {
-        if (agentConfig.apiKey != null)
-            headers += "X-Api-Key" to agentConfig.apiKey
+        if (Configuration.parameters[ParameterDefinitions.API_KEY].isNotBlank())
+            headers += "X-Api-Key" to Configuration.parameters[ParameterDefinitions.API_KEY]
     }
 
     fun sendSessionData(data: String) = runCatching {

@@ -29,16 +29,16 @@ actual object ThreadStorage {
     }
 
     actual fun startSession(testName: String?) {
-        if (AgentConfig.config.sessionForEachTest) {
+        if (Configuration.parameters[ParameterDefinitions.SESSION_FOR_EACH_TEST]) {
             SessionController.startSession(
-                customSessionId = AgentConfig.config.sessionId,
+                customSessionId = Configuration.parameters[ParameterDefinitions.SESSION_ID],
                 testName = testName
             )
         }
     }
 
     actual fun stopSession() = SessionController.run {
-        if (AgentConfig.config.sessionForEachTest) {
+        if (Configuration.parameters[ParameterDefinitions.SESSION_FOR_EACH_TEST]) {
             stopSession(sessionIds = sessionId.value)
         }
     }

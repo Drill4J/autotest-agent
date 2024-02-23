@@ -130,7 +130,7 @@ actual object TestListener {
             )
             logger.info { "Test: $test FINISHED. Result:$status" }
             clearDrillHeaders(it)
-            if (AgentConfig.withJsCoverage()) sendSessionData(test.hash())
+            if (Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE]) sendSessionData(test.hash())
         }
     }
 

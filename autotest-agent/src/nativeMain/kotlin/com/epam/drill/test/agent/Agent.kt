@@ -15,13 +15,9 @@
  */
 package com.epam.drill.test.agent
 
-import com.epam.drill.logging.LoggingConfiguration
-import com.epam.drill.test.agent.configuration.AgentConfig
-import com.epam.drill.test.agent.configuration.AgentRawConfig
 import com.epam.drill.test.agent.jvmti.classFileLoadHook
 import com.epam.drill.test.agent.jvmti.vmInitEvent
 import com.epam.drill.test.agent.jvmti.vmDeathEvent
-import com.epam.drill.test.agent.serialization.StringPropertyDecoder
 import com.epam.drill.test.agent.session.SessionController
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
@@ -29,10 +25,14 @@ import kotlinx.cinterop.ptr
 import kotlinx.cinterop.sizeOf
 import kotlinx.cinterop.staticCFunction
 import kotlin.native.concurrent.freeze
-import com.epam.drill.jvmapi.callObjectVoidMethod
-import com.epam.drill.jvmapi.callObjectVoidMethodWithInt
-import com.epam.drill.jvmapi.callObjectVoidMethodWithString
+import com.epam.drill.agent.configuration.DefaultParameterDefinitions.INSTALLATION_DIR
 import com.epam.drill.jvmapi.gen.*
+import com.epam.drill.test.agent.configuration.AgentLoggingConfiguration
+import com.epam.drill.test.agent.configuration.Configuration
+import com.epam.drill.test.agent.configuration.ParameterDefinitions.FRAMEWORK_PLUGINS
+import com.epam.drill.test.agent.configuration.ParameterDefinitions.IS_MANUALLY_CONTROLLED
+import com.epam.drill.test.agent.configuration.ParameterDefinitions.SESSION_FOR_EACH_TEST
+import com.epam.drill.test.agent.configuration.ParameterDefinitions.SESSION_ID
 import com.epam.drill.test.agent.instrument.StrategyManager
 import mu.KotlinLogging
 
@@ -42,26 +42,15 @@ object Agent {
 
     fun agentOnLoad(options: String): Int = memScoped {
         try {
-            val config = options.toAgentParams().freeze()
-            setUnhandledExceptionHook({ thr: Throwable ->
-                logger.error(thr) { "Unhandled event $thr" }
-            }.freeze())
-            val jvmtiCapabilities = alloc<jvmtiCapabilities>()
-            jvmtiCapabilities.can_retransform_classes = 1.toUInt()
-            jvmtiCapabilities.can_retransform_any_class = 1.toUInt()
-            jvmtiCapabilities.can_maintain_original_method_order = 1.toUInt()
-            AddCapabilities(jvmtiCapabilities.ptr)
-            AddToBootstrapClassLoaderSearch("${config.drillInstallationDir}/drillRuntime.jar")
-            callbackRegister()
+            AgentLoggingConfiguration.defaultNativeLoggingConfiguration()
+            Configuration.initializeNative(options)
+            AgentLoggingConfiguration.updateNativeLoggingConfiguration()
 
-            config.browserProxyAddress?.takeIf { "/" in it }?.let {
-                logger.warn { "Expected format for a browser proxy is hostname.com:1234" }
-            }
+            addCapabilities()
+            setEventCallbacks()
+            setUnhandledExceptionHook({ thr: Throwable -> logger.error(thr) { "Unhandled event $thr" } }.freeze())
+            AddToBootstrapClassLoaderSearch("${Configuration.parameters[INSTALLATION_DIR]}/drill-runtime.jar")
 
-            if (config.devToolsProxyAddress.isNullOrBlank()) {
-                logger.error { "UI coverage will be lost. Please specify devToolsProxyAddress" }
-            }
-            AgentConfig.updateConfig(config)
         } catch (ex: Throwable) {
             logger.error(ex) { "Can't load the agent. Reason:" }
         }
@@ -71,8 +60,7 @@ object Agent {
     fun agentOnUnload() {
         try {
             logger.info { "Shutting the agent down" }
-            val agentConfig = AgentConfig.config
-            if (!agentConfig.isManuallyControlled && !agentConfig.sessionForEachTest)
+            if (!Configuration.parameters[IS_MANUALLY_CONTROLLED] && !Configuration.parameters[SESSION_FOR_EACH_TEST])
                 SessionController.stopSession()
         } catch (ex: Throwable) {
             logger.error { "Failed to unload the agent properly. Reason: ${ex.message}" }
@@ -82,26 +70,34 @@ object Agent {
     fun agentOnVmInit() {
         logger.debug { "Init event" }
         initRuntimeIfNeeded()
-        val agentConfig = AgentConfig.config
-        if (!agentConfig.isManuallyControlled && !agentConfig.sessionForEachTest)
-            SessionController.startSession(agentConfig.sessionId)
-        agentConfig.run {
-            logger.trace { "Initializing StrategyManager" }
-            StrategyManager.initialize(rawFrameworkPlugins, isManuallyControlled)
-            logger.trace { "Configuring logging" }
-            callObjectVoidMethod(LoggingConfiguration::class, LoggingConfiguration::readDefaultConfiguration.name)
-            callObjectVoidMethodWithString(LoggingConfiguration::class, "setLoggingLevels", logLevel)
-            callObjectVoidMethodWithString(LoggingConfiguration::class, LoggingConfiguration::setLoggingFilename, logFile)
-            callObjectVoidMethodWithInt(LoggingConfiguration::class, LoggingConfiguration::setLogMessageLimit, logLimit)
-        }
         SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, null)
+
+        AgentLoggingConfiguration.defaultJvmLoggingConfiguration()
+        AgentLoggingConfiguration.updateJvmLoggingConfiguration()
+        Configuration.initializeJvm()
+
+        if (!Configuration.parameters[IS_MANUALLY_CONTROLLED] && !Configuration.parameters[SESSION_FOR_EACH_TEST])
+            SessionController.startSession(Configuration.parameters[SESSION_ID])
+        logger.trace { "Initializing StrategyManager..." }
+        StrategyManager.initialize(
+            Configuration.parameters[FRAMEWORK_PLUGINS].joinToString(";"),
+            Configuration.parameters[IS_MANUALLY_CONTROLLED]
+        )
     }
 
     fun agentOnVmDeath() {
         logger.debug { "Death Event" }
     }
 
-    private fun callbackRegister() = memScoped {
+    private fun addCapabilities() = memScoped {
+        val jvmtiCapabilities = alloc<jvmtiCapabilities>()
+        jvmtiCapabilities.can_retransform_classes = 1.toUInt()
+        jvmtiCapabilities.can_retransform_any_class = 1.toUInt()
+        jvmtiCapabilities.can_maintain_original_method_order = 1.toUInt()
+        AddCapabilities(jvmtiCapabilities.ptr)
+    }
+
+    private fun setEventCallbacks() = memScoped {
         val eventCallbacks = alloc<jvmtiEventCallbacks>()
         eventCallbacks.VMInit = staticCFunction(::vmInitEvent)
         eventCallbacks.VMDeath = staticCFunction(::vmDeathEvent)
@@ -112,27 +108,3 @@ object Agent {
     }
 
 }
-
-private const val WRONG_PARAMS = "Agent parameters are not specified correctly."
-
-private fun String?.toAgentParams() =
-    AgentRawConfig.serializer().deserialize(StringPropertyDecoder(this.asParams())).also {
-        println(it)
-        if (it.agentId.isBlank() && it.groupId.isBlank()) {
-            error(WRONG_PARAMS)
-        }
-        LoggingConfiguration.readDefaultConfiguration()
-        LoggingConfiguration.setLoggingFilename(it.logFile)
-        LoggingConfiguration.setLoggingLevels(it.logLevel)
-        LoggingConfiguration.setLogMessageLimit(it.logLimit)
-    }
-
-private fun String?.asParams(): Map<String, String> =
-    try {
-        this?.split(",")?.filter(String::isNotEmpty)?.associate {
-            val (key, value) = it.split("=")
-            key to value
-        } ?: emptyMap()
-    } catch (parseException: Exception) {
-        throw IllegalArgumentException(WRONG_PARAMS)
-    }

@@ -75,6 +75,7 @@ kotlin {
                 implementation(project(":logging"))
                 implementation(project(":common"))
                 implementation(project(":agent-instrumentation"))
+                implementation(project(":agent-config"))
                 implementation(project(":test2code-api"))
             }
         }
@@ -148,7 +149,7 @@ kotlin {
         val runtimeJar by registering(ShadowJar::class) {
             group = "shadow"
             isZip64 = true
-            archiveFileName.set("drillRuntime.jar")
+            archiveFileName.set("drill-runtime.jar")
             from(jvmMainCompilation.output, jvmMainCompilation.runtimeDependencyFiles)
             from(extensionZip)
             relocate("kotlin", "kruntime")

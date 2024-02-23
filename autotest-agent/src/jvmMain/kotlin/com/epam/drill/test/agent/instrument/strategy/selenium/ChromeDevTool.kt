@@ -31,8 +31,10 @@ import mu.KotlinLogging
 private const val DEBUGGER_ADDRESS = "debuggerAddress"
 private const val DEV_TOOL_DEBUGGER_URL = "webSocketDebuggerUrl"
 private val JAVA_TOGGLES = listOf("Network")
-private val JS_TOGGLES = listOf("Debugger", "Profiler").takeIf { AgentConfig.withJsCoverage() } ?: emptyList()
-private val REPLACE_LOCALHOST = AgentConfig.devtoolsAddressReplaceLocalhost()
+private val JS_TOGGLES = listOf("Debugger", "Profiler")
+    .takeIf { Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE] }
+    ?: emptyList()
+private val REPLACE_LOCALHOST = Configuration.parameters[ParameterDefinitions.DEVTOOLS_REPLACE_LOCALHOST]
 
 /**
  * Works with local or Selenoid DevTools by websocket
@@ -42,10 +44,10 @@ class ChromeDevTool(
     private val remoteHost: String?
 ) {
     private val logger = KotlinLogging.logger {}
-    private val launchType = AgentConfig.launchType()
-    private val devToolsProxyAddress = AgentConfig.devToolsProxyAddress()?.let {
-        if (it.startsWith("http")) it else "http://$it"
-    }
+    private val launchType = Configuration.parameters[ParameterDefinitions.LAUNCH_TYPE]
+    private val devToolsProxyAddress = Configuration.parameters[ParameterDefinitions.DEVTOOLS_PROXY_ADDRESS]
+        .takeIf(String::isNotBlank)
+        ?.let { if (it.startsWith("http")) it else "http://$it" }
     private val isClosed = atomic(false)
 
     private val json = Json {
@@ -100,7 +102,7 @@ class ChromeDevTool(
 
     fun isHeadersAdded(): Boolean = this.headersAdded
 
-    private fun startCollectJsCoverage() = AgentConfig.takeIf { it.withJsCoverage() }?.let {
+    private fun startCollectJsCoverage() = Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE].takeIf(true::equals)?.let {
         disableCache() && startPreciseCoverage() && enableScriptParsed()
     }?.also { success ->
         if (!success) logger.warn { "JS coverage may be lost" }
@@ -143,7 +145,7 @@ class ChromeDevTool(
         isClosed.update { true }
     }
 
-    private fun stopCollectJsCoverage() = AgentConfig.takeIf { it.withJsCoverage() }?.let {
+    private fun stopCollectJsCoverage() = Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE].takeIf(true::equals)?.let {
         HttpClient.request("$devToolsProxyAddress/event/Debugger.scriptParsed") {
             method = HttpMethod.DELETE
             body = json.encodeToString(
