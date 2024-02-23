@@ -94,6 +94,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
                 implementation("com.benasher44:uuid:$uuidVersion")
                 implementation(project(":jvmapi"))
+                implementation(project(":konform"))
             }
         }
         val linuxX64Main by getting(configuration = configureNativeDependencies)

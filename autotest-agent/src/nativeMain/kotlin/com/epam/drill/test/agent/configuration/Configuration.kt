@@ -29,7 +29,7 @@ import com.epam.drill.jvmapi.callObjectVoidMethodWithString
 
 actual object Configuration : AgentConfiguration {
 
-    private val logger = KotlinLogging.logger("com.epam.drill.agent.configuration.JavaAgentConfiguration")
+    private val logger = KotlinLogging.logger("com.epam.drill.test.agent.configuration.JavaAgentConfiguration")
     private val configuration = AtomicReference<DefaultAgentConfiguration?>(null)
 
     actual override val agentMetadata: AgentMetadata
@@ -50,7 +50,13 @@ actual object Configuration : AgentConfiguration {
             installationDirProvider
         ))
         logger.info { "initializeNative: Found from properties file: ${propertiesFileProvider.configuration}" }
+        val validatedParametersProvider = ValidatedParametersProvider(setOf(
+            agentOptionsProvider,
+            installationDirProvider,
+            propertiesFileProvider
+        ))
         configuration.value = DefaultAgentConfiguration(setOf(
+            validatedParametersProvider,
             agentOptionsProvider,
             installationDirProvider,
             propertiesFileProvider
