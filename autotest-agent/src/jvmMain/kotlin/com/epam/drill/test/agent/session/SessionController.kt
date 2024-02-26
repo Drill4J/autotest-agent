@@ -19,10 +19,12 @@ import com.benasher44.uuid.*
 import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.configuration.*
-import com.epam.drill.test.agent.http.*
 import com.epam.drill.test.agent.serialization.*
 import kotlinx.serialization.builtins.*
 import kotlin.concurrent.thread
+import com.epam.drill.common.agent.transport.AgentMessageDestination
+import com.epam.drill.common.agent.transport.ResponseStatus
+import com.epam.drill.test.agent.transport.TestAgentMessageSender
 import mu.KotlinLogging
 
 actual object SessionController {
@@ -30,13 +32,10 @@ actual object SessionController {
     var sessionId = ""
     private val logger = KotlinLogging.logger("com.epam.drill.test.agent.actions.SessionController")
 
-    private val dispatchActionPath: String
-        get() =
-            if (Configuration.agentMetadata.serviceGroupId.isBlank()) {
-                "/api/agents/${Configuration.agentMetadata.id}/plugins/${Configuration.parameters[ParameterDefinitions.PLUGIN_ID]}/dispatch-action"
-            } else {
-                "/api/groups/${Configuration.agentMetadata.serviceGroupId}/plugins/${Configuration.parameters[ParameterDefinitions.PLUGIN_ID]}/dispatch-action"
-            }
+    private val dispatchActionDestination = AgentMessageDestination(
+        "POST",
+        "plugins/${Configuration.parameters[ParameterDefinitions.PLUGIN_ID]}/dispatch-action"
+    )
 
     init {
         thread {
@@ -63,12 +62,9 @@ actual object SessionController {
     }
 
     private fun sendTests(tests: List<TestInfo>) {
-        val payload = json.encodeToString(
-            Action.serializer(),
-            AddTests(payload = AddTestsPayload(ThreadStorage.sessionId(), tests))
-        )
+        val payload = AddTests(payload = AddTestsPayload(ThreadStorage.sessionId(), tests))
         val result = dispatchAction(payload)
-        logger.trace { "Count of tests sent: ${tests.size}, received status ${result.code}" }
+        logger.trace { "Count of tests sent: ${tests.size}, received status ${result.statusObject}" }
     }
 
     fun startSession(
@@ -81,74 +77,52 @@ actual object SessionController {
     ) = runCatching {
         logger.debug { "Attempting to start a Drill4J test session..." }
         val sessionId = customSessionId ?: uuid4().toString()
-        val payload = json.encodeToString(
-            Action.serializer(),
-            StartNewSession(payload = StartPayload(
-                sessionId = sessionId,
-                testType = testType,
-                testName = testName,
-                isRealtime = isRealtime,
-                isGlobal = isGlobal,
-                labels = labels,
-            ))
-        )
+        val payload = StartNewSession(payload = StartPayload(
+            sessionId = sessionId,
+            testType = testType,
+            testName = testName,
+            isRealtime = isRealtime,
+            isGlobal = isGlobal,
+            labels = labels,
+        ))
         SessionController.sessionId = sessionId
         val response = dispatchAction(payload)
-        logger.debug { "Received response: ${response.body}" }
+        logger.debug { "Received response: ${response.statusObject}" }
         logger.info { "Started a test session with ID $sessionId" }
     }.onFailure { logger.warn(it) { "Can't startSession '$sessionId'" } }.getOrNull()
 
     fun stopSession(sessionIds: String? = null) = runCatching {
         logger.debug { "Attempting to stop a Drill4J test session..." }
-        val payload = json.encodeToString(
-            Action.serializer(),
-            StopSession(payload = StopSessionPayload(
-                sessionId = sessionIds ?: sessionId,
-                tests = runCatching {
-                    json.decodeFromString(ListSerializer(TestInfo.serializer()), TestListener.getData())
-                }.getOrNull() ?: emptyList()
-            ))
-        )
+        val payload = StopSession(payload = StopSessionPayload(
+            sessionId = sessionIds ?: sessionId,
+            tests = runCatching {
+                json.decodeFromString(ListSerializer(TestInfo.serializer()), TestListener.getData())
+            }.getOrNull() ?: emptyList()
+        ))
         val response = dispatchAction(payload)
-        logger.debug { "Received response: ${response.body}" }
+        logger.debug { "Received response: ${response.statusObject}" }
         logger.info { "Stopped a test session with ID $sessionId" }
     }.onFailure {
         logger.warn(it) { "Can't stopSession $sessionId" }
     }.getOrNull().also { TestListener.reset() }
 
-    private fun dispatchAction(payload: String): HttpResponse {
-        val headers = mutableMapOf(
-            "Content-Type" to "application/json"
-        ).also {
-            addApiKey(it)
-        }
+    private fun dispatchAction(payload: Action): ResponseStatus {
         logger.debug {
             """Dispatch action: 
-                                |path:$dispatchActionPath
-                                |payload:${payload.substring(0, 4000)}
-                                |headers:$headers
+                                |path:${dispatchActionDestination.target}
+                                |payload:${payload}
                                 |""".trimMargin()
         }
-        return httpCall(
-            Configuration.parameters[ParameterDefinitions.ADMIN_ADDRESS] + dispatchActionPath, HttpRequest(
-                "POST", headers, payload
-            )
-        ).apply { if (code != 200) error("Can't perform request: $this") }
-    }
-
-    private fun addApiKey(headers: MutableMap<String, String>) {
-        if (Configuration.parameters[ParameterDefinitions.API_KEY].isNotBlank())
-            headers += "X-Api-Key" to Configuration.parameters[ParameterDefinitions.API_KEY]
+        return TestAgentMessageSender.send(dispatchActionDestination, payload).also {
+            if (!it.success) error("Can't perform request: ${it.statusObject}")
+        }
     }
 
     fun sendSessionData(data: String) = runCatching {
         logger.debug { "Attempting to send session data ..." }
-        val payload = json.encodeToString(
-            Action.serializer(),
-            AddSessionData(payload = SessionDataPayload(sessionId = sessionId, data = data))
-        )
+        val payload = AddSessionData(payload = SessionDataPayload(sessionId = sessionId, data = data))
         val response = dispatchAction(payload)
-        logger.debug { "Received response: ${response.body}" }
+        logger.debug { "Received response: ${response.statusObject}" }
     }.onFailure {
         logger.warn(it) { "Can't send session data $sessionId" }
     }.getOrNull().also { TestListener.reset() }
