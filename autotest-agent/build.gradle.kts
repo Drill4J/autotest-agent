@@ -82,6 +82,7 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:$kotlinxCollectionsVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+                implementation("org.jetbrains.kotlinx:atomicfu:$atomicfuVersion")
                 implementation("org.javassist:javassist:$javassistVersion")
                 implementation("io.aesy:datasize:$aesyDatasizeVersion")
                 implementation("com.benasher44:uuid:$uuidVersion")

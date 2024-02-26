@@ -26,7 +26,7 @@ import kotlinx.collections.immutable.*
 import kotlinx.serialization.builtins.*
 import mu.KotlinLogging
 
-actual object TestListener {
+object TestListener {
 
     const val methodParamsKey = "methodParams"
     const val classParamsKey = "classParams"
@@ -191,7 +191,7 @@ actual object TestListener {
         }
     }
 
-    actual fun getData(): String {
+    fun getData(): String {
         val finished = runCatching {
             _testInfo.value.filterKeys { test -> isFinalizeTestState(test) }.values.map { properties ->
                 TestInfo.serializer().deserialize(PropertyDecoder(properties))
@@ -205,7 +205,7 @@ actual object TestListener {
         return json.encodeToString(ListSerializer(TestInfo.serializer()), finished)
     }
 
-    actual fun reset() {
+    fun reset() {
         _testInfo.update { it.clear() }
     }
 

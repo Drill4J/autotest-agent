@@ -25,7 +25,7 @@ import kotlinx.serialization.builtins.*
 import kotlin.concurrent.thread
 import mu.KotlinLogging
 
-object SessionController {
+actual object SessionController {
     var testHash = "undefined"
     var sessionId = ""
     private val logger = KotlinLogging.logger("com.epam.drill.test.agent.actions.SessionController")
@@ -52,6 +52,14 @@ object SessionController {
                 }.onFailure { logger.error(it) { "Can't parse tests. Reason:" } }
             }
         }
+    }
+
+    actual fun startSession(customSessionId: String?) {
+        startSession(customSessionId, "AUTO")
+    }
+
+    actual fun stopSession() {
+        stopSession(null)
     }
 
     private fun sendTests(tests: List<TestInfo>) {
