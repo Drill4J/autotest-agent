@@ -21,15 +21,13 @@ import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.configuration.*
 import com.epam.drill.test.agent.http.*
 import com.epam.drill.test.agent.serialization.*
-import kotlinx.coroutines.*
 import kotlinx.serialization.builtins.*
-import kotlin.native.concurrent.*
-import kotlin.time.*
+import kotlin.concurrent.thread
 import mu.KotlinLogging
 
 object SessionController {
-    val testHash = AtomicReference("undefined")
-    val sessionId = AtomicReference("")
+    var testHash = "undefined"
+    var sessionId = ""
     private val logger = KotlinLogging.logger("com.epam.drill.test.agent.actions.SessionController")
 
     private val dispatchActionPath: String
@@ -41,9 +39,9 @@ object SessionController {
             }
 
     init {
-        GlobalScope.launch {
+        thread {
             while (true) {
-                delay(Duration.seconds(3))
+                Thread.sleep(3000)
                 runCatching {
                     val tests = runCatching {
                         json.decodeFromString(ListSerializer(TestInfo.serializer()), TestListener.getData())
@@ -59,7 +57,7 @@ object SessionController {
     private fun sendTests(tests: List<TestInfo>) {
         val payload = json.encodeToString(
             Action.serializer(),
-            AddTests(payload = AddTestsPayload(ThreadStorage.sessionId() ?: "", tests))
+            AddTests(payload = AddTestsPayload(ThreadStorage.sessionId(), tests))
         )
         val result = dispatchAction(payload)
         logger.trace { "Count of tests sent: ${tests.size}, received status ${result.code}" }
@@ -86,18 +84,18 @@ object SessionController {
                 labels = labels,
             ))
         )
-        this.sessionId.value = sessionId
+        SessionController.sessionId = sessionId
         val response = dispatchAction(payload)
         logger.debug { "Received response: ${response.body}" }
         logger.info { "Started a test session with ID $sessionId" }
-    }.onFailure { logger.warn(it) { "Can't startSession '${sessionId.value}'" } }.getOrNull()
+    }.onFailure { logger.warn(it) { "Can't startSession '$sessionId'" } }.getOrNull()
 
     fun stopSession(sessionIds: String? = null) = runCatching {
         logger.debug { "Attempting to stop a Drill4J test session..." }
         val payload = json.encodeToString(
             Action.serializer(),
             StopSession(payload = StopSessionPayload(
-                sessionId = sessionIds ?: sessionId.value,
+                sessionId = sessionIds ?: sessionId,
                 tests = runCatching {
                     json.decodeFromString(ListSerializer(TestInfo.serializer()), TestListener.getData())
                 }.getOrNull() ?: emptyList()
@@ -105,9 +103,9 @@ object SessionController {
         )
         val response = dispatchAction(payload)
         logger.debug { "Received response: ${response.body}" }
-        logger.info { "Stopped a test session with ID ${sessionId.value}" }
+        logger.info { "Stopped a test session with ID $sessionId" }
     }.onFailure {
-        logger.warn(it) { "Can't stopSession ${sessionId.value}" }
+        logger.warn(it) { "Can't stopSession $sessionId" }
     }.getOrNull().also { TestListener.reset() }
 
     private fun dispatchAction(payload: String): HttpResponse {
@@ -139,11 +137,11 @@ object SessionController {
         logger.debug { "Attempting to send session data ..." }
         val payload = json.encodeToString(
             Action.serializer(),
-            AddSessionData(payload = SessionDataPayload(sessionId = sessionId.value, data = data))
+            AddSessionData(payload = SessionDataPayload(sessionId = sessionId, data = data))
         )
         val response = dispatchAction(payload)
         logger.debug { "Received response: ${response.body}" }
     }.onFailure {
-        logger.warn(it) { "Can't send session data ${sessionId.value}" }
+        logger.warn(it) { "Can't send session data $sessionId" }
     }.getOrNull().also { TestListener.reset() }
 }

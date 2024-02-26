@@ -71,7 +71,6 @@ kotlin {
         }
         val commonMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
                 implementation(project(":logging"))
                 implementation(project(":common"))
                 implementation(project(":agent-instrumentation"))
@@ -82,17 +81,16 @@ kotlin {
         val jvmMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:$kotlinxCollectionsVersion")
-                implementation("org.jetbrains.kotlinx:atomicfu:$atomicfuVersion")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
                 implementation("org.javassist:javassist:$javassistVersion")
                 implementation("io.aesy:datasize:$aesyDatasizeVersion")
+                implementation("com.benasher44:uuid:$uuidVersion")
                 implementation(project(":agent-transport"))
                 implementation(project(":knasm"))
             }
         }
         val configureNativeDependencies: KotlinSourceSet.() -> Unit = {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
-                implementation("com.benasher44:uuid:$uuidVersion")
                 implementation(project(":jvmapi"))
                 implementation(project(":konform"))
             }

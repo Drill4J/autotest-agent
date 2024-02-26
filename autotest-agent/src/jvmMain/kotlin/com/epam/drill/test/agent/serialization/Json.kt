@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.agent
+package com.epam.drill.test.agent.serialization
 
-expect object TestListener {
-    fun getData(): String
-    fun reset()
+import kotlinx.serialization.json.*
+
+val json = Json {
+    encodeDefaults = true
+    ignoreUnknownKeys = true
 }

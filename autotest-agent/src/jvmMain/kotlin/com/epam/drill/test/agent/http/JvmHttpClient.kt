@@ -19,11 +19,11 @@ import java.net.*
 import mu.KotlinLogging
 import com.epam.drill.test.agent.serialization.*
 
-actual object JvmHttpClient {
+object JvmHttpClient {
 
     private val logger = KotlinLogging.logger {}
 
-    actual fun httpCall(endpoint: String, request: String): String {
+    fun httpCall(endpoint: String, request: String): String {
         val httpRequest = json.decodeFromString(HttpRequest.serializer(), request)
         return runCatching {
             val httpResponse = HttpClient.request(if (endpoint.startsWith("http")) endpoint else "http://$endpoint") {

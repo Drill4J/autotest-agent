@@ -15,17 +15,27 @@
  */
 package com.epam.drill.test.agent.session
 
+import com.epam.drill.test.agent.TestListener
+
 object SessionProvider {
 
-    external fun startSession(
+    fun startSession(
         sessionId: String,
         testType: String = "AUTO",
         isRealtime: Boolean = false,
         testName: String? = null,
         isGlobal: Boolean = false
-    )
+    ) {
+        SessionController.startSession(sessionId, testType, isRealtime, testName, isGlobal)
+        TestListener.reset()
+    }
 
-    external fun stopSession(sessionId: String? = null)
+    fun stopSession(sessionId: String? = null) {
+        SessionController.stopSession(sessionId)
+    }
 
-    external fun setTestName(testName: String?)
+    fun setTestName(testName: String?) {
+        ThreadStorage.memorizeTestName(testName ?: "unspecified")
+    }
+
 }
