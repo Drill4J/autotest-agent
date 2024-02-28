@@ -13,9 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.agent.http
+package com.epam.drill.test.common
 
-import kotlinx.serialization.Serializable
+import java.lang.Long.toHexString
+import java.util.zip.CRC32
+import com.epam.drill.plugins.test2code.api.TestDetails
 
-@Serializable
-data class HttpResponse(val code: Int, val headers: Map<String?, String?> = mapOf(), val body: String = "")
+fun TestDetails.hash(): String = CRC32().let {
+    it.update(this.toString().toByteArray())
+    toHexString(it.value)
+}

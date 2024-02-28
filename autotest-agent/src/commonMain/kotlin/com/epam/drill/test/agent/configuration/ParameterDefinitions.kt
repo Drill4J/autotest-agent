@@ -38,7 +38,10 @@ object ParameterDefinitions {
     val SESSION_FOR_EACH_TEST = AgentParameterDefinition.forBoolean(name = "sessionForEachTest")
     val WITH_JS_COVERAGE = AgentParameterDefinition.forBoolean(name = "withJsCoverage")
     val PROXY_ADDRESS = AgentParameterDefinition.forString(name = "browserProxyAddress")
-    val DEVTOOLS_PROXY_ADDRESS = AgentParameterDefinition.forString(name = "devToolsProxyAddress")
+    val DEVTOOLS_PROXY_ADDRESS = AgentParameterDefinition.forString(
+        name = "devToolsProxyAddress",
+        parser = { it.trim().takeIf(String::isBlank) ?: it.takeIf(URL_SCHEME_REGEX::matches) ?: "http://$it"}
+    )
     val DEVTOOLS_REPLACE_LOCALHOST = AgentParameterDefinition.forString(name = "devtoolsAddressReplaceLocalhost")
     val SESSION_ID = AgentParameterDefinition.forString(name = "sessionId")
     val LAUNCH_TYPE = AgentParameterDefinition.forString(name = "launchType")

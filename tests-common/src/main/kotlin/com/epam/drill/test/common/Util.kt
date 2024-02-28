@@ -18,7 +18,6 @@ package com.epam.drill.test.common
 import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.TestListener.classParamsKey
 import com.epam.drill.test.agent.TestListener.methodParamsKey
-import com.epam.drill.test.agent.util.*
 import com.google.gson.*
 import kotlinx.serialization.json.*
 import org.apache.http.client.methods.*

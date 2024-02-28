@@ -32,7 +32,7 @@ import com.epam.drill.common.agent.transport.AgentMessageSender
 import com.epam.drill.test.agent.configuration.Configuration
 import com.epam.drill.test.agent.configuration.ParameterDefinitions
 
-object TestAgentMessageSender : AgentMessageSender {
+object AdminMessageSender : AgentMessageSender {
 
     private const val QUEUE_DEFAULT_SIZE: Long = 512L * 1024 * 1024
 

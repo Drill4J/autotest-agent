@@ -24,7 +24,7 @@ import kotlinx.serialization.builtins.*
 import kotlin.concurrent.thread
 import com.epam.drill.common.agent.transport.AgentMessageDestination
 import com.epam.drill.common.agent.transport.ResponseStatus
-import com.epam.drill.test.agent.transport.TestAgentMessageSender
+import com.epam.drill.test.agent.transport.AdminMessageSender
 import mu.KotlinLogging
 
 actual object SessionController {
@@ -113,7 +113,7 @@ actual object SessionController {
                                 |payload:${payload}
                                 |""".trimMargin()
         }
-        return TestAgentMessageSender.send(dispatchActionDestination, payload).also {
+        return AdminMessageSender.send(dispatchActionDestination, payload).also {
             if (!it.success) error("Can't perform request: ${it.statusObject}")
         }
     }

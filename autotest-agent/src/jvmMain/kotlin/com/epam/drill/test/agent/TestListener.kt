@@ -20,10 +20,10 @@ import com.epam.drill.test.agent.configuration.*
 import com.epam.drill.test.agent.instrument.strategy.selenium.*
 import com.epam.drill.test.agent.serialization.*
 import com.epam.drill.test.agent.session.*
-import com.epam.drill.test.agent.util.*
 import kotlinx.atomicfu.*
 import kotlinx.collections.immutable.*
 import kotlinx.serialization.builtins.*
+import java.util.zip.CRC32
 import mu.KotlinLogging
 
 object TestListener {
@@ -220,6 +220,11 @@ object TestListener {
         val scripts = scriptParsed()
         if (scripts.isBlank()) return null
         ThreadStorage.sendSessionData(coverage, scripts, testId)
+    }
+
+    private fun TestDetails.hash(): String = CRC32().let {
+        it.update(this.toString().toByteArray())
+        java.lang.Long.toHexString(it.value)
     }
 
 }
