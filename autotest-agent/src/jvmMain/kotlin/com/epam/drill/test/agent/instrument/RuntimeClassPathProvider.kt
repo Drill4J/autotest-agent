@@ -13,17 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.agent.instrument.clients
+package com.epam.drill.test.agent.instrument
 
+import com.epam.drill.agent.configuration.DefaultParameterDefinitions.INSTALLATION_DIR
 import com.epam.drill.agent.instrument.ClassPathProvider
-import com.epam.drill.agent.instrument.HeadersProcessor
-import com.epam.drill.agent.instrument.TransformerObject
-import com.epam.drill.agent.instrument.clients.JavaHttpClientTransformerObject
-import com.epam.drill.test.agent.instrument.RuntimeClassPathProvider
-import com.epam.drill.test.agent.instrument.TestSessionHeadersProcessor
+import com.epam.drill.test.agent.configuration.Configuration
 
-actual object JavaHttpClientTransformer :
-    TransformerObject,
-    JavaHttpClientTransformerObject(),
-    HeadersProcessor by TestSessionHeadersProcessor,
-    ClassPathProvider by RuntimeClassPathProvider
+object RuntimeClassPathProvider : ClassPathProvider {
+
+    override fun getClassPath() = "${Configuration.parameters[INSTALLATION_DIR]}/drill-runtime.jar"
+
+}

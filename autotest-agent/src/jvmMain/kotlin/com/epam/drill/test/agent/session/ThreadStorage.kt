@@ -20,7 +20,6 @@ import com.epam.drill.test.agent.configuration.Configuration
 import com.epam.drill.test.agent.configuration.ParameterDefinitions
 import com.epam.drill.test.agent.serialization.json
 import com.epam.drill.test.agent.session.*
-import com.epam.drill.test.agent.util.*
 
 object ThreadStorage {
     val storage = InheritableThreadLocal<String>()

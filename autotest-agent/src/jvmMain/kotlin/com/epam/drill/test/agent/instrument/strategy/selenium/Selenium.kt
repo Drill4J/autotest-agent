@@ -18,6 +18,7 @@ package com.epam.drill.test.agent.instrument.strategy.selenium
 import com.epam.drill.agent.instrument.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.configuration.*
+import com.epam.drill.test.agent.instrument.RuntimeClassPathProvider
 import javassist.*
 import org.objectweb.asm.*
 import java.io.*
@@ -25,7 +26,7 @@ import java.security.*
 import mu.KotlinLogging
 
 @Suppress("PrivatePropertyName")
-object Selenium : AbstractTransformerObject() {
+object Selenium : AbstractTransformerObject(), ClassPathProvider by RuntimeClassPathProvider {
 
     private const val Command = "org.openqa.selenium.remote.Command"
     private const val ImmutableMap = "com.google.common.collect.ImmutableMap"
