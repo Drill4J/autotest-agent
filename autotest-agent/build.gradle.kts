@@ -29,6 +29,7 @@ val javassistVersion: String by parent!!.extra
 val uuidVersion: String by parent!!.extra
 val aesyDatasizeVersion: String by parent!!.extra
 val nativeAgentLibName: String by parent!!.extra
+val macosLd64 : String by parent!!.extra
 
 repositories {
     mavenLocal()
@@ -51,8 +52,10 @@ kotlin {
             }
         }
         macosX64(configure = configureNativeTarget).apply {
-            binaries.all {
-                linkerOpts("-ld64")
+            if(macosLd64.toBoolean()) {
+                binaries.all {
+                    linkerOpts("-ld64")
+                }
             }
         }
         currentPlatformTarget().compilations["main"].defaultSourceSet {
