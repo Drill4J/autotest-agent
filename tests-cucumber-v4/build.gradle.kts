@@ -3,7 +3,6 @@ import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.konan.target.presetName
 import com.hierynomus.gradle.license.tasks.LicenseCheck
 import com.hierynomus.gradle.license.tasks.LicenseFormat
-import com.epam.drill.test.agent.runner.LogLevels
 
 plugins {
     kotlin("jvm")
@@ -55,7 +54,7 @@ drill {
     agentId = "test-pet-standalone"
     adminHost = rootProject.extra["testsAdminStubServerHost"] as String
     adminPort = rootProject.extra["testsAdminStubServerPort"] as Int
-    logLevel = LogLevels.TRACE
+    logLevel = "TRACE"
     jvmArgs += "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5010"
     labels = mapOf("User" to "Test", "Team" to "Drill4j")
     additionalParams = mapOf(

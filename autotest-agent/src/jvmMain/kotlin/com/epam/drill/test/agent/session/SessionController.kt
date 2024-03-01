@@ -53,7 +53,7 @@ actual object SessionController {
         }
     }
 
-    actual fun startSession(customSessionId: String?) {
+    actual fun startSession(customSessionId: String) {
         startSession(customSessionId, "AUTO")
     }
 
@@ -68,7 +68,7 @@ actual object SessionController {
     }
 
     fun startSession(
-        customSessionId: String?,
+        customSessionId: String,
         testType: String = "AUTO",
         isRealtime: Boolean = Configuration.parameters[ParameterDefinitions.IS_REALTIME_ENABLED],
         testName: String? = null,
@@ -76,7 +76,7 @@ actual object SessionController {
         labels: Set<Label> = Configuration.parameters[ParameterDefinitions.LABELS],
     ) = runCatching {
         logger.debug { "Attempting to start a Drill4J test session..." }
-        val sessionId = customSessionId ?: uuid4().toString()
+        val sessionId = customSessionId.takeIf(String::isNotBlank) ?: uuid4().toString()
         val payload = StartNewSession(payload = StartPayload(
             sessionId = sessionId,
             testType = testType,
@@ -94,7 +94,7 @@ actual object SessionController {
     fun stopSession(sessionIds: String? = null) = runCatching {
         logger.debug { "Attempting to stop a Drill4J test session..." }
         val payload = StopSession(payload = StopSessionPayload(
-            sessionId = sessionIds ?: sessionId,
+            sessionId = sessionIds?.takeIf(String::isNotBlank) ?: sessionId,
             tests = runCatching {
                 json.decodeFromString(ListSerializer(TestInfo.serializer()), TestListener.getData())
             }.getOrNull() ?: emptyList()

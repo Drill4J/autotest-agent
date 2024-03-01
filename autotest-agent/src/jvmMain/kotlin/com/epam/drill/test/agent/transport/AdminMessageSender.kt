@@ -26,13 +26,13 @@ import com.epam.drill.agent.transport.QueuedAgentMessageSender
 import com.epam.drill.agent.transport.RetryingTransportStateNotifier
 import com.epam.drill.agent.transport.http.HttpAgentMessageDestinationMapper
 import com.epam.drill.agent.transport.http.HttpAgentMessageTransport
-import com.epam.drill.common.agent.transport.AgentMessage
 import com.epam.drill.common.agent.transport.AgentMessageDestination
 import com.epam.drill.common.agent.transport.AgentMessageSender
+import com.epam.drill.plugins.test2code.api.Action
 import com.epam.drill.test.agent.configuration.Configuration
 import com.epam.drill.test.agent.configuration.ParameterDefinitions
 
-object AdminMessageSender : AgentMessageSender {
+object AdminMessageSender : AgentMessageSender<Action> {
 
     private const val QUEUE_DEFAULT_SIZE: Long = 512L * 1024 * 1024
 
@@ -42,17 +42,18 @@ object AdminMessageSender : AgentMessageSender {
     override val available: Boolean
         get() = messageSender.available
 
-    override fun send(destination: AgentMessageDestination, message: AgentMessage) =
+    override fun send(destination: AgentMessageDestination, message: Action) =
         messageSender.send(destination, message)
 
-    private fun messageSender(): QueuedAgentMessageSender<ByteArray> {
+    private fun messageSender(): QueuedAgentMessageSender<Action, ByteArray> {
         val transport = HttpAgentMessageTransport(
             Configuration.parameters[ParameterDefinitions.ADMIN_ADDRESS],
             Configuration.parameters[ParameterDefinitions.API_KEY],
             Configuration.parameters[ParameterDefinitions.SSL_TRUSTSTORE].let(::resolvePath),
-            Configuration.parameters[ParameterDefinitions.SSL_TRUSTSTORE_PASSWORD]
+            Configuration.parameters[ParameterDefinitions.SSL_TRUSTSTORE_PASSWORD],
+            gzipCompression = false
         )
-        val serializer = JsonAgentMessageSerializer()
+        val serializer = JsonAgentMessageSerializer(Action.serializer())
         val mapper = HttpAgentMessageDestinationMapper(
             Configuration.agentMetadata.id,
             Configuration.agentMetadata.serviceGroupId,

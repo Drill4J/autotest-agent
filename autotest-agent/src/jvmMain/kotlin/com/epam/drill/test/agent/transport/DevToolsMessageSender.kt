@@ -33,7 +33,7 @@ object DevToolsMessageSender {
         gzipCompression = false,
         receiveContent = true
     )
-    private val messageSerializer = JsonAgentMessageSerializer()
+    private val messageSerializer = JsonAgentMessageSerializer<DevToolsMessage>()
     private val messageDeserializer = JsonAgentMessageDeserializer()
 
     @Suppress("unchecked_cast")
