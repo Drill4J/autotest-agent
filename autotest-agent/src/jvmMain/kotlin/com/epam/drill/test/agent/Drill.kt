@@ -42,7 +42,7 @@ class Drill {
         }
 
         @JvmStatic
-        fun stopSession(sessionId: String? = null) {
+        fun stopSession(sessionId: String) {
             runCatching {
                 SessionProvider.stopSession(sessionId)
             }.onFailure { println("can't start session");it.printStackTrace() }/**/

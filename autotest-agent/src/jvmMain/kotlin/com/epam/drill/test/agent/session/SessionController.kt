@@ -58,7 +58,7 @@ actual object SessionController {
     }
 
     actual fun stopSession() {
-        stopSession(null)
+        stopSession("")
     }
 
     private fun sendTests(tests: List<TestInfo>) {
@@ -91,10 +91,10 @@ actual object SessionController {
         logger.info { "Started a test session with ID $sessionId" }
     }.onFailure { logger.warn(it) { "Can't startSession '$sessionId'" } }.getOrNull()
 
-    fun stopSession(sessionIds: String? = null) = runCatching {
+    fun stopSession(sessionId: String) = runCatching {
         logger.debug { "Attempting to stop a Drill4J test session..." }
         val payload = StopSession(payload = StopSessionPayload(
-            sessionId = sessionIds?.takeIf(String::isNotBlank) ?: sessionId,
+            sessionId = sessionId.takeIf(String::isNotBlank) ?: sessionId,
             tests = runCatching {
                 json.decodeFromString(ListSerializer(TestInfo.serializer()), TestListener.getData())
             }.getOrNull() ?: emptyList()

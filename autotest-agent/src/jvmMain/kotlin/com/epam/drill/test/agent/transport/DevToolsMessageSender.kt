@@ -16,6 +16,7 @@
 package com.epam.drill.test.agent.transport
 
 import kotlinx.serialization.DeserializationStrategy
+import mu.KotlinLogging
 import com.epam.drill.agent.transport.JsonAgentMessageSerializer
 import com.epam.drill.agent.transport.http.HttpAgentMessageTransport
 import com.epam.drill.agent.transport.http.HttpResponseContent
@@ -35,6 +36,7 @@ object DevToolsMessageSender {
     )
     private val messageSerializer = JsonAgentMessageSerializer<DevToolsMessage>()
     private val messageDeserializer = JsonAgentMessageDeserializer()
+    private val logger = KotlinLogging.logger {}
 
     @Suppress("unchecked_cast")
     fun send(
@@ -43,6 +45,7 @@ object DevToolsMessageSender {
     ) = messageTransport.send(destination, messageSerializer.serialize(message), messageSerializer.contentType())
         .let { it as HttpResponseContent<ByteArray> }
         .let { HttpResponseContent(it.statusObject, it.content.decodeToString()) }
+        .also(::logResponseContent)
 
     @Suppress("unchecked_cast")
     fun <T : AgentMessage> send(
@@ -52,6 +55,7 @@ object DevToolsMessageSender {
     ) = messageTransport.send(destination, messageSerializer.serialize(message), messageSerializer.contentType())
         .let { it as HttpResponseContent<ByteArray> }
         .let { HttpResponseContent(it.statusObject, messageDeserializer.deserialize(strategy, it.content)) }
+        .also(::logResponseContent)
 
     @Suppress("unchecked_cast")
     fun send(
@@ -66,5 +70,14 @@ object DevToolsMessageSender {
     ).send(destination, message.encodeToByteArray(), messageSerializer.contentType())
         .let { it as HttpResponseContent<ByteArray> }
         .let { HttpResponseContent(it.statusObject, it.content.decodeToString()) }
+        .also(::logResponseContent)
+
+    private fun logResponseContent(responseContent: HttpResponseContent<*>) = logger.trace {
+        val response = responseContent.content.toString()
+            .takeIf(String::isNotEmpty)
+            ?.let { "\n${it.prependIndent("\t")}" }
+            ?: " <empty>"
+        "send: Response received, status=${responseContent.statusObject}:$response"
+    }
 
 }

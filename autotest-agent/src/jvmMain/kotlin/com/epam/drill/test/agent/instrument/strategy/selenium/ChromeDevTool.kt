@@ -187,7 +187,7 @@ class ChromeDevTool(
                     return null
                 }
 
-                val response = DevToolsMessageSender.send("http://$debuggerURL", AgentMessageDestination("GET", "json/version"), "")
+                val response = DevToolsMessageSender.send("http://$debuggerURL", AgentMessageDestination("GET", "/json/version"), "")
                 if (!response.success) {
                     logger.warn { "Can't get debugger address from http://$debuggerURL/json/version: code=${response.statusObject}, body:${response.content}" }
                     return null
@@ -202,6 +202,8 @@ class ChromeDevTool(
     private fun connect(devToolAddress: String, currentUrl: String) {
         if (REPLACE_LOCALHOST.isNotBlank()) {
             targetUrl = devToolAddress.replace("localhost", REPLACE_LOCALHOST)
+        } else {
+            targetUrl = devToolAddress
         }
         val success: Boolean = connectToDevTools().takeIf { it }?.also {
             val targetId = retrieveTargetId(currentUrl)

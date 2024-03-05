@@ -30,7 +30,7 @@ object SessionProvider {
         TestListener.reset()
     }
 
-    fun stopSession(sessionId: String? = null) {
+    fun stopSession(sessionId: String) {
         SessionController.stopSession(sessionId)
     }
 

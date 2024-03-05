@@ -50,7 +50,7 @@ object ThreadStorage {
 
     fun stopSession() = SessionController.run {
         if (Configuration.parameters[ParameterDefinitions.SESSION_FOR_EACH_TEST]) {
-            stopSession(sessionIds = sessionId)
+            stopSession(sessionId = sessionId)
         }
     }
 
