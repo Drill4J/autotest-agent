@@ -17,11 +17,11 @@ package com.epam.drill.test.agent.instrument.strategy.kafka
 
 import com.epam.drill.agent.instrument.*
 import com.epam.drill.test.agent.*
-import com.epam.drill.test.agent.instrument.strategy.*
+import com.epam.drill.test.agent.instrument.RuntimeClassPathProvider
 import javassist.*
 import mu.KotlinLogging
 
-object Kafka : AbstractTransformerObject() {
+object Kafka : AbstractTransformerObject(), ClassPathProvider by RuntimeClassPathProvider {
 
     private const val KAFKA_PRODUCER_INTERFACE = "org/apache/kafka/clients/producer/Producer"
 

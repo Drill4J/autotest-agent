@@ -18,6 +18,7 @@ package com.epam.drill.test.agent.instrument.strategy.selenium
 import com.epam.drill.agent.instrument.*
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.configuration.*
+import com.epam.drill.test.agent.instrument.RuntimeClassPathProvider
 import javassist.*
 import org.objectweb.asm.*
 import java.io.*
@@ -25,7 +26,7 @@ import java.security.*
 import mu.KotlinLogging
 
 @Suppress("PrivatePropertyName")
-object Selenium : AbstractTransformerObject() {
+object Selenium : AbstractTransformerObject(), ClassPathProvider by RuntimeClassPathProvider {
 
     private const val Command = "org.openqa.selenium.remote.Command"
     private const val ImmutableMap = "com.google.common.collect.ImmutableMap"
@@ -161,11 +162,11 @@ object Selenium : AbstractTransformerObject() {
          */
         startSession.insertBefore(
             """
-                if (${AgentConfig::class.java.name}.INSTANCE.${AgentConfig::proxyUrl.name}() != null && $isFirefoxBrowser($1)) {
+                if (${this::class.java.name}.INSTANCE.${this::proxyUrl.name}() != null && $isFirefoxBrowser($1)) {
                     $DesiredCapabilities dCap = new $DesiredCapabilities();
                     $Proxy dProxy = new $Proxy();
-                    dProxy.setHttpProxy(${AgentConfig::class.java.name}.INSTANCE.${AgentConfig::proxyUrl.name}());
-                    dProxy.setSslProxy(${AgentConfig::class.java.name}.INSTANCE.${AgentConfig::proxyUrl.name}());
+                    dProxy.setHttpProxy(${this::class.java.name}.INSTANCE.${this::proxyUrl.name}());
+                    dProxy.setSslProxy(${this::class.java.name}.INSTANCE.${this::proxyUrl.name}());
                     dCap.setCapability("proxy", dProxy);
                     $1 = $1.merge(dCap);
                 }
@@ -174,7 +175,7 @@ object Selenium : AbstractTransformerObject() {
         )
         startSession.insertAfter(
             """
-                    if (${AgentConfig::class.java.name}.INSTANCE.${AgentConfig::devToolsProxyAddress.name}() != null){
+                    if (${this::class.java.name}.INSTANCE.${this::devToolsProxyAddress.name}() != null){
                         ${ChromeDevTool::class.java.name} drillDevTools = new ${ChromeDevTool::class.java.name}(
                             ((java.util.Map)getCapabilities().getCapability("goog:chromeOptions")),
                             drillRemoteAddress
@@ -260,6 +261,10 @@ object Selenium : AbstractTransformerObject() {
             """.trimIndent()
         )
     }
+
+    fun proxyUrl() = Configuration.parameters[ParameterDefinitions.PROXY_ADDRESS]
+
+    fun devToolsProxyAddress() = Configuration.parameters[ParameterDefinitions.DEVTOOLS_PROXY_ADDRESS]
 
     private fun getChromeDevTool() = "${DevToolStorage::class.java.name}.INSTANCE.${DevToolStorage::get.name}()"
 }

@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.agent.session
+package com.epam.drill.test.agent.configuration
 
-import com.epam.drill.jvmapi.callObjectVoidMethod
-import com.epam.drill.jvmapi.callObjectVoidMethodWithString
+import com.epam.drill.common.agent.configuration.AgentConfiguration
+import com.epam.drill.common.agent.configuration.AgentMetadata
+import com.epam.drill.common.agent.configuration.AgentParameters
 
-actual object SessionController {
-
-    actual fun startSession(customSessionId: String): Unit =
-        callObjectVoidMethodWithString(SessionController::class, SessionController::startSession, customSessionId)
-
-    actual fun stopSession(): Unit =
-        callObjectVoidMethod(SessionController::class, SessionController::stopSession)
-
+expect object Configuration : AgentConfiguration {
+    override val agentMetadata: AgentMetadata
+    override val parameters: AgentParameters
+    fun initializeNative(agentOptions: String)
+    fun initializeJvm(inputParameters: String)
 }

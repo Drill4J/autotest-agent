@@ -26,7 +26,7 @@ abstract class Configuration {
     var version: String = "+"
     var agentPath: File? = null
     var runtimePath: File? = null
-    var logLevel: LogLevels = LogLevels.ERROR
+    var logLevel: String = "ERROR"
     var logFile: File? = null
     var additionalParams: Map<String, String>? = null
     var jvmArgs: Set<String> = mutableSetOf()
@@ -39,7 +39,7 @@ abstract class Configuration {
         args["drillInstallationDir"] = runtimePath
         args["adminAddress"] = "$adminHost:$adminPort"
         args[Configuration::agentId.name] = agentId
-        args[Configuration::logLevel.name] = logLevel.name
+        args[Configuration::logLevel.name] = logLevel
         args[Configuration::directUrlToZip.name] = directUrlToZip
         args[Configuration::directLocalPathToZip.name] = directLocalPathToZip
         apiKey?.let { args[Configuration::apiKey.name] = it }

@@ -15,12 +15,15 @@
  */
 package com.epam.drill.test.agent.instrument.clients
 
+import com.epam.drill.agent.instrument.ClassPathProvider
 import com.epam.drill.agent.instrument.HeadersProcessor
 import com.epam.drill.agent.instrument.TransformerObject
 import com.epam.drill.agent.instrument.clients.ApacheHttpClientTransformerObject
+import com.epam.drill.test.agent.instrument.RuntimeClassPathProvider
 import com.epam.drill.test.agent.instrument.TestSessionHeadersProcessor
 
 actual object ApacheHttpClientTransformer :
     TransformerObject,
     ApacheHttpClientTransformerObject(),
-    HeadersProcessor by TestSessionHeadersProcessor
+    HeadersProcessor by TestSessionHeadersProcessor,
+    ClassPathProvider by RuntimeClassPathProvider

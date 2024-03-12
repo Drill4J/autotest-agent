@@ -16,11 +16,12 @@
 package com.epam.drill.test.agent.instrument.strategy.runner
 
 import com.epam.drill.agent.instrument.*
+import com.epam.drill.test.agent.instrument.RuntimeClassPathProvider
 import javassist.*
 import java.util.*
 import mu.KotlinLogging
 
-class JunitRunner : AbstractTransformerObject() {
+class JunitRunner : AbstractTransformerObject(), ClassPathProvider by RuntimeClassPathProvider {
 
     override val logger = KotlinLogging.logger {}
 

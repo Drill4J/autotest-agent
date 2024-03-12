@@ -13,17 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.agent.session
+package com.epam.drill.test.agent.instrument
 
-import com.epam.drill.jvmapi.callObjectVoidMethod
-import com.epam.drill.jvmapi.callObjectVoidMethodWithString
+import com.epam.drill.agent.configuration.DefaultParameterDefinitions.INSTALLATION_DIR
+import com.epam.drill.agent.instrument.ClassPathProvider
+import com.epam.drill.test.agent.configuration.Configuration
 
-actual object SessionController {
+object RuntimeClassPathProvider : ClassPathProvider {
 
-    actual fun startSession(customSessionId: String): Unit =
-        callObjectVoidMethodWithString(SessionController::class, SessionController::startSession, customSessionId)
-
-    actual fun stopSession(): Unit =
-        callObjectVoidMethod(SessionController::class, SessionController::stopSession)
+    override fun getClassPath() = "${Configuration.parameters[INSTALLATION_DIR]}/drill-runtime.jar"
 
 }

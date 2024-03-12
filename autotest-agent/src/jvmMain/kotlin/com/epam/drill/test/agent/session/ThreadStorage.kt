@@ -16,31 +16,47 @@
 package com.epam.drill.test.agent.session
 
 import java.net.*
-import com.epam.drill.test.agent.configuration.*
+import com.epam.drill.test.agent.configuration.Configuration
+import com.epam.drill.test.agent.configuration.ParameterDefinitions
+import com.epam.drill.test.agent.serialization.json
 import com.epam.drill.test.agent.session.*
-import com.epam.drill.test.agent.util.*
 
-actual object ThreadStorage {
+object ThreadStorage {
     val storage = InheritableThreadLocal<String>()
 
     @Suppress("unused")
     fun memorizeTestName(testName: String?) {
         val value = testName?.let { URLEncoder.encode(it, Charsets.UTF_8.name()) }
         storage.set(value)
-        memorizeTestNameNative(value)
+        SessionController.testHash = value ?: ""
     }
 
     fun clear() {
         storage.set(null)
     }
 
-    actual external fun memorizeTestNameNative(testName: String?)
+    fun sessionId(): String {
+        return SessionController.sessionId
+    }
 
-    actual external fun sessionId(): String?
+    fun startSession(testName: String?) {
+        if (Configuration.parameters[ParameterDefinitions.SESSION_FOR_EACH_TEST]) {
+            SessionController.startSession(
+                customSessionId = Configuration.parameters[ParameterDefinitions.SESSION_ID],
+                testName = testName
+            )
+        }
+    }
 
-    actual external fun startSession(testName: String?)
+    fun stopSession() = SessionController.run {
+        if (Configuration.parameters[ParameterDefinitions.SESSION_FOR_EACH_TEST]) {
+            stopSession(sessionId = sessionId)
+        }
+    }
 
-    actual external fun stopSession()
+    fun sendSessionData(preciseCoverage: String, scriptParsed: String, testId: String) {
+        val data = SessionData(preciseCoverage, scriptParsed, testId)
+        SessionController.sendSessionData(json.encodeToString(SessionData.serializer(), data))
+    }
 
-    actual external fun sendSessionData(preciseCoverage: String, scriptParsed: String, testId: String)
 }

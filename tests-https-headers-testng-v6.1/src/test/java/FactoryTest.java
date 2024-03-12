@@ -16,8 +16,8 @@
 import com.epam.drill.plugins.test2code.api.*;
 import com.epam.drill.test.agent.*;
 import com.epam.drill.test.agent.instrument.strategy.testing.testng.*;
-import com.epam.drill.test.agent.util.*;
 import com.epam.drill.test.common.TestData;
+import com.epam.drill.test.common.TestDetailsHashKt;
 import org.testng.annotations.*;
 
 import java.util.*;

@@ -27,9 +27,7 @@ object TestSessionHeadersProcessor : HeadersProcessor {
     override fun storeHeaders(headers: Map<String, String>) = Unit
 
     override fun retrieveHeaders() = mutableMapOf<String, String>().apply {
-        ThreadStorage.sessionId()?.let {
-            put(SESSION_ID_HEADER, it)
-        }
+        put(SESSION_ID_HEADER, ThreadStorage.sessionId())
         ThreadStorage.storage.get()?.let {
             put(TEST_ID_HEADER, it)
         }
