@@ -21,7 +21,6 @@ import com.epam.drill.test.agent.serialization.*
 import com.epam.drill.test.agent.session.*
 import com.epam.drill.agent.transport.http.HttpResponseContent
 import com.epam.drill.common.agent.transport.AgentMessage
-import com.epam.drill.common.agent.transport.AgentMessageDestination
 import com.epam.drill.test.agent.transport.DevToolsMessageSender
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
@@ -115,7 +114,8 @@ class ChromeDevTool(
     ).success
 
     private fun enableScriptParsed() = DevToolsMessageSender.send(
-        AgentMessageDestination("GET", "/event/Debugger.scriptParsed"),
+        "GET",
+        "/event/Debugger.scriptParsed",
         DevToolsRequest(targetUrl, sessionId.sessionId)
     ).success
 
@@ -125,7 +125,8 @@ class ChromeDevTool(
     ).takeIf(HttpResponseContent<String>::success)?.content ?: ""
 
     fun scriptParsed(): String = DevToolsMessageSender.send(
-        AgentMessageDestination("GET", "/event/Debugger.scriptParsed/get-data"),
+        "GET",
+        "/event/Debugger.scriptParsed/get-data",
         DevToolsRequest(targetUrl, sessionId.sessionId)
     ).takeIf(HttpResponseContent<String>::success)?.content ?: ""
 
@@ -134,7 +135,8 @@ class ChromeDevTool(
             disableToggles()
             stopCollectJsCoverage()
             DevToolsMessageSender.send(
-                AgentMessageDestination("DELETE", "/connection"),
+                "DELETE",
+                "/connection",
                 DevToolsRequest(targetUrl)
             )
         }
@@ -143,7 +145,8 @@ class ChromeDevTool(
 
     private fun stopCollectJsCoverage() = Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE].takeIf(true::equals)?.let {
         DevToolsMessageSender.send(
-            AgentMessageDestination("DELETE", "/event/Debugger.scriptParsed"),
+            "DELETE",
+            "/event/Debugger.scriptParsed",
             DevToolsRequest(targetUrl, sessionId.sessionId)
         )
     }
@@ -187,7 +190,7 @@ class ChromeDevTool(
                     return null
                 }
 
-                val response = DevToolsMessageSender.send("http://$debuggerURL", AgentMessageDestination("GET", "/json/version"), "")
+                val response = DevToolsMessageSender.send("http://$debuggerURL", "GET", "/json/version", "")
                 if (!response.success) {
                     logger.warn { "Can't get debugger address from http://$debuggerURL/json/version: code=${response.statusObject}, body:${response.content}" }
                     return null
@@ -224,7 +227,8 @@ class ChromeDevTool(
     private fun connectToDevTools(): Boolean {
         logger.debug { "DevTools URL: $targetUrl" }
         val response = DevToolsMessageSender.send(
-            AgentMessageDestination("POST", "/connection"),
+            "POST",
+            "/connection",
             DevToolsRequest(targetUrl)
         )
         return response.success
@@ -237,7 +241,8 @@ class ChromeDevTool(
         )
         logger.debug { "Start intercepting. Headers: $headers, sessionId: $sessionId" }
         val response = DevToolsMessageSender.send(
-            AgentMessageDestination("POST", "/intercept"),
+            "POST",
+            "/intercept",
             DevToolInterceptRequest(targetUrl, params = mapOf("headers" to headers))
         )
         response.success
@@ -246,7 +251,8 @@ class ChromeDevTool(
     fun stopIntercept(): Boolean {
         logger.debug { "Stop intercepting: $targetUrl, sessionId $sessionId" }
         val response = DevToolsMessageSender.send(
-            AgentMessageDestination("DELETE", "/intercept"),
+            "DELETE",
+            "/intercept",
             DevToolInterceptRequest(targetUrl)
         )
         setHeaders(mapOf())
@@ -299,14 +305,14 @@ class ChromeDevTool(
         commandName: String,
         request: DevToolsMessage,
         httpMethod: String = "POST"
-    ) = DevToolsMessageSender.send(AgentMessageDestination(httpMethod, "/command/$commandName"), request)
+    ) = DevToolsMessageSender.send(httpMethod, "/command/$commandName", request)
 
     private fun <T : AgentMessage> executeCommand(
         commandName: String,
         request: DevToolsMessage,
         strategy: DeserializationStrategy<T>,
         httpMethod: String = "POST"
-    ) = DevToolsMessageSender.send(AgentMessageDestination(httpMethod, "/command/$commandName"), request, strategy)
+    ) = DevToolsMessageSender.send(httpMethod, "/command/$commandName", request, strategy)
 
     private fun Map<String, Any>.toOutput(): Map<String, JsonElement> = mapValues { (_, value) ->
         val serializer = value::class.serializer().cast()

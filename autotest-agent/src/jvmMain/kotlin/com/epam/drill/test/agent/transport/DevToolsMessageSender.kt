@@ -40,19 +40,29 @@ object DevToolsMessageSender {
 
     @Suppress("unchecked_cast")
     fun send(
-        destination: AgentMessageDestination,
+        method: String,
+        path: String,
         message: DevToolsMessage
-    ) = messageTransport.send(destination, messageSerializer.serialize(message), messageSerializer.contentType())
+    ) = messageTransport.send(
+        AgentMessageDestination(method, path),
+        messageSerializer.serialize(message),
+        messageSerializer.contentType()
+    )
         .let { it as HttpResponseContent<ByteArray> }
         .let { HttpResponseContent(it.statusObject, it.content.decodeToString()) }
         .also(::logResponseContent)
 
     @Suppress("unchecked_cast")
     fun <T : AgentMessage> send(
-        destination: AgentMessageDestination,
+        method: String,
+        path: String,
         message: DevToolsMessage,
         strategy: DeserializationStrategy<T>
-    ) = messageTransport.send(destination, messageSerializer.serialize(message), messageSerializer.contentType())
+    ) = messageTransport.send(
+        AgentMessageDestination(method, path),
+        messageSerializer.serialize(message),
+        messageSerializer.contentType()
+    )
         .let { it as HttpResponseContent<ByteArray> }
         .let { HttpResponseContent(it.statusObject, messageDeserializer.deserialize(strategy, it.content)) }
         .also(::logResponseContent)
@@ -60,14 +70,19 @@ object DevToolsMessageSender {
     @Suppress("unchecked_cast")
     fun send(
         serverAddress: String,
-        destination: AgentMessageDestination,
+        method: String,
+        path: String,
         message: String
     ) = HttpAgentMessageTransport(
         serverAddress = serverAddress,
         drillInternal = false,
         gzipCompression = false,
         receiveContent = true
-    ).send(destination, message.encodeToByteArray(), messageSerializer.contentType())
+    ).send(
+        AgentMessageDestination(method, path),
+        message.encodeToByteArray(),
+        messageSerializer.contentType()
+    )
         .let { it as HttpResponseContent<ByteArray> }
         .let { HttpResponseContent(it.statusObject, it.content.decodeToString()) }
         .also(::logResponseContent)
