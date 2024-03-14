@@ -32,10 +32,7 @@ actual object SessionController {
     var sessionId = ""
     private val logger = KotlinLogging.logger("com.epam.drill.test.agent.actions.SessionController")
 
-    private val dispatchActionDestination = AgentMessageDestination(
-        "POST",
-        "plugins/${Configuration.parameters[ParameterDefinitions.PLUGIN_ID]}/dispatch-action"
-    )
+    private val dispatchActionDestination = AgentMessageDestination("POST", "dispatch-action")
 
     init {
         thread {

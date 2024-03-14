@@ -24,7 +24,6 @@ import com.epam.drill.agent.transport.InMemoryAgentMessageQueue
 import com.epam.drill.agent.transport.JsonAgentMessageSerializer
 import com.epam.drill.agent.transport.QueuedAgentMessageSender
 import com.epam.drill.agent.transport.RetryingTransportStateNotifier
-import com.epam.drill.agent.transport.http.HttpAgentMessageDestinationMapper
 import com.epam.drill.agent.transport.http.HttpAgentMessageTransport
 import com.epam.drill.common.agent.transport.AgentMessageDestination
 import com.epam.drill.common.agent.transport.AgentMessageSender
@@ -54,11 +53,7 @@ object AdminMessageSender : AgentMessageSender<Action> {
             gzipCompression = false
         )
         val serializer = JsonAgentMessageSerializer(Action.serializer())
-        val mapper = HttpAgentMessageDestinationMapper(
-            Configuration.agentMetadata.id,
-            Configuration.agentMetadata.serviceGroupId,
-            null
-        )
+        val mapper = HttpAgentMessageDestinationMapper()
         val queue = InMemoryAgentMessageQueue(
             serializer,
             Configuration.parameters[ParameterDefinitions.MESSAGE_QUEUE_LIMIT].let(::parseBytes)
