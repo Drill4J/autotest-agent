@@ -115,7 +115,7 @@ class ChromeDevTool(
     ).success
 
     private fun enableScriptParsed() = DevToolsMessageSender.send(
-        AgentMessageDestination("GET", "/event/Debugger.scriptParsed"),
+        AgentMessageDestination("POST", "/event/Debugger.scriptParsed"),
         DevToolsRequest(targetUrl, sessionId.sessionId)
     ).success
 
@@ -125,7 +125,7 @@ class ChromeDevTool(
     ).takeIf(HttpResponseContent<String>::success)?.content ?: ""
 
     fun scriptParsed(): String = DevToolsMessageSender.send(
-        AgentMessageDestination("GET", "/event/Debugger.scriptParsed/get-data"),
+        AgentMessageDestination("POST", "/event/Debugger.scriptParsed/get-data"),
         DevToolsRequest(targetUrl, sessionId.sessionId)
     ).takeIf(HttpResponseContent<String>::success)?.content ?: ""
 

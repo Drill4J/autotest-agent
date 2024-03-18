@@ -174,7 +174,7 @@ object TestListener {
     }
 
     private fun addDrillHeaders(testHash: String) {
-        ThreadStorage.startSession(testHash)
+        ThreadStorage.startSession()
         ThreadStorage.memorizeTestName(testHash)
         DevToolStorage.get()?.startIntercept()
         WebDriverThreadStorage.addCookies()
@@ -216,9 +216,16 @@ object TestListener {
 
     private fun sendSessionData(testId: String) = DevToolStorage.get()?.run {
         val coverage = takePreciseCoverage()
-        if (coverage.isBlank()) return null
+        if (coverage.isBlank()) {
+            logger.info { "coverage is blank" }
+            return null
+        }
         val scripts = scriptParsed()
-        if (scripts.isBlank()) return null
+        if (scripts.isBlank()) {
+            logger.info { "script parsed is blank" }
+            return null
+        }
+        logger.info { "ThreadStorage.sendSessionData" }
         ThreadStorage.sendSessionData(coverage, scripts, testId)
     }
 

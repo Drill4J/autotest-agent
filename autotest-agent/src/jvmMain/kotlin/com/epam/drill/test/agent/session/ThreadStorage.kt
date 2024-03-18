@@ -16,8 +16,6 @@
 package com.epam.drill.test.agent.session
 
 import java.net.*
-import com.epam.drill.test.agent.configuration.Configuration
-import com.epam.drill.test.agent.configuration.ParameterDefinitions
 import com.epam.drill.test.agent.serialization.json
 import com.epam.drill.test.agent.session.*
 
@@ -39,19 +37,12 @@ object ThreadStorage {
         return SessionController.sessionId
     }
 
-    fun startSession(testName: String?) {
-        if (Configuration.parameters[ParameterDefinitions.SESSION_FOR_EACH_TEST]) {
-            SessionController.startSession(
-                customSessionId = Configuration.parameters[ParameterDefinitions.SESSION_ID],
-                testName = testName
-            )
-        }
+    fun startSession() {
+
     }
 
     fun stopSession() = SessionController.run {
-        if (Configuration.parameters[ParameterDefinitions.SESSION_FOR_EACH_TEST]) {
-            stopSession(sessionId = sessionId)
-        }
+
     }
 
     fun sendSessionData(preciseCoverage: String, scriptParsed: String, testId: String) {

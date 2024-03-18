@@ -23,6 +23,8 @@ abstract class Configuration {
     var groupId: String? = null
     var adminPort: Int = 8080
     var apiKey: String? = null
+    var jsAgentBuildVersion: String? = null
+    var jsAgentId: String? = null
     var version: String = "+"
     var agentPath: File? = null
     var runtimePath: File? = null
@@ -43,6 +45,9 @@ abstract class Configuration {
         args[Configuration::directUrlToZip.name] = directUrlToZip
         args[Configuration::directLocalPathToZip.name] = directLocalPathToZip
         apiKey?.let { args[Configuration::apiKey.name] = it }
+        jsAgentBuildVersion?.let { args[Configuration::jsAgentBuildVersion.name] = it }
+        jsAgentId?.let { args[Configuration::jsAgentId.name] = it }
+        // TODO add validation
         groupId?.let { args[Configuration::groupId.name] = it }
         logFile?.let { args[Configuration::logFile.name] = it.absolutePath }
         additionalParams?.let { args.putAll(it) }

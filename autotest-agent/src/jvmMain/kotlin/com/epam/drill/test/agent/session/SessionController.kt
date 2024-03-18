@@ -18,7 +18,6 @@ package com.epam.drill.test.agent.session
 import com.benasher44.uuid.*
 import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.*
-import com.epam.drill.test.agent.configuration.*
 import com.epam.drill.test.agent.serialization.*
 import kotlinx.serialization.builtins.*
 import kotlin.concurrent.thread
@@ -31,11 +30,6 @@ actual object SessionController {
     var testHash = "undefined"
     var sessionId = ""
     private val logger = KotlinLogging.logger("com.epam.drill.test.agent.actions.SessionController")
-
-    private val dispatchActionDestination = AgentMessageDestination(
-        "POST",
-        "plugins/${Configuration.parameters[ParameterDefinitions.PLUGIN_ID]}/dispatch-action"
-    )
 
     init {
         thread {
@@ -54,76 +48,51 @@ actual object SessionController {
     }
 
     actual fun startSession(customSessionId: String) {
-        startSession(customSessionId, "AUTO")
+        runCatching {
+            val sessionId = customSessionId.takeIf(String::isNotBlank) ?: uuid4().toString()
+            SessionController.sessionId = sessionId
+        }.getOrNull()
+            .also { TestListener.reset() }
     }
 
     actual fun stopSession() {
-        stopSession("")
+        runCatching {
+            // TODO check if all tests metadata is sent
+            //  if not use the following to collect the "last" of the tests
+            //  json.decodeFromString(ListSerializer(TestInfo.serializer()), TestListener.getData())
+        }.getOrNull()
+            .also {  TestListener.reset() }
     }
 
-    private fun sendTests(tests: List<TestInfo>) {
-        val payload = AddTests(payload = AddTestsPayload(ThreadStorage.sessionId(), tests))
-        val result = dispatchAction(payload)
-        logger.trace { "Count of tests sent: ${tests.size}, received status ${result.statusObject}" }
-    }
-
-    fun startSession(
-        customSessionId: String,
-        testType: String = "AUTO",
-        isRealtime: Boolean = Configuration.parameters[ParameterDefinitions.IS_REALTIME_ENABLED],
-        testName: String? = null,
-        isGlobal: Boolean = Configuration.parameters[ParameterDefinitions.IS_GLOBAL],
-        labels: Set<Label> = Configuration.parameters[ParameterDefinitions.LABELS],
-    ) = runCatching {
-        logger.debug { "Attempting to start a Drill4J test session..." }
-        val sessionId = customSessionId.takeIf(String::isNotBlank) ?: uuid4().toString()
-        val payload = StartNewSession(payload = StartPayload(
-            sessionId = sessionId,
-            testType = testType,
-            testName = testName,
-            isRealtime = isRealtime,
-            isGlobal = isGlobal,
-            labels = labels,
-        ))
-        SessionController.sessionId = sessionId
-        val response = dispatchAction(payload)
-        logger.debug { "Received response: ${response.statusObject}" }
-        logger.info { "Started a test session with ID $sessionId" }
-    }.onFailure { logger.warn(it) { "Can't startSession '$sessionId'" } }.getOrNull()
-
-    fun stopSession(sessionId: String) = runCatching {
-        logger.debug { "Attempting to stop a Drill4J test session..." }
-        val payload = StopSession(payload = StopSessionPayload(
-            sessionId = sessionId.takeIf(String::isNotBlank) ?: sessionId,
-            tests = runCatching {
-                json.decodeFromString(ListSerializer(TestInfo.serializer()), TestListener.getData())
-            }.getOrNull() ?: emptyList()
-        ))
-        val response = dispatchAction(payload)
-        logger.debug { "Received response: ${response.statusObject}" }
-        logger.info { "Stopped a test session with ID $sessionId" }
-    }.onFailure {
-        logger.warn(it) { "Can't stopSession $sessionId" }
-    }.getOrNull().also { TestListener.reset() }
-
-    private fun dispatchAction(payload: Action): ResponseStatus {
-        logger.debug {
-            """Dispatch action: 
-                                |path:${dispatchActionDestination.target}
-                                |payload:${payload}
-                                |""".trimMargin()
-        }
-        return AdminMessageSender.send(dispatchActionDestination, payload).also {
-            if (!it.success) error("Can't perform request: ${it.statusObject}")
-        }
+    private fun sendTests(tests: List<TestInfo>) = runCatching {
+        val addTestsPayload = AddTestsPayload(sessionId = sessionId, tests)
+        sendToAdmin(
+            destination = AgentMessageDestination(
+                "POST",
+                "tests-metadata"
+            ),
+            payload = addTestsPayload
+        )
     }
 
     fun sendSessionData(data: String) = runCatching {
-        logger.debug { "Attempting to send session data ..." }
         val payload = AddSessionData(payload = SessionDataPayload(sessionId = sessionId, data = data))
-        val response = dispatchAction(payload)
-        logger.debug { "Received response: ${response.statusObject}" }
+        sendToAdmin(
+            AgentMessageDestination(
+                "POST",
+                "raw-javascript-coverage"
+            ),
+            payload
+        )
     }.onFailure {
-        logger.warn(it) { "Can't send session data $sessionId" }
+        logger.warn(it) { "can't send js raw coverage $sessionId" }
     }.getOrNull().also { TestListener.reset() }
+
+    private fun sendToAdmin(destination: AgentMessageDestination, payload: Action): ResponseStatus {
+        return AdminMessageSender.send(destination, payload)
+            .also {
+                if (!it.success) error("request ${destination.target} failed with ${it.statusObject}")
+            }
+    }
+
 }

@@ -32,11 +32,7 @@ class Drill {
         ) {
             runCatching {
                 SessionProvider.startSession(
-                    sessionId = sessionId,
-                    testType = testType,
-                    isRealtime = isRealtime,
-                    testName = testName,
-                    isGlobal = isGlobal
+                    sessionId = sessionId
                 )
             }.onFailure { println("can't start session");it.printStackTrace() }/**/
         }
@@ -45,14 +41,14 @@ class Drill {
         fun stopSession(sessionId: String) {
             runCatching {
                 SessionProvider.stopSession(sessionId)
-            }.onFailure { println("can't start session");it.printStackTrace() }/**/
+            }.onFailure { println("can't stop session");it.printStackTrace() }/**/
         }
 
         @JvmStatic
         fun setTestName(testName: String?) {
             runCatching {
                 SessionProvider.setTestName(testName)
-            }.onFailure { println("can't start session");it.printStackTrace() }/**/
+            }.onFailure { println("can't set test name");it.printStackTrace() }/**/
         }
     }
 }
