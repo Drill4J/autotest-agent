@@ -24,7 +24,7 @@ import com.epam.drill.agent.transport.InMemoryAgentMessageQueue
 import com.epam.drill.agent.transport.JsonAgentMessageSerializer
 import com.epam.drill.agent.transport.QueuedAgentMessageSender
 import com.epam.drill.agent.transport.RetryingTransportStateNotifier
-import com.epam.drill.agent.transport.http.HttpAgentMessageDestinationMapper
+import com.epam.drill.agent.transport.http.HttpAutotestAgentMessageDestinationMapper
 import com.epam.drill.agent.transport.http.HttpAgentMessageTransport
 import com.epam.drill.common.agent.transport.AgentMessageDestination
 import com.epam.drill.common.agent.transport.AgentMessageSender
@@ -54,10 +54,12 @@ object AdminMessageSender : AgentMessageSender<Action> {
             gzipCompression = false
         )
         val serializer = JsonAgentMessageSerializer(Action.serializer())
-        val mapper = HttpAgentMessageDestinationMapper(
-            Configuration.agentMetadata.id,
+        val mapper = HttpAutotestAgentMessageDestinationMapper(
             Configuration.agentMetadata.serviceGroupId,
-            null
+            // TODO remove JS parameters
+            //  once automatic detection for agentId and buildVersion is implemented for JavaScript WEB projects
+            Configuration.parameters[ParameterDefinitions.JS_AGENT_ID],
+            Configuration.parameters[ParameterDefinitions.JS_AGENT_BUILD_VERSION]
         )
         val queue = InMemoryAgentMessageQueue(
             serializer,

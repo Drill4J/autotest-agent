@@ -25,18 +25,7 @@ class AdminStubStorage {
 
     fun addAction(rawAction: String) {
         when (val action = parseAction(rawAction)) {
-            is StartNewSession -> {
-                startedSessions.add(action.payload.sessionId)
-            }
             is AddTests -> {
-                action.payload.let {
-                    val testsInfo = tests[action.payload.sessionId] ?: listOf()
-                    tests[action.payload.sessionId] = testsInfo + it.tests
-                }
-            }
-            is StopSession -> {
-                startedSessions.remove(action.payload.sessionId)
-                finishedSessions.add(action.payload.sessionId)
                 action.payload.let {
                     val testsInfo = tests[action.payload.sessionId] ?: listOf()
                     tests[action.payload.sessionId] = testsInfo + it.tests

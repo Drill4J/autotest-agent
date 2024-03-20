@@ -20,6 +20,7 @@ import com.epam.drill.plugins.test2code.api.Label
 
 object ParameterDefinitions {
 
+    val GROUP_ID = AgentParameterDefinition.forString(name = "groupId")
     val ADMIN_ADDRESS = AgentParameterDefinition.forString(
         name = "adminAddress",
         parser = { it.takeIf(URL_SCHEME_REGEX::matches) ?: "http://$it"}
@@ -28,10 +29,9 @@ object ParameterDefinitions {
     val MESSAGE_QUEUE_LIMIT = AgentParameterDefinition.forString(name = "coverageRetentionLimit", defaultValue = "512Mb")
     val SSL_TRUSTSTORE = AgentParameterDefinition.forString(name = "sslTruststore")
     val SSL_TRUSTSTORE_PASSWORD = AgentParameterDefinition.forString(name = "sslTruststorePassword")
-    val LOG_LEVEL = AgentParameterDefinition.forString(name = "logLevel", defaultValue = "INFO")
+    val LOG_LEVEL = AgentParameterDefinition.forString(name = "logLevel", defaultValue = "TRACE")
     val LOG_FILE = AgentParameterDefinition.forString(name = "logFile")
     val LOG_LIMIT = AgentParameterDefinition.forInt(name = "logLimit", defaultValue = 512)
-    val PLUGIN_ID = AgentParameterDefinition.forString(name = "pluginId", defaultValue = "test2code")
     val IS_REALTIME_ENABLED = AgentParameterDefinition.forBoolean(name = "isRealtimeEnable")
     val IS_GLOBAL = AgentParameterDefinition.forBoolean(name = "isGlobal")
     val IS_MANUALLY_CONTROLLED = AgentParameterDefinition.forBoolean(name = "isManuallyControlled")
@@ -63,4 +63,6 @@ object ParameterDefinitions {
 
     private val URL_SCHEME_REGEX = Regex("\\w+://.+")
 
+    val JS_AGENT_BUILD_VERSION = AgentParameterDefinition.forString(name = "jsAgentBuildVersion")
+    val JS_AGENT_ID = AgentParameterDefinition.forString(name = "jsAgentId")
 }

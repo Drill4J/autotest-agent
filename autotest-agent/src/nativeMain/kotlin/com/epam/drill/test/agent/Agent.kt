@@ -31,7 +31,6 @@ import com.epam.drill.test.agent.configuration.AgentLoggingConfiguration
 import com.epam.drill.test.agent.configuration.Configuration
 import com.epam.drill.test.agent.configuration.ParameterDefinitions.FRAMEWORK_PLUGINS
 import com.epam.drill.test.agent.configuration.ParameterDefinitions.IS_MANUALLY_CONTROLLED
-import com.epam.drill.test.agent.configuration.ParameterDefinitions.SESSION_FOR_EACH_TEST
 import com.epam.drill.test.agent.configuration.ParameterDefinitions.SESSION_ID
 import com.epam.drill.test.agent.instrument.StrategyManager
 import mu.KotlinLogging
@@ -60,7 +59,7 @@ object Agent {
     fun agentOnUnload() {
         try {
             logger.info { "Shutting the agent down" }
-            if (!Configuration.parameters[IS_MANUALLY_CONTROLLED] && !Configuration.parameters[SESSION_FOR_EACH_TEST])
+            if (!Configuration.parameters[IS_MANUALLY_CONTROLLED])
                 SessionController.stopSession()
         } catch (ex: Throwable) {
             logger.error { "Failed to unload the agent properly. Reason: ${ex.message}" }
@@ -76,7 +75,7 @@ object Agent {
         AgentLoggingConfiguration.updateJvmLoggingConfiguration()
         Configuration.initializeJvm()
 
-        if (!Configuration.parameters[IS_MANUALLY_CONTROLLED] && !Configuration.parameters[SESSION_FOR_EACH_TEST])
+        if (!Configuration.parameters[IS_MANUALLY_CONTROLLED])
             SessionController.startSession(Configuration.parameters[SESSION_ID])
         logger.trace { "Initializing StrategyManager..." }
         StrategyManager.initialize(
