@@ -25,10 +25,10 @@ class AdminStubStorage {
 
     fun addAction(rawAction: String) {
         when (val action = parseAction(rawAction)) {
-            is AddTests -> {
-                action.payload.let {
-                    val testsInfo = tests[action.payload.sessionId] ?: listOf()
-                    tests[action.payload.sessionId] = testsInfo + it.tests
+            is AddTestsPayload -> {
+                action.let {
+                    val testsInfo = tests[action.sessionId] ?: listOf()
+                    tests[action.sessionId] = testsInfo + it.tests
                 }
             }
         }
