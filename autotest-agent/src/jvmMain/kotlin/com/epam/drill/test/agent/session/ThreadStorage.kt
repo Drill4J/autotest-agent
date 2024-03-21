@@ -16,31 +16,38 @@
 package com.epam.drill.test.agent.session
 
 import java.net.*
-import com.epam.drill.test.agent.configuration.*
+import com.epam.drill.test.agent.serialization.json
 import com.epam.drill.test.agent.session.*
-import com.epam.drill.test.agent.util.*
 
-actual object ThreadStorage {
+object ThreadStorage {
     val storage = InheritableThreadLocal<String>()
 
     @Suppress("unused")
     fun memorizeTestName(testName: String?) {
         val value = testName?.let { URLEncoder.encode(it, Charsets.UTF_8.name()) }
         storage.set(value)
-        memorizeTestNameNative(value)
+        SessionController.testHash = value ?: ""
     }
 
     fun clear() {
         storage.set(null)
     }
 
-    actual external fun memorizeTestNameNative(testName: String?)
+    fun sessionId(): String {
+        return SessionController.sessionId
+    }
 
-    actual external fun sessionId(): String?
+    fun startSession() {
 
-    actual external fun startSession(testName: String?)
+    }
 
-    actual external fun stopSession()
+    fun stopSession() = SessionController.run {
 
-    actual external fun sendSessionData(preciseCoverage: String, scriptParsed: String, testId: String)
+    }
+
+    fun sendSessionData(preciseCoverage: String, scriptParsed: String, testId: String) {
+        val data = SessionData(preciseCoverage, scriptParsed, testId)
+        SessionController.sendSessionData(json.encodeToString(SessionData.serializer(), data))
+    }
+
 }

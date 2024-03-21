@@ -20,6 +20,7 @@ import com.epam.drill.test.agent.instrument.strategy.*
 import javassist.*
 import java.lang.reflect.*
 import java.security.*
+import mu.KotlinLogging
 
 abstract class TestNGStrategy : AbstractTestStrategy() {
     companion object {
@@ -30,6 +31,8 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
         private const val DrillTestNGTestListner = "DrillTestNGTestListener"
         private const val ITestContext = "org.testng.ITestContext"
     }
+
+    protected val logger = KotlinLogging.logger {}
 
     abstract val versionRegex: Regex
     override val id: String
@@ -71,7 +74,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
                             if (result.getThrowable() == null) {
                                 ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment", result.getInstanceName(), result.getName(), getParamsString(result), getFactoryParams(result));
                             } else {
-                                ${Log::class.java.name}.INSTANCE.${Log::debug.name}("The start of the test " + result.getName() + " is ignored by the drill");
+                                ${this::class.java.name}.INSTANCE.${this::debug.name}("The start of the test " + result.getName() + " is ignored by the drill");
                             }
                         }
                 """.trimIndent(),
@@ -174,4 +177,9 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             else -> obj.javaClass.simpleName.substringBeforeLast("\$")
         }
     } ?: ""
+
+    fun debug(message: String) {
+        logger.debug { message }
+    }
+
 }

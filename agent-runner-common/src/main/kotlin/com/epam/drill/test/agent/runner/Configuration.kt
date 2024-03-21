@@ -22,12 +22,13 @@ abstract class Configuration {
     var agentId: String? = null
     var groupId: String? = null
     var adminPort: Int = 8080
-    var adminUserName: String? = null
-    var adminPassword: String? = null
+    var apiKey: String? = null
+    var jsAgentBuildVersion: String? = null
+    var jsAgentId: String? = null
     var version: String = "+"
     var agentPath: File? = null
     var runtimePath: File? = null
-    var logLevel: LogLevels = LogLevels.ERROR
+    var logLevel: String = "ERROR"
     var logFile: File? = null
     var additionalParams: Map<String, String>? = null
     var jvmArgs: Set<String> = mutableSetOf()
@@ -40,11 +41,13 @@ abstract class Configuration {
         args["drillInstallationDir"] = runtimePath
         args["adminAddress"] = "$adminHost:$adminPort"
         args[Configuration::agentId.name] = agentId
-        args[Configuration::logLevel.name] = logLevel.name
+        args[Configuration::logLevel.name] = logLevel
         args[Configuration::directUrlToZip.name] = directUrlToZip
         args[Configuration::directLocalPathToZip.name] = directLocalPathToZip
-        adminUserName?.let { args[Configuration::adminUserName.name] = it }
-        adminPassword?.let { args[Configuration::adminPassword.name] = it }
+        apiKey?.let { args[Configuration::apiKey.name] = it }
+        jsAgentBuildVersion?.let { args[Configuration::jsAgentBuildVersion.name] = it }
+        jsAgentId?.let { args[Configuration::jsAgentId.name] = it }
+        // TODO add validation
         groupId?.let { args[Configuration::groupId.name] = it }
         logFile?.let { args[Configuration::logFile.name] = it.absolutePath }
         additionalParams?.let { args.putAll(it) }

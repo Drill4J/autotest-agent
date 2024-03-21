@@ -19,7 +19,6 @@ import com.epam.drill.plugins.test2code.api.TestDetails
 import com.epam.drill.plugins.test2code.api.TestInfo
 import com.epam.drill.plugins.test2code.api.TestResult
 import com.epam.drill.test.agent.instrument.strategy.testing.junit.JUnitStrategy
-import com.epam.drill.test.agent.session.SessionProvider
 import com.epam.drill.test.common.AssertKt
 import com.epam.drill.test.common.ServerDate
 import com.epam.drill.test.common.TestData

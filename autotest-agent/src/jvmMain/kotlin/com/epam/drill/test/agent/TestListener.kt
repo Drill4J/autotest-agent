@@ -20,13 +20,13 @@ import com.epam.drill.test.agent.configuration.*
 import com.epam.drill.test.agent.instrument.strategy.selenium.*
 import com.epam.drill.test.agent.serialization.*
 import com.epam.drill.test.agent.session.*
-import com.epam.drill.test.agent.util.*
 import kotlinx.atomicfu.*
 import kotlinx.collections.immutable.*
 import kotlinx.serialization.builtins.*
+import java.util.zip.CRC32
 import mu.KotlinLogging
 
-actual object TestListener {
+object TestListener {
 
     const val methodParamsKey = "methodParams"
     const val classParamsKey = "classParams"
@@ -130,7 +130,7 @@ actual object TestListener {
             )
             logger.info { "Test: $test FINISHED. Result:$status" }
             clearDrillHeaders(it)
-            if (AgentConfig.withJsCoverage()) sendSessionData(test.hash())
+            if (Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE]) sendSessionData(test.hash())
         }
     }
 
@@ -174,7 +174,7 @@ actual object TestListener {
     }
 
     private fun addDrillHeaders(testHash: String) {
-        ThreadStorage.startSession(testHash)
+        ThreadStorage.startSession()
         ThreadStorage.memorizeTestName(testHash)
         DevToolStorage.get()?.startIntercept()
         WebDriverThreadStorage.addCookies()
@@ -191,7 +191,7 @@ actual object TestListener {
         }
     }
 
-    actual fun getData(): String {
+    fun getData(): String {
         val finished = runCatching {
             _testInfo.value.filterKeys { test -> isFinalizeTestState(test) }.values.map { properties ->
                 TestInfo.serializer().deserialize(PropertyDecoder(properties))
@@ -205,7 +205,7 @@ actual object TestListener {
         return json.encodeToString(ListSerializer(TestInfo.serializer()), finished)
     }
 
-    actual fun reset() {
+    fun reset() {
         _testInfo.update { it.clear() }
     }
 
@@ -216,10 +216,22 @@ actual object TestListener {
 
     private fun sendSessionData(testId: String) = DevToolStorage.get()?.run {
         val coverage = takePreciseCoverage()
-        if (coverage.isBlank()) return null
+        if (coverage.isBlank()) {
+            logger.info { "coverage is blank" }
+            return null
+        }
         val scripts = scriptParsed()
-        if (scripts.isBlank()) return null
+        if (scripts.isBlank()) {
+            logger.info { "script parsed is blank" }
+            return null
+        }
+        logger.info { "ThreadStorage.sendSessionData" }
         ThreadStorage.sendSessionData(coverage, scripts, testId)
+    }
+
+    private fun TestDetails.hash(): String = CRC32().let {
+        it.update(this.toString().toByteArray())
+        java.lang.Long.toHexString(it.value)
     }
 
 }

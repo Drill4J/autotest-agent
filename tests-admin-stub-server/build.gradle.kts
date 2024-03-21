@@ -20,6 +20,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
+    implementation(project(":common"))
     implementation(project(":test2code-api"))
     implementation(project(":tests-common"))
 }

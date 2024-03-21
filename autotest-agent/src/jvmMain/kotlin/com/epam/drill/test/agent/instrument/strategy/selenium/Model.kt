@@ -17,12 +17,13 @@ package com.epam.drill.test.agent.instrument.strategy.selenium
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import com.epam.drill.common.agent.transport.AgentMessage
 
 @Serializable
-data class TargetInfos(val targetInfos: List<Target>)
+data class TargetInfos(val targetInfos: List<Target>): AgentMessage()
 
 @Serializable
-data class SessionId(val sessionId: String = "")
+data class SessionId(val sessionId: String = ""): AgentMessage()
 
 @Serializable
 data class Target(
@@ -35,7 +36,7 @@ data class Target(
 )
 
 @Serializable
-sealed class DevToolsMessage {
+sealed class DevToolsMessage : AgentMessage() {
     abstract val target: String
 }
 
