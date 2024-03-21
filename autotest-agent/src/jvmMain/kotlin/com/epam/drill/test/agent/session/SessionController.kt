@@ -76,7 +76,7 @@ actual object SessionController {
     }
 
     fun sendSessionData(data: String) = runCatching {
-        val payload = AddSessionData(payload = SessionDataPayload(sessionId = sessionId, data = data))
+        val payload = AddSessionData(sessionId = sessionId, data = data)
         sendToAdmin(
             AgentMessageDestination(
                 "POST",
