@@ -34,11 +34,11 @@ class ValidatedParametersProvider(
 ) : AgentConfigurationProvider {
 
     private class ValidatingParameters(provider: ValidatedParametersProvider) {
-        val agentId by provider
+        val appId by provider
         val groupId by provider
         val drillInstallationDir by provider
-        val adminAddress by provider
-        val apiKey by provider
+        val drillApiUrl by provider
+        val drillApiKey by provider
         val devToolsProxyAddress by provider
         val browserProxyAddress by provider
         val logLevel by provider
@@ -51,13 +51,13 @@ class ValidatedParametersProvider(
         ValidatingParameters::drillInstallationDir required {
             minLength(1)
         }
-        ValidatingParameters::adminAddress required {
+        ValidatingParameters::drillApiUrl required {
             validTransportUrl()
         }
     }
 
     private val softValidators = Validation<ValidatingParameters> {
-        ValidatingParameters::agentId ifPresent {
+        ValidatingParameters::appId ifPresent {
             identifier()
             minLength(3)
         }
@@ -65,8 +65,8 @@ class ValidatedParametersProvider(
             identifier()
             minLength(3)
         }
-        ValidatingParameters::apiKey required {
-            minLength(1)
+        ValidatingParameters::drillApiKey required {
+
         }
         ValidatingParameters::logLevelAsList onEach {
             isValidLogLevel()
@@ -110,7 +110,7 @@ class ValidatedParametersProvider(
             logger.error { message }
             result.errors.forEach { error ->
                 when (convertToField(error)) {
-                    ValidatingParameters::agentId.name -> defaultFor(DefaultParameterDefinitions.AGENT_ID)
+                    ValidatingParameters::appId.name -> defaultFor(DefaultParameterDefinitions.APP_ID)
                     ValidatingParameters::groupId.name -> defaultFor(DefaultParameterDefinitions.GROUP_ID)
                     ValidatingParameters::logLevel.name -> defaultFor(ParameterDefinitions.LOG_LEVEL)
                     ValidatingParameters::logLimit.name -> defaultFor(ParameterDefinitions.LOG_LIMIT)

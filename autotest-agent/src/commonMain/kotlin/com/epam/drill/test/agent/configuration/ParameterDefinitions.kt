@@ -19,23 +19,16 @@ import com.epam.drill.common.agent.configuration.AgentParameterDefinition
 import com.epam.drill.plugins.test2code.api.Label
 
 object ParameterDefinitions {
-
     val GROUP_ID = AgentParameterDefinition.forString(name = "groupId")
-    val ADMIN_ADDRESS = AgentParameterDefinition.forString(
-        name = "adminAddress",
-        parser = { it.takeIf(URL_SCHEME_REGEX::matches) ?: "http://$it"}
-    )
-    val API_KEY = AgentParameterDefinition.forString(name = "apiKey")
+    val DRILL_API_URL = AgentParameterDefinition.forString(name = "drillApiUrl", parser = { if (!it.endsWith("/") ) "$it/" else it })
+    val DRILL_API_KEY = AgentParameterDefinition.forString(name = "drillApiKey")
     val MESSAGE_QUEUE_LIMIT = AgentParameterDefinition.forString(name = "coverageRetentionLimit", defaultValue = "512Mb")
     val SSL_TRUSTSTORE = AgentParameterDefinition.forString(name = "sslTruststore")
     val SSL_TRUSTSTORE_PASSWORD = AgentParameterDefinition.forString(name = "sslTruststorePassword")
     val LOG_LEVEL = AgentParameterDefinition.forString(name = "logLevel", defaultValue = "TRACE")
     val LOG_FILE = AgentParameterDefinition.forString(name = "logFile")
     val LOG_LIMIT = AgentParameterDefinition.forInt(name = "logLimit", defaultValue = 512)
-    val IS_REALTIME_ENABLED = AgentParameterDefinition.forBoolean(name = "isRealtimeEnable")
-    val IS_GLOBAL = AgentParameterDefinition.forBoolean(name = "isGlobal")
     val IS_MANUALLY_CONTROLLED = AgentParameterDefinition.forBoolean(name = "isManuallyControlled")
-    val SESSION_FOR_EACH_TEST = AgentParameterDefinition.forBoolean(name = "sessionForEachTest")
     val WITH_JS_COVERAGE = AgentParameterDefinition.forBoolean(name = "withJsCoverage")
     val PROXY_ADDRESS = AgentParameterDefinition.forString(name = "browserProxyAddress")
     val DEVTOOLS_PROXY_ADDRESS = AgentParameterDefinition.forString(

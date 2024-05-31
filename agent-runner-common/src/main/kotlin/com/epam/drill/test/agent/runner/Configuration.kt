@@ -18,11 +18,11 @@ package com.epam.drill.test.agent.runner
 import java.io.File
 
 abstract class Configuration {
-    lateinit var adminHost: String
-    var agentId: String? = null
+    lateinit var drillApiUrl: String
+    var drillApiKey: String? = null
     var groupId: String? = null
-    var adminPort: Int = 8080
-    var apiKey: String? = null
+    var appId: String? = null
+
     var jsAgentBuildVersion: String? = null
     var jsAgentId: String? = null
     var version: String = "+"
@@ -39,16 +39,16 @@ abstract class Configuration {
     fun toJvmArgs(): List<String> {
         val args = mutableMapOf<String, Any?>()
         args["drillInstallationDir"] = runtimePath
-        args["adminAddress"] = "$adminHost:$adminPort"
-        args[Configuration::agentId.name] = agentId
+        args[Configuration::drillApiUrl.name] = drillApiUrl
+        drillApiKey?.let { args[Configuration::drillApiKey.name] = it }
+        args[Configuration::groupId.name] = groupId
+        args[Configuration::appId.name] = appId
         args[Configuration::logLevel.name] = logLevel
         args[Configuration::directUrlToZip.name] = directUrlToZip
         args[Configuration::directLocalPathToZip.name] = directLocalPathToZip
-        apiKey?.let { args[Configuration::apiKey.name] = it }
         jsAgentBuildVersion?.let { args[Configuration::jsAgentBuildVersion.name] = it }
         jsAgentId?.let { args[Configuration::jsAgentId.name] = it }
         // TODO add validation
-        groupId?.let { args[Configuration::groupId.name] = it }
         logFile?.let { args[Configuration::logFile.name] = it.absolutePath }
         additionalParams?.let { args.putAll(it) }
         args.putAll(jvmArgs())

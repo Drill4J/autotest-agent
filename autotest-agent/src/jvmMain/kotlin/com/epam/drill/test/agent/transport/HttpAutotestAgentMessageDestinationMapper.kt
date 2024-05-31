@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.agent.runner
+package com.epam.drill.test.agent.transport
 
-open class AgentConfiguration : Configuration() {
-    var labels: Map<String, String>? = null
-    override val repositoryName: String = "autotest-agent"
+import com.epam.drill.agent.transport.AgentMessageDestinationMapper
+import com.epam.drill.common.agent.transport.AgentMessageDestination
 
-    override fun jvmArgs(): Map<String, String> {
-        val args = mutableMapOf<String, String>()
-        labels?.let {
-            args[AgentConfiguration::labels.name] = it.map { (k, v) -> "$k:$v" }.joinToString(";")
-        }
-        return args
-    }
+class HttpAutotestAgentMessageDestinationMapper : AgentMessageDestinationMapper {
 
+    private val apiPath = "data-ingest"
+
+    override fun map(destination: AgentMessageDestination): AgentMessageDestination =
+        destination.copy(
+            target =
+            if (destination.target.isEmpty()) apiPath else "${apiPath}/${destination.target}"
+        )
 }

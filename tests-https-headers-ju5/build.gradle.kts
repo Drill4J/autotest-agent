@@ -48,9 +48,8 @@ val nativeAgentFile = "${HostManager.host.family.dynamicPrefix}${nativeAgentLibN
 drill {
     runtimePath = nativeAgentDir
     agentPath = nativeAgentDir.resolve(nativeAgentFile)
-    agentId = "test-pet-standalone"
-    adminHost = rootProject.extra["testsAdminStubServerHost"] as String
-    adminPort = rootProject.extra["testsAdminStubServerPort"] as Int
+    appId = "test-pet-standalone"
+    drillApiUrl = "http://" + rootProject.extra["testsAdminStubServerHost"] as String + ":" + rootProject.extra["testsAdminStubServerPort"] as Int
     logLevel = "TRACE"
     jvmArgs += "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5016"
     labels = mapOf("User" to "Test", "Team" to "Drill4j")

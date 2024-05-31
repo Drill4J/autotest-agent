@@ -24,7 +24,6 @@ import com.epam.drill.agent.transport.InMemoryAgentMessageQueue
 import com.epam.drill.agent.transport.JsonAgentMessageSerializer
 import com.epam.drill.agent.transport.QueuedAgentMessageSender
 import com.epam.drill.agent.transport.RetryingTransportStateNotifier
-import com.epam.drill.agent.transport.http.HttpAutotestAgentMessageDestinationMapper
 import com.epam.drill.agent.transport.http.HttpAgentMessageTransport
 import com.epam.drill.common.agent.transport.AgentMessageDestination
 import com.epam.drill.common.agent.transport.AgentMessageSender
@@ -39,28 +38,19 @@ object AdminMessageSender : AgentMessageSender<Action> {
     private val logger = KotlinLogging.logger {}
     private val messageSender = messageSender()
 
-    override val available: Boolean
-        get() = messageSender.available
-
     override fun send(destination: AgentMessageDestination, message: Action) =
         messageSender.send(destination, message)
 
     private fun messageSender(): QueuedAgentMessageSender<Action, ByteArray> {
         val transport = HttpAgentMessageTransport(
-            Configuration.parameters[ParameterDefinitions.ADMIN_ADDRESS],
-            Configuration.parameters[ParameterDefinitions.API_KEY],
+            Configuration.parameters[ParameterDefinitions.DRILL_API_URL],
+            Configuration.parameters[ParameterDefinitions.DRILL_API_KEY],
             Configuration.parameters[ParameterDefinitions.SSL_TRUSTSTORE].let(::resolvePath),
             Configuration.parameters[ParameterDefinitions.SSL_TRUSTSTORE_PASSWORD],
             gzipCompression = false
         )
         val serializer = JsonAgentMessageSerializer(Action.serializer())
-        val mapper = HttpAutotestAgentMessageDestinationMapper(
-            Configuration.agentMetadata.serviceGroupId,
-            // TODO remove JS parameters
-            //  once automatic detection for agentId and buildVersion is implemented for JavaScript WEB projects
-            Configuration.parameters[ParameterDefinitions.JS_AGENT_ID],
-            Configuration.parameters[ParameterDefinitions.JS_AGENT_BUILD_VERSION]
-        )
+        val mapper = HttpAutotestAgentMessageDestinationMapper()
         val queue = InMemoryAgentMessageQueue(
             serializer,
             Configuration.parameters[ParameterDefinitions.MESSAGE_QUEUE_LIMIT].let(::parseBytes)

@@ -73,6 +73,8 @@ actual object SessionController {
             ),
             payload = addTestsPayload
         )
+    }.onFailure {
+        logger.warn(it) { "can't send test metadata by session $sessionId" }
     }
 
     fun sendSessionData(data: String) = runCatching {
