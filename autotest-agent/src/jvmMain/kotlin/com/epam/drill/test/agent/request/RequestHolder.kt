@@ -24,7 +24,7 @@ import com.epam.drill.common.agent.request.RequestHolder
 actual object RequestHolder : RequestHolder {
 
     private val logger = KotlinLogging.logger {}
-    private lateinit var threadStorage: InheritableThreadLocal<DrillRequest>
+    private var threadStorage: InheritableThreadLocal<DrillRequest> =  InheritableThreadLocal()
 
     actual override fun remove() {
         if (threadStorage.get() == null) return
@@ -47,9 +47,5 @@ actual object RequestHolder : RequestHolder {
 
     actual fun dump(): ByteArray? =
         retrieve()?.let { ProtoBuf.encodeToByteArray(DrillRequest.serializer(), it) }
-
-    actual fun init(isAsync: Boolean) {
-        threadStorage = if (isAsync) TransmittableThreadLocal() else InheritableThreadLocal()
-    }
 
 }

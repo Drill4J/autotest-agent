@@ -40,7 +40,4 @@ actual object RequestHolder : RequestHolder {
     actual fun dump(): ByteArray? =
         callObjectByteArrayMethod(this::class, this::dump)
 
-    actual fun init(isAsync: Boolean): Unit =
-        callObjectVoidMethodWithBoolean(this::class, this::init, isAsync)
-
 }
