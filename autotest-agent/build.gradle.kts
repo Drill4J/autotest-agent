@@ -30,7 +30,7 @@ val uuidVersion: String by parent!!.extra
 val aesyDatasizeVersion: String by parent!!.extra
 val nativeAgentLibName: String by parent!!.extra
 val macosLd64 : String by parent!!.extra
-val transmittableThreadLocalVersion: String by parent!!.extra
+
 repositories {
     mavenLocal()
     mavenCentral()
@@ -83,8 +83,6 @@ kotlin {
         }
         val jvmMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:$kotlinxSerializationVersion")
-                implementation("com.alibaba:transmittable-thread-local:$transmittableThreadLocalVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:$kotlinxCollectionsVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
                 implementation("org.jetbrains.kotlinx:atomicfu:$atomicfuVersion")
@@ -97,8 +95,6 @@ kotlin {
         }
         val configureNativeDependencies: KotlinSourceSet.() -> Unit = {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:$kotlinxCollectionsVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:$kotlinxSerializationVersion")
                 implementation(project(":jvmapi"))
                 implementation(project(":konform"))
             }

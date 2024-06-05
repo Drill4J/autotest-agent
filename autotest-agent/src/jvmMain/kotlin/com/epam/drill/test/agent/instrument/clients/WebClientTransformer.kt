@@ -17,11 +17,11 @@ package com.epam.drill.test.agent.instrument.clients
 
 import com.epam.drill.agent.instrument.*
 import com.epam.drill.agent.instrument.clients.WebClientTransformerObject
-import com.epam.drill.test.agent.instrument.DefaultHeadersProcessor
 import com.epam.drill.test.agent.instrument.RuntimeClassPathProvider
+import com.epam.drill.test.agent.instrument.TestSessionHeadersProcessor
 
 actual object WebClientTransformer:
     TransformerObject,
     WebClientTransformerObject(),
-    HeadersProcessor by DefaultHeadersProcessor,
+    HeadersProcessor by TestSessionHeadersProcessor,
     ClassPathProvider by RuntimeClassPathProvider
