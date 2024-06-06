@@ -21,6 +21,7 @@ import com.epam.drill.test.agent.serialization.*
 import com.epam.drill.test.agent.session.*
 import com.epam.drill.agent.transport.http.HttpResponseContent
 import com.epam.drill.common.agent.transport.AgentMessage
+import com.epam.drill.test.agent.instrument.TestSessionHeadersProcessor
 import com.epam.drill.test.agent.transport.DevToolsMessageSender
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
@@ -95,11 +96,12 @@ class ChromeDevTool(
 
     fun isHeadersAdded(): Boolean = this.headersAdded
 
-    private fun startCollectJsCoverage() = Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE].takeIf(true::equals)?.let {
-        disableCache() && startPreciseCoverage() && enableScriptParsed()
-    }?.also { success ->
-        if (!success) logger.warn { "JS coverage may be lost" }
-    }
+    private fun startCollectJsCoverage() =
+        Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE].takeIf(true::equals)?.let {
+            disableCache() && startPreciseCoverage() && enableScriptParsed()
+        }?.also { success ->
+            if (!success) logger.warn { "JS coverage may be lost" }
+        }
 
     private fun startPreciseCoverage() = mapOf("detailed" to true, "callCount" to false).let { params ->
         executeCommand(
@@ -143,13 +145,14 @@ class ChromeDevTool(
         isClosed = true
     }
 
-    private fun stopCollectJsCoverage() = Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE].takeIf(true::equals)?.let {
-        DevToolsMessageSender.send(
-            "DELETE",
-            "/event/Debugger.scriptParsed",
-            DevToolsRequest(targetUrl, sessionId.sessionId)
-        )
-    }
+    private fun stopCollectJsCoverage() =
+        Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE].takeIf(true::equals)?.let {
+            DevToolsMessageSender.send(
+                "DELETE",
+                "/event/Debugger.scriptParsed",
+                DevToolsRequest(targetUrl, sessionId.sessionId)
+            )
+        }
 
     // todo is it necessary to disable toggles when browser exit?
     private fun disableToggles() = (JAVA_TOGGLES + JS_TOGGLES).map {
@@ -234,19 +237,18 @@ class ChromeDevTool(
         return response.success
     }
 
-    fun startIntercept(): Boolean = ThreadStorage.storage.get()?.let { testHash ->
-        val headers = mapOf(
-            TEST_ID_HEADER to testHash,
-            SESSION_ID_HEADER to (ThreadStorage.sessionId())
-        )
+    fun startIntercept(): Boolean {
+        val headers = TestSessionHeadersProcessor.retrieveHeaders()
+        if (headers.isEmpty()) return false
         logger.debug { "Start intercepting. Headers: $headers, sessionId: $sessionId" }
         val response = DevToolsMessageSender.send(
             "POST",
             "/intercept",
             DevToolInterceptRequest(targetUrl, params = mapOf("headers" to headers))
         )
-        response.success
-    } ?: false
+        return response.success
+    }
+
 
     fun stopIntercept(): Boolean {
         logger.debug { "Stop intercepting: $targetUrl, sessionId $sessionId" }
@@ -330,9 +332,11 @@ class ChromeDevTool(
                 duration.toDouble(DurationUnit.SECONDS) > 1 -> {
                     logger.warn { message }
                 }
+
                 duration.toDouble(DurationUnit.SECONDS) > 30 -> {
                     logger.error { message }
                 }
+
                 else -> if (debug) logger.debug { message } else logger.trace { message }
             }
         }.value

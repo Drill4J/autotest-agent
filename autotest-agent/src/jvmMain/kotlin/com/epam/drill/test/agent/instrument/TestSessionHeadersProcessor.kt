@@ -27,9 +27,9 @@ object TestSessionHeadersProcessor : HeadersProcessor {
     override fun storeHeaders(headers: Map<String, String>) = Unit
 
     override fun retrieveHeaders() = mutableMapOf<String, String>().apply {
-        put(SESSION_ID_HEADER, ThreadStorage.sessionId())
-        ThreadStorage.storage.get()?.let {
-            put(TEST_ID_HEADER, it)
+        ThreadStorage.retrieve()?.let {
+            put(SESSION_ID_HEADER, it.drillSessionId)
+            putAll(it.headers)
         }
     }
 
