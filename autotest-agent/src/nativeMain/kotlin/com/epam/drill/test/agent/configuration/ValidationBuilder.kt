@@ -21,8 +21,8 @@ import com.epam.drill.konform.validation.ValidationBuilder
 private val TRANSPORT_SCHEMES = setOf("http://", "https://")
 
 internal fun ValidationBuilder<String>.validTransportUrl() = addConstraint(
-    "must have a valid URL address, e.g. 'https://localhost:8090' or 'localhost:8090', but was '{value}'"
-) { TRANSPORT_SCHEMES.any(it::startsWith) || it.matches("^[\\w\\-.]+:\\d{1,5}$".toRegex()) }
+    "must have a valid URL address, e.g. 'https://localhost:8090', but was '{value}'"
+){ TRANSPORT_SCHEMES.any(it::startsWith) }
 
 internal fun ValidationBuilder<String>.validHostPortSpec() = addConstraint(
     "must have a valid host:port specification, e.g. 'host-name.com:1234', but was '{value}'"
