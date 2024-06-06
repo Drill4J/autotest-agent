@@ -45,7 +45,7 @@ object AdminMessageSender : AgentMessageSender<Action> {
         val transport = HttpAgentMessageTransport(
             Configuration.parameters[ParameterDefinitions.DRILL_API_URL],
             Configuration.parameters[ParameterDefinitions.DRILL_API_KEY],
-            Configuration.parameters[ParameterDefinitions.SSL_TRUSTSTORE].let(::resolvePath),
+            Configuration.parameters[ParameterDefinitions.SSL_TRUSTSTORE].takeIf(String::isNotEmpty)?.let(::resolvePath) ?: "",
             Configuration.parameters[ParameterDefinitions.SSL_TRUSTSTORE_PASSWORD],
             gzipCompression = false
         )
