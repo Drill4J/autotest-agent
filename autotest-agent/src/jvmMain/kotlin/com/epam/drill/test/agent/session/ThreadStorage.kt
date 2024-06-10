@@ -15,22 +15,29 @@
  */
 package com.epam.drill.test.agent.session
 
+import com.epam.drill.common.agent.request.DrillRequest
+import com.epam.drill.common.agent.request.RequestHolder
+import com.epam.drill.test.agent.TEST_ID_HEADER
 import java.net.*
 import com.epam.drill.test.agent.serialization.json
-import com.epam.drill.test.agent.session.*
+import mu.KotlinLogging
 
-object ThreadStorage {
-    val storage = InheritableThreadLocal<String>()
+object ThreadStorage : RequestHolder {
+    private val logger = KotlinLogging.logger {}
+    private var threadStorage: InheritableThreadLocal<DrillRequest> =  InheritableThreadLocal()
 
     @Suppress("unused")
     fun memorizeTestName(testName: String?) {
         val value = testName?.let { URLEncoder.encode(it, Charsets.UTF_8.name()) }
-        storage.set(value)
         SessionController.testHash = value ?: ""
+        store(DrillRequest(
+            drillSessionId = sessionId(),
+            headers = mapOf(TEST_ID_HEADER to (value ?: "unspecified"))
+        ))
     }
 
     fun clear() {
-        storage.set(null)
+        remove()
     }
 
     fun sessionId(): String {
@@ -48,6 +55,20 @@ object ThreadStorage {
     fun sendSessionData(preciseCoverage: String, scriptParsed: String, testId: String) {
         val data = SessionData(preciseCoverage, scriptParsed, testId)
         SessionController.sendSessionData(json.encodeToString(SessionData.serializer(), data))
+    }
+
+    override fun remove() {
+        if (threadStorage.get() == null) return
+        logger.trace { "remove: Request ${threadStorage.get().drillSessionId} removed, threadId = ${Thread.currentThread().id}" }
+        threadStorage.remove()
+    }
+
+    override fun retrieve(): DrillRequest? =
+        threadStorage.get()
+
+    override fun store(drillRequest: DrillRequest) {
+        threadStorage.set(drillRequest)
+        logger.trace { "store: Request ${drillRequest.drillSessionId} saved, threadId = ${Thread.currentThread().id}" }
     }
 
 }

@@ -52,7 +52,7 @@ kotlin {
             }
         }
         macosX64(configure = configureNativeTarget).apply {
-            if(macosLd64.toBoolean()) {
+            if (macosLd64.toBoolean()) {
                 binaries.all {
                     linkerOpts("-ld64")
                 }
@@ -110,11 +110,12 @@ kotlin {
         }
     }
     val copyNativeClassesForTarget: TaskContainer.(KotlinNativeTarget) -> Task = {
-        val copyNativeClasses:TaskProvider<Copy> = register("copyNativeClasses${it.targetName.capitalize()}", Copy::class) {
-            group = "build"
-            from("src/nativeMain/kotlin")
-            into("src/${it.targetName}Main/kotlin/gen")
-        }
+        val copyNativeClasses: TaskProvider<Copy> =
+            register("copyNativeClasses${it.targetName.capitalize()}", Copy::class) {
+                group = "build"
+                from("src/nativeMain/kotlin")
+                into("src/${it.targetName}Main/kotlin/gen")
+            }
         copyNativeClasses.get()
     }
     val filterOutCurrentPlatform: (KotlinNativeTarget) -> Boolean = {
@@ -185,7 +186,8 @@ distributions {
     val enabledNativeTargets = kotlin.targets.withType<KotlinNativeTarget>().filter(filterEnabledNativeTargets)
     enabledNativeTargets.forEach {
         val runtimeJarTask = tasks["runtimeJar"]
-        val nativeAgentLinkTask = tasks["link${nativeAgentLibName.capitalize()}DebugShared${it.targetName.capitalize()}"]
+        val nativeAgentLinkTask =
+            tasks["link${nativeAgentLibName.capitalize()}DebugShared${it.targetName.capitalize()}"]
         create(it.targetName) {
             distributionBaseName.set(it.targetName)
             contents {

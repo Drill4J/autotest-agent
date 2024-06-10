@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           java-version: 8.0
-          distribution: zulu
+          distribution: corretto
       - uses: gradle/wrapper-validation-action@v1
       - if: matrix.config.preset == 'linuxX64' || matrix.config.preset == 'macosX64'
         run: chmod +x ${{ github.workspace }}/gradlew
@@ -88,7 +88,7 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           java-version: 8.0
-          distribution: zulu
+          distribution: corretto
       - uses: gradle/wrapper-validation-action@v1
       - if: matrix.config.preset == 'linuxX64' || matrix.config.preset == 'macosX64'
         run: chmod +x ${{ github.workspace }}/gradlew
@@ -122,7 +122,7 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           java-version: 8.0
-          distribution: zulu
+          distribution: corretto
       - uses: gradle/wrapper-validation-action@v1
       - run: chmod +x ${{ github.workspace }}/gradlew
       - run: chmod +x ${{ github.workspace }}/setup-shared-libs.sh

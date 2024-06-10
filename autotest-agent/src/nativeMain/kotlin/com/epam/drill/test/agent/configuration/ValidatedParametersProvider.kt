@@ -65,8 +65,8 @@ class ValidatedParametersProvider(
             identifier()
             minLength(3)
         }
-        ValidatingParameters::drillApiKey required {
-
+        ValidatingParameters::drillApiKey ifPresent {
+            minLength(3)
         }
         ValidatingParameters::logLevelAsList onEach {
             isValidLogLevel()
@@ -74,7 +74,7 @@ class ValidatedParametersProvider(
         ValidatingParameters::logLimitAsInt ifPresent {
             minimum(0)
         }
-        ValidatingParameters::devToolsProxyAddress required {
+        ValidatingParameters::devToolsProxyAddress ifPresent {
             validTransportUrl()
         }
         ValidatingParameters::browserProxyAddress ifPresent {

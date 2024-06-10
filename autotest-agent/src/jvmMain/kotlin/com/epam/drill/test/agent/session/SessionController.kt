@@ -34,15 +34,8 @@ actual object SessionController {
     init {
         thread {
             while (true) {
-                Thread.sleep(3000)
-                runCatching {
-                    val tests = runCatching {
-                        json.decodeFromString(ListSerializer(TestInfo.serializer()), TestListener.getData())
-                    }.getOrNull() ?: emptyList()
-                    if (tests.any()) {
-                        sendTests(tests)
-                    }
-                }.onFailure { logger.error(it) { "Can't parse tests. Reason:" } }
+                Thread.sleep(1000)
+                getAndSendTests()
             }
         }
     }
@@ -57,9 +50,7 @@ actual object SessionController {
 
     actual fun stopSession() {
         runCatching {
-            // TODO check if all tests metadata is sent
-            //  if not use the following to collect the "last" of the tests
-            //  json.decodeFromString(ListSerializer(TestInfo.serializer()), TestListener.getData())
+            getAndSendTests()
         }.getOrNull()
             .also {  TestListener.reset() }
     }
@@ -95,6 +86,18 @@ actual object SessionController {
             .also {
                 if (!it.success) error("request ${destination.target} failed with ${it.statusObject}")
             }
+    }
+
+
+    private fun getAndSendTests() {
+        runCatching {
+            val tests = runCatching {
+                json.decodeFromString(ListSerializer(TestInfo.serializer()), TestListener.getData())
+            }.getOrNull() ?: emptyList()
+            if (tests.any()) {
+                sendTests(tests)
+            }
+        }.onFailure { logger.error(it) { "Can't parse tests. Reason:" } }
     }
 
 }

@@ -17,6 +17,7 @@ package com.epam.drill.test.agent.instrument
 
 import com.epam.drill.agent.instrument.*
 import com.epam.drill.test.agent.instrument.clients.*
+import com.epam.drill.test.agent.instrument.servers.ReactorTransformer
 import com.epam.drill.test.agent.instrument.strategy.selenium.*
 import com.epam.drill.test.agent.instrument.strategy.kafka.*
 import com.epam.drill.test.agent.instrument.strategy.runner.*
@@ -34,7 +35,9 @@ actual object StrategyManager {
     private var systemStrategies: MutableSet<Transformer> = HashSet()
 
     init {
+        systemStrategies.add(ReactorTransformer)
         systemStrategies.add(OkHttpClientStub)
+        systemStrategies.add(WebClientTransformer)
         systemStrategies.add(ApacheHttpClientTransformer)
         systemStrategies.add(JavaHttpClientTransformer)
         systemStrategies.add(Selenium)
