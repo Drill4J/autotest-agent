@@ -18,7 +18,7 @@ package com.epam.drill.test.agent.runner
 import java.io.File
 
 abstract class Configuration {
-    lateinit var drillApiUrl: String
+    var drillApiUrl: String? = null
     var drillApiKey: String? = null
     var groupId: String? = null
     var appId: String? = null
@@ -48,7 +48,6 @@ abstract class Configuration {
         args[Configuration::directLocalPathToZip.name] = directLocalPathToZip
         jsAgentBuildVersion?.let { args[Configuration::jsAgentBuildVersion.name] = it }
         jsAgentId?.let { args[Configuration::jsAgentId.name] = it }
-        // TODO add validation
         logFile?.let { args[Configuration::logFile.name] = it.absolutePath }
         additionalParams?.let { args.putAll(it) }
         args.putAll(jvmArgs())

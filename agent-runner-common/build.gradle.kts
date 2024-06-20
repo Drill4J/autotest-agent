@@ -28,6 +28,7 @@ java {
 
 dependencies {
     compileOnly(kotlin("stdlib-jdk8"))
+    implementation("io.konform:konform:0.4.0")
 }
 
 @Suppress("UNUSED_VARIABLE")
