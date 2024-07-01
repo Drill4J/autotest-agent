@@ -135,20 +135,21 @@ kotlin {
             from(rootDir.resolve("drill-header-transmitter"))
         }
         val relocatePackages = setOf(
-            "javax.websocket",
+            "javax.validation",
             "javassist",
             "ch.qos.logback",
-            "com.fasterxml",
-            "com.github.kklisura",
+            "io.aesy.datasize",
+            "com.alibaba",
+            "com.benasher44",
             "io.ktor",
-            "okhttp3",
-            "okio",
-            "org.glassfish.grizzly",
-            "org.glassfish.tyrus",
+            "net.bytebuddy",
+            "org.objectweb.asm",
+            "org.slf4j",
+            "org.apache",
             "org.intellij.lang.annotations",
             "org.jetbrains.annotations",
-            "org.objectweb.asm",
-            "org.slf4j"
+            "org.petitparser",
+            "mu",
         )
         val runtimeJar by registering(ShadowJar::class) {
             group = "shadow"
