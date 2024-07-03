@@ -73,6 +73,17 @@ kotlin {
             languageSettings.optIn("kotlinx.serialization.InternalSerializationApi")
         }
         val commonMain by getting {
+            kotlin.srcDir("src/commonGenerated/kotlin")
+            file("src/commonGenerated/kotlin/com/epam/drill/test/agent").apply {
+                mkdirs()
+                resolve("Version.kt").writeText(
+                    """
+                    package com.epam.drill.test.agent
+                    
+                    internal val agentVersion = "${project.version}"
+                    """.trimIndent()
+                )
+            }
             dependencies {
                 implementation(project(":logging"))
                 implementation(project(":common"))

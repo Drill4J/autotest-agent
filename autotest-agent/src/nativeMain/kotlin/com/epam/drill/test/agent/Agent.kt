@@ -34,33 +34,45 @@ import com.epam.drill.test.agent.configuration.ParameterDefinitions.IS_MANUALLY_
 import com.epam.drill.test.agent.configuration.ParameterDefinitions.SESSION_ID
 import com.epam.drill.test.agent.instrument.StrategyManager
 import mu.KotlinLogging
+import platform.posix.getpid
 
 object Agent {
 
     private val logger = KotlinLogging.logger("com.epam.drill.test.agent.Agent")
 
+    private val logo = """
+          ____    ____                 _       _          _  _                _      
+         |  _"\U |  _"\ u     ___     |"|     |"|        | ||"|            U |"| u   
+        /| | | |\| |_) |/    |_"_|  U | | u U | | u      | || |_          _ \| |/    
+        U| |_| |\|  _ <       | |    \| |/__ \| |/__     |__   _|        | |_| |_,-. 
+         |____/ u|_| \_\    U/| |\u   |_____| |_____|      /|_|\          \___/-(_/  
+          |||_   //   \\_.-,_|___|_,-.//  \\  //  \\      u_|||_u          _//       
+         (__)_) (__)  (__)\_)-' '-(_/(_")("_)(_")("_)     (__)__)         (__)  
+         Autotest Agent (v${agentVersion})
+        """.trimIndent()
+
     fun agentOnLoad(options: String): Int = memScoped {
-        try {
-            AgentLoggingConfiguration.defaultNativeLoggingConfiguration()
-            Configuration.initializeNative(options)
-            AgentLoggingConfiguration.updateNativeLoggingConfiguration()
+        println(logo)
 
-            addCapabilities()
-            setEventCallbacks()
-            setUnhandledExceptionHook({ thr: Throwable -> logger.error(thr) { "Unhandled event $thr" } }.freeze())
-            AddToBootstrapClassLoaderSearch("${Configuration.parameters[INSTALLATION_DIR]}/drill-runtime.jar")
+        AgentLoggingConfiguration.defaultNativeLoggingConfiguration()
+        Configuration.initializeNative(options)
+        AgentLoggingConfiguration.updateNativeLoggingConfiguration()
 
-        } catch (ex: Throwable) {
-            logger.error(ex) { "Can't load the agent. Reason:" }
-        }
+        addCapabilities()
+        setEventCallbacks()
+        setUnhandledExceptionHook({ thr: Throwable -> logger.error(thr) { "Unhandled event $thr" } }.freeze())
+        AddToBootstrapClassLoaderSearch("${Configuration.parameters[INSTALLATION_DIR]}/drill-runtime.jar")
+
+        logger.info { "agentOnLoad: Autotest agent has been loaded. Pid is: " + getpid() }
+
         return JNI_OK
     }
 
     fun agentOnUnload() {
         try {
-            logger.info { "Shutting the agent down" }
             if (!Configuration.parameters[IS_MANUALLY_CONTROLLED])
                 SessionController.stopSession()
+            logger.info { "agentOnUnload:  Autotest agent has been unloaded." }
         } catch (ex: Throwable) {
             logger.error { "Failed to unload the agent properly. Reason: ${ex.message}" }
         }
