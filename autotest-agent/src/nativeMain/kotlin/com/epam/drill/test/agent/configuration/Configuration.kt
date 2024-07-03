@@ -40,16 +40,16 @@ actual object Configuration : AgentConfiguration {
 
     actual fun initializeNative(agentOptions: String) {
         val agentOptionsProvider = AgentOptionsProvider(agentOptions)
-        logger.info { "initializeNative: Found agent options: ${agentOptionsProvider.configuration}" }
+        logger.debug { "initializeNative: Found agent options: ${agentOptionsProvider.configuration}" }
         val installationDirProvider = InstallationDirProvider(setOf(
             agentOptionsProvider
         ))
-        logger.info { "initializeNative: Found installation dir: ${installationDirProvider.configuration}" }
+        logger.debug { "initializeNative: Found installation dir: ${installationDirProvider.configuration}" }
         val propertiesFileProvider = PropertiesFileProvider(setOf(
             agentOptionsProvider,
             installationDirProvider
         ))
-        logger.info { "initializeNative: Found from properties file: ${propertiesFileProvider.configuration}" }
+        logger.debug { "initializeNative: Found from properties file: ${propertiesFileProvider.configuration}" }
         val validatedParametersProvider = ValidatedParametersProvider(setOf(
             agentOptionsProvider,
             installationDirProvider,

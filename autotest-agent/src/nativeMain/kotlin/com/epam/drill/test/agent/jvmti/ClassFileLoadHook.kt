@@ -44,15 +44,15 @@ object ClassFileLoadHook {
         }
         val instrumentedBytes = AgentClassTransformer.transform(className, classBytes, loader, protectionDomain) ?: return
         val instrumentedSize = instrumentedBytes.size
-        logger.debug { "Class $className has been transformed" }
-        logger.debug { "Applying instrumenting (old: $classDataLen to new: $instrumentedSize)" }
+        logger.trace { "Class $className has been transformed" }
+        logger.trace { "Applying instrumenting (old: $classDataLen to new: $instrumentedSize)" }
         Allocate(instrumentedSize.toLong(), newData)
         val newBytes = newData!!.pointed.value!!
         instrumentedBytes.forEachIndexed { index, byte ->
             newBytes[index] = byte.toUByte()
         }
         newClassDataLen?.pointed?.value = instrumentedSize
-        logger.info { "Successfully instrumented class $className" }
+        logger.debug { "Successfully instrumented class $className" }
     }
 
     private fun notSuitableClass(
