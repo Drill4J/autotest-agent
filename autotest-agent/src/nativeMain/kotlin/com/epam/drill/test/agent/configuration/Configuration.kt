@@ -61,14 +61,12 @@ actual object Configuration : AgentConfiguration {
             installationDirProvider,
             propertiesFileProvider
         ))
-        val runtimeParametersProvider = RuntimeParametersProvider()
         configuration.value = DefaultAgentConfiguration(setOf(
             validatedParametersProvider,
             environmentVariablesProvider,
             agentOptionsProvider,
             installationDirProvider,
-            propertiesFileProvider,
-            runtimeParametersProvider
+            propertiesFileProvider
         )).freeze()
     }
 
