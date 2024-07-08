@@ -24,6 +24,7 @@ import mu.KotlinLogging
 object ClassFileLoadHook {
 
     private val logger = KotlinLogging.logger("com.epam.drill.test.agent.instrumenting.ClassFileLoadHook")
+    private const val DRILL_PACKAGE = "com/epam/drill"
 
     operator fun invoke(
         loader: jobject?,
@@ -39,8 +40,9 @@ object ClassFileLoadHook {
         if (notSuitableClass(loader, protectionDomain, className, classData)
             && !className.contains("Http") // raw hack for http(s) classes
         ) return
+        if (classData == null || className.startsWith(DRILL_PACKAGE)) return
         val classBytes = ByteArray(classDataLen).apply {
-            Memory.of(classData!!, classDataLen).loadByteArray(0, this)
+            Memory.of(classData, classDataLen).loadByteArray(0, this)
         }
         val instrumentedBytes = AgentClassTransformer.transform(className, classBytes, loader, protectionDomain) ?: return
         val instrumentedSize = instrumentedBytes.size
