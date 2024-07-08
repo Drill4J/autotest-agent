@@ -44,10 +44,13 @@ actual object Configuration : AgentConfiguration {
         logger.info { "initializeNative: Found environment variables: ${environmentVariablesProvider.configuration}" }
         val agentOptionsProvider = AgentOptionsProvider(agentOptions)
         logger.info { "initializeNative: Found agent options: ${agentOptionsProvider.configuration}" }
-        val installationDirProvider = InstallationDirProvider(setOf(
-            environmentVariablesProvider,
-            agentOptionsProvider
-        ))
+        val installationDirProvider = InstallationDirProvider(
+            configurationProviders = setOf(
+                environmentVariablesProvider,
+                agentOptionsProvider
+            ),
+            agentLibName = "drill-autotestAgent"
+        )
         logger.info { "initializeNative: Found installation dir: ${installationDirProvider.configuration}" }
         val propertiesFileProvider = PropertiesFileProvider(setOf(
             environmentVariablesProvider,
@@ -78,3 +81,4 @@ actual object Configuration : AgentConfiguration {
         .let(::initializeJvm)
 
 }
+
