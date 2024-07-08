@@ -97,7 +97,6 @@ kotlin {
             dependencies {
                 implementation(project(":jvmapi"))
                 implementation(project(":konform"))
-                implementation("com.benasher44:uuid:$uuidVersion")
             }
         }
         val linuxX64Main by getting(configuration = configureNativeDependencies)
