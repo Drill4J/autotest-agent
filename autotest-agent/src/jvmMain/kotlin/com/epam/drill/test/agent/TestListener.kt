@@ -64,7 +64,7 @@ object TestListener {
             )
             val testHash = test.hash()
             if (test !in _testInfo.value) {
-                logger.info { "Test: $test STARTED" }
+                logger.debug { "Test: $test STARTED" }
                 addTestInfo(
                     test,
                     TestInfo::id.name to testHash,
@@ -128,7 +128,7 @@ object TestListener {
                 TestInfo::finishedAt.name to System.currentTimeMillis(),
                 TestInfo::result.name to getByMapping(status)
             )
-            logger.info { "Test: $test FINISHED. Result:$status" }
+            logger.debug { "Test: $test FINISHED. Result:$status" }
             clearDrillHeaders(it)
             if (Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE]) sendSessionData(test.hash())
         }
@@ -217,15 +217,15 @@ object TestListener {
     private fun sendSessionData(testId: String) = DevToolStorage.get()?.run {
         val coverage = takePreciseCoverage()
         if (coverage.isBlank()) {
-            logger.info { "coverage is blank" }
+            logger.trace { "coverage is blank" }
             return null
         }
         val scripts = scriptParsed()
         if (scripts.isBlank()) {
-            logger.info { "script parsed is blank" }
+            logger.trace { "script parsed is blank" }
             return null
         }
-        logger.info { "ThreadStorage.sendSessionData" }
+        logger.debug { "ThreadStorage.sendSessionData" }
         ThreadStorage.sendSessionData(coverage, scripts, testId)
     }
 

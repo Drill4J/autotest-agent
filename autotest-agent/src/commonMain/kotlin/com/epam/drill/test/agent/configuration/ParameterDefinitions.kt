@@ -25,7 +25,7 @@ object ParameterDefinitions {
     val MESSAGE_QUEUE_LIMIT = AgentParameterDefinition.forString(name = "coverageRetentionLimit", defaultValue = "512Mb")
     val SSL_TRUSTSTORE = AgentParameterDefinition.forString(name = "sslTruststore")
     val SSL_TRUSTSTORE_PASSWORD = AgentParameterDefinition.forString(name = "sslTruststorePassword")
-    val LOG_LEVEL = AgentParameterDefinition.forString(name = "logLevel", defaultValue = "TRACE")
+    val LOG_LEVEL = AgentParameterDefinition.forString(name = "logLevel", defaultValue = "INFO")
     val LOG_FILE = AgentParameterDefinition.forString(name = "logFile")
     val LOG_LIMIT = AgentParameterDefinition.forInt(name = "logLimit", defaultValue = 512)
     val IS_MANUALLY_CONTROLLED = AgentParameterDefinition.forBoolean(name = "isManuallyControlled")

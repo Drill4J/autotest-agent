@@ -24,6 +24,7 @@ import mu.KotlinLogging
 object ClassFileLoadHook {
 
     private val logger = KotlinLogging.logger("com.epam.drill.test.agent.instrumenting.ClassFileLoadHook")
+    private const val DRILL_PACKAGE = "com/epam/drill"
 
     operator fun invoke(
         loader: jobject?,
@@ -39,20 +40,21 @@ object ClassFileLoadHook {
         if (notSuitableClass(loader, protectionDomain, className, classData)
             && !className.contains("Http") // raw hack for http(s) classes
         ) return
+        if (classData == null || className.startsWith(DRILL_PACKAGE)) return
         val classBytes = ByteArray(classDataLen).apply {
-            Memory.of(classData!!, classDataLen).loadByteArray(0, this)
+            Memory.of(classData, classDataLen).loadByteArray(0, this)
         }
         val instrumentedBytes = AgentClassTransformer.transform(className, classBytes, loader, protectionDomain) ?: return
         val instrumentedSize = instrumentedBytes.size
-        logger.debug { "Class $className has been transformed" }
-        logger.debug { "Applying instrumenting (old: $classDataLen to new: $instrumentedSize)" }
+        logger.trace { "Class $className has been transformed" }
+        logger.trace { "Applying instrumenting (old: $classDataLen to new: $instrumentedSize)" }
         Allocate(instrumentedSize.toLong(), newData)
         val newBytes = newData!!.pointed.value!!
         instrumentedBytes.forEachIndexed { index, byte ->
             newBytes[index] = byte.toUByte()
         }
         newClassDataLen?.pointed?.value = instrumentedSize
-        logger.info { "Successfully instrumented class $className" }
+        logger.debug { "Successfully instrumented class $className" }
     }
 
     private fun notSuitableClass(
