@@ -20,6 +20,7 @@ import kotlin.native.concurrent.freeze
 import mu.KotlinLogging
 import com.epam.drill.agent.configuration.DefaultAgentConfiguration
 import com.epam.drill.agent.configuration.provider.AgentOptionsProvider
+import com.epam.drill.agent.configuration.provider.EnvironmentVariablesProvider
 import com.epam.drill.agent.configuration.provider.InstallationDirProvider
 import com.epam.drill.agent.configuration.provider.PropertiesFileProvider
 import com.epam.drill.common.agent.configuration.AgentConfiguration
@@ -39,24 +40,33 @@ actual object Configuration : AgentConfiguration {
         get() = configuration.value!!.parameters
 
     actual fun initializeNative(agentOptions: String) {
+        val environmentVariablesProvider = EnvironmentVariablesProvider()
+        logger.debug { "initializeNative: Found environment variables: ${environmentVariablesProvider.configuration}" }
         val agentOptionsProvider = AgentOptionsProvider(agentOptions)
-        logger.info { "initializeNative: Found agent options: ${agentOptionsProvider.configuration}" }
-        val installationDirProvider = InstallationDirProvider(setOf(
-            agentOptionsProvider
-        ))
-        logger.info { "initializeNative: Found installation dir: ${installationDirProvider.configuration}" }
+        logger.debug { "initializeNative: Found agent options: ${agentOptionsProvider.configuration}" }
+        val installationDirProvider = InstallationDirProvider(
+            configurationProviders = setOf(
+                environmentVariablesProvider,
+                agentOptionsProvider
+            ),
+            agentLibName = "drill-autotestAgent"
+        )
+        logger.debug { "initializeNative: Found installation dir: ${installationDirProvider.configuration}" }
         val propertiesFileProvider = PropertiesFileProvider(setOf(
+            environmentVariablesProvider,
             agentOptionsProvider,
             installationDirProvider
         ))
-        logger.info { "initializeNative: Found from properties file: ${propertiesFileProvider.configuration}" }
+        logger.debug { "initializeNative: Found from properties file: ${propertiesFileProvider.configuration}" }
         val validatedParametersProvider = ValidatedParametersProvider(setOf(
+            environmentVariablesProvider,
             agentOptionsProvider,
             installationDirProvider,
             propertiesFileProvider
         ))
         configuration.value = DefaultAgentConfiguration(setOf(
             validatedParametersProvider,
+            environmentVariablesProvider,
             agentOptionsProvider,
             installationDirProvider,
             propertiesFileProvider
@@ -71,3 +81,4 @@ actual object Configuration : AgentConfiguration {
         .let(::initializeJvm)
 
 }
+
