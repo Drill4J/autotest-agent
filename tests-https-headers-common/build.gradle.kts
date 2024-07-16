@@ -15,7 +15,6 @@ val unirestJavaVersion: String by parent!!.extra
 val googleGsonVersion: String by parent!!.extra
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 

@@ -13,7 +13,6 @@ version = rootProject.version
 val cucumberVersion = "6.5.1"
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 

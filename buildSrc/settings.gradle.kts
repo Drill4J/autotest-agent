@@ -7,7 +7,6 @@ pluginManagement {
         id("com.github.hierynomus.license") version licenseVersion
     }
     repositories {
-        mavenLocal()
         mavenCentral()
         gradlePluginPortal()
     }

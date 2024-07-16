@@ -18,7 +18,6 @@ val restAssuredVersion: String by parent!!.extra
 val unirestJavaVersion: String by parent!!.extra
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 

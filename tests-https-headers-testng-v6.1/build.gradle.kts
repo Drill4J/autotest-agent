@@ -17,7 +17,6 @@ val slf4jVersion: String by parent!!.extra
 val nativeAgentLibName: String by parent!!.extra
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 

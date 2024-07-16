@@ -28,7 +28,6 @@ val kotlinxSerializationVersion: String by extra
 val sharedLibsLocalPath: String by extra
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 

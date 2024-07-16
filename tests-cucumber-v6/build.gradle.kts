@@ -17,7 +17,6 @@ val cucumberVersion = "6.0.0"
 val nativeAgentLibName: String by parent!!.extra
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
