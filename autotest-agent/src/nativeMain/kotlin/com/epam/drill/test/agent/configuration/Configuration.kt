@@ -41,9 +41,9 @@ actual object Configuration : AgentConfiguration {
 
     actual fun initializeNative(agentOptions: String) {
         val environmentVariablesProvider = EnvironmentVariablesProvider()
-        logger.info { "initializeNative: Found environment variables: ${environmentVariablesProvider.configuration}" }
+        logger.debug { "initializeNative: Found environment variables: ${environmentVariablesProvider.configuration}" }
         val agentOptionsProvider = AgentOptionsProvider(agentOptions)
-        logger.info { "initializeNative: Found agent options: ${agentOptionsProvider.configuration}" }
+        logger.debug { "initializeNative: Found agent options: ${agentOptionsProvider.configuration}" }
         val installationDirProvider = InstallationDirProvider(
             configurationProviders = setOf(
                 environmentVariablesProvider,
@@ -51,13 +51,13 @@ actual object Configuration : AgentConfiguration {
             ),
             agentLibName = "drill-autotestAgent"
         )
-        logger.info { "initializeNative: Found installation dir: ${installationDirProvider.configuration}" }
+        logger.debug { "initializeNative: Found installation dir: ${installationDirProvider.configuration}" }
         val propertiesFileProvider = PropertiesFileProvider(setOf(
             environmentVariablesProvider,
             agentOptionsProvider,
             installationDirProvider
         ))
-        logger.info { "initializeNative: Found from properties file: ${propertiesFileProvider.configuration}" }
+        logger.debug { "initializeNative: Found from properties file: ${propertiesFileProvider.configuration}" }
         val validatedParametersProvider = ValidatedParametersProvider(setOf(
             environmentVariablesProvider,
             agentOptionsProvider,
