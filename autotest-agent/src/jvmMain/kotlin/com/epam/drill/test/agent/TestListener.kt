@@ -25,6 +25,7 @@ import kotlinx.collections.immutable.*
 import kotlinx.serialization.builtins.*
 import java.util.zip.CRC32
 import mu.KotlinLogging
+import java.util.UUID
 
 object TestListener {
 
@@ -62,23 +63,28 @@ object TestListener {
                     methodParamsKey to methodParams,
                 )
             )
-            val testHash = test.hash()
+            val testDefinitionId = test.hash()
+            val testLaunchId = UUID.randomUUID().toString()
+
             if (test !in _testInfo.value) {
                 logger.debug { "Test: $test STARTED" }
                 addTestInfo(
                     test,
-                    TestInfo::id.name to testHash,
+                TestInfo::groupId.name to Configuration.parameters[ParameterDefinitions.GROUP_ID],
+                    TestInfo::id.name to testLaunchId,
+                    TestInfo::testDefinitionId.name to testDefinitionId,
                     TestInfo::details.name to test,
                     TestInfo::startedAt.name to System.currentTimeMillis()
                 )
-                addDrillHeaders(testHash)
+                addDrillHeaders(testLaunchId)
             } else if (isFinalizeTestState(test)) {
-                restartTest(testHash, test)
-                addDrillHeaders(testHash)
+                restartTest(testLaunchId, test)
+                addDrillHeaders(testLaunchId)
             }
         }
     }
 
+    // TODO do we really need that logic?
     private fun restartTest(testHash: String, test: TestDetails) {
         val prevDuration = _testInfo.value[test]?.let { testProperties ->
             val startedAt = testProperties[TestInfo::startedAt.name] as Long
