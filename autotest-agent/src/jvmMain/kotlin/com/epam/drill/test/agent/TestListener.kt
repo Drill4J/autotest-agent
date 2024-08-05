@@ -94,6 +94,7 @@ object TestListener {
         logger.trace { "Test: $test was repeated, prev duration $prevDuration. Change status to UNKNOWN" }
         addTestInfo(
             test,
+            TestInfo::groupId.name to Configuration.parameters[ParameterDefinitions.GROUP_ID],
             TestInfo::id.name to testHash,
             TestInfo::details.name to test,
             TestInfo::result.name to TestResult.UNKNOWN,
@@ -131,6 +132,7 @@ object TestListener {
         test?.takeIf { it in _testInfo.value }?.let {
             addTestInfo(
                 test,
+                TestInfo::groupId.name to Configuration.parameters[ParameterDefinitions.GROUP_ID],
                 TestInfo::finishedAt.name to System.currentTimeMillis(),
                 TestInfo::result.name to getByMapping(status)
             )
