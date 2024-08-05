@@ -199,8 +199,17 @@ object TestListener {
 
     fun getData(): String {
         val finished = runCatching {
-            _testInfo.value.filterKeys { test -> isFinalizeTestState(test) }.values.map { properties ->
-                TestInfo.serializer().deserialize(PropertyDecoder(properties))
+            _testInfo.value.filterKeys { test -> isFinalizeTestState(test) }.entries.map { entries ->
+                val properties = entries.value
+                TestInfo(
+                    id = properties[TestInfo::id.name] as String,
+                    groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID],
+                    testTaskId = Configuration.parameters[ParameterDefinitions.TEST_TASK_ID],
+                    result = properties[TestInfo::result.name] as TestResult,
+                    startedAt = properties[TestInfo::startedAt.name] as Long,
+                    finishedAt = properties[TestInfo::finishedAt.name] as Long,
+                    details = entries.key,
+                )
             }
         }.getOrElse {
             logger.error(it) { "Can't get tests list. Reason:" }
