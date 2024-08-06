@@ -78,7 +78,11 @@ object TestListener {
         if (className == null || method == null)
             return
 
-        val testLaunchId = ThreadStorage.retrieveTestLaunchId() ?: return
+        val testLaunchId = ThreadStorage.retrieveTestLaunchId()
+        if (testLaunchId == null) {
+            logger.warn { "Test $className::$method finished with result $status but no test launch id was found." }
+            return
+        }
         val testLaunchInfo = TestLaunchInfo(
             engine = engine,
             path = className,
