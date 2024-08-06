@@ -71,4 +71,6 @@ object ThreadStorage : RequestHolder {
         logger.trace { "store: Request ${drillRequest.drillSessionId} saved, threadId = ${Thread.currentThread().id}" }
     }
 
+    fun retrieveTestLaunchId(): String? = retrieve()?.headers?.get(TEST_ID_HEADER)
+
 }
