@@ -140,9 +140,6 @@ object TestListener {
         WebDriverThreadStorage.addCookies()
     }
 
-    /**
-     * Removing headers only for started tests
-     */
     private fun clearDrillHeaders() {
         DevToolStorage.get()?.stopIntercept()
         ThreadStorage.clear()
