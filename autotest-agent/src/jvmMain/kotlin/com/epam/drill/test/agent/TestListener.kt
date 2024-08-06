@@ -143,29 +143,27 @@ object TestListener {
         ThreadStorage.clear()
     }
 
-    fun getFinishedTests(): List<TestInfo> {
-        val finished = testExecutionData
-            .filterValues { test -> test.result != TestResult.UNKNOWN }
-            .mapValues { (launchInfo, executionInfo) ->
-                val testDetails = TestDetails(
-                    engine = launchInfo.engine,
-                    path = launchInfo.path,
-                    testName = launchInfo.testName,
-                    params = launchInfo.params
-                )
-                TestInfo(
-                    groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID],
-                    id = launchInfo.testLaunchId,
-                    testDefinitionId = testDetails.hash(),
-                    result = executionInfo.result,
-                    startedAt = executionInfo.startedAt ?: 0L,
-                    finishedAt = executionInfo.finishedAt ?: 0L,
-                    details = testDetails,
-                )
-            }
-        finished.keys.forEach { testExecutionData.remove(it) }
-        return finished.values.toList()
-    }
+    fun getFinishedTests(): List<TestInfo> = testExecutionData
+        .filterValues { test -> test.result != TestResult.UNKNOWN }
+        .mapValues { (launchInfo, executionInfo) ->
+            val testDetails = TestDetails(
+                engine = launchInfo.engine,
+                path = launchInfo.path,
+                testName = launchInfo.testName,
+                params = launchInfo.params
+            )
+            TestInfo(
+                groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID],
+                id = launchInfo.testLaunchId,
+                testDefinitionId = testDetails.hash(),
+                result = executionInfo.result,
+                startedAt = executionInfo.startedAt ?: 0L,
+                finishedAt = executionInfo.finishedAt ?: 0L,
+                details = testDetails,
+            )
+        }.onEach {
+            testExecutionData.remove(it.key)
+        }.values.toList()
 
     fun reset() {
         testExecutionData.clear()
