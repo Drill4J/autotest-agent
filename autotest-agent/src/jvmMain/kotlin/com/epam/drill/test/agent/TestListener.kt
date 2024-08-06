@@ -18,9 +18,7 @@ package com.epam.drill.test.agent
 import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.configuration.*
 import com.epam.drill.test.agent.instrument.strategy.selenium.*
-import com.epam.drill.test.agent.serialization.*
 import com.epam.drill.test.agent.session.*
-import kotlinx.serialization.builtins.*
 import java.util.zip.CRC32
 import mu.KotlinLogging
 import java.util.UUID
@@ -78,7 +76,11 @@ object TestListener {
         if (className == null || method == null)
             return
 
-        val testLaunchId = ThreadStorage.retrieveTestLaunchId() ?: return
+        val testLaunchId = ThreadStorage.retrieveTestLaunchId()
+        if (testLaunchId == null) {
+            logger.warn { "Test $className::$method finished with result $status but no test launch id was found." }
+            return
+        }
         val testLaunchInfo = TestLaunchInfo(
             engine = engine,
             path = className,
@@ -136,38 +138,33 @@ object TestListener {
         WebDriverThreadStorage.addCookies()
     }
 
-    /**
-     * Removing headers only for started tests
-     */
     private fun clearDrillHeaders() {
         DevToolStorage.get()?.stopIntercept()
         ThreadStorage.clear()
     }
 
-    fun retrieveData(): String {
-        val finished = testExecutionData
-            .filterValues { test -> test.result != TestResult.UNKNOWN }
-            .mapValues { (launchInfo, executionInfo) ->
-                val testDetails = TestDetails(
-                    engine = launchInfo.engine,
-                    path = launchInfo.path,
-                    testName = launchInfo.testName,
-                    params = launchInfo.params
-                )
-                TestInfo(
-                    groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID],
-                    id = launchInfo.testLaunchId,
-                    testDefinitionId = testDetails.hash(),
-                    result = executionInfo.result,
-                    startedAt = executionInfo.startedAt ?: 0L,
-                    finishedAt = executionInfo.finishedAt ?: 0L,
-                    details = testDetails,
-                    testTaskId = Configuration.parameters[ParameterDefinitions.TEST_TASK_ID],
-                )
-            }
-        finished.keys.forEach { testExecutionData.remove(it) }
-        return json.encodeToString(ListSerializer(TestInfo.serializer()), finished.values.toList())
-    }
+    fun getFinishedTests(): List<TestInfo> = testExecutionData
+        .filterValues { test -> test.result != TestResult.UNKNOWN }
+        .mapValues { (launchInfo, executionInfo) ->
+            val testDetails = TestDetails(
+                engine = launchInfo.engine,
+                path = launchInfo.path,
+                testName = launchInfo.testName,
+                params = launchInfo.params
+            )
+            TestInfo(
+                groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID],
+                id = launchInfo.testLaunchId,
+                testDefinitionId = testDetails.hash(),
+                result = executionInfo.result,
+                startedAt = executionInfo.startedAt ?: 0L,
+                finishedAt = executionInfo.finishedAt ?: 0L,
+                details = testDetails,
+                testTaskId = Configuration.parameters[ParameterDefinitions.TEST_TASK_ID],
+            )
+        }.onEach {
+            testExecutionData.remove(it.key)
+        }.values.toList()
 
     fun reset() {
         testExecutionData.clear()

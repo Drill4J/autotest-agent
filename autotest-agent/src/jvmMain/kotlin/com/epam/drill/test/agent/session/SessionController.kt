@@ -18,8 +18,6 @@ package com.epam.drill.test.agent.session
 import com.benasher44.uuid.*
 import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.*
-import com.epam.drill.test.agent.serialization.*
-import kotlinx.serialization.builtins.*
 import com.epam.drill.common.agent.transport.AgentMessageDestination
 import com.epam.drill.common.agent.transport.ResponseStatus
 import com.epam.drill.test.agent.transport.AdminMessageSender
@@ -93,14 +91,7 @@ actual object SessionController {
 
 
     private fun getAndSendTests() {
-        runCatching {
-            val tests = runCatching {
-                json.decodeFromString(ListSerializer(TestInfo.serializer()), TestListener.retrieveData())
-            }.getOrNull() ?: emptyList()
-            if (tests.any()) {
-                sendTests(tests)
-            }
-        }.onFailure { logger.error(it) { "Can't parse tests. Reason:" } }
+        sendTests(TestListener.getFinishedTests())
     }
 
 }
