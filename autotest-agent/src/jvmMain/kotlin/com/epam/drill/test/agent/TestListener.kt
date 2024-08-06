@@ -18,9 +18,7 @@ package com.epam.drill.test.agent
 import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.configuration.*
 import com.epam.drill.test.agent.instrument.strategy.selenium.*
-import com.epam.drill.test.agent.serialization.*
 import com.epam.drill.test.agent.session.*
-import kotlinx.serialization.builtins.*
 import java.util.zip.CRC32
 import mu.KotlinLogging
 import java.util.UUID
@@ -145,7 +143,7 @@ object TestListener {
         ThreadStorage.clear()
     }
 
-    fun retrieveData(): String {
+    fun getFinishedTests(): List<TestInfo> {
         val finished = testExecutionData
             .filterValues { test -> test.result != TestResult.UNKNOWN }
             .mapValues { (launchInfo, executionInfo) ->
@@ -166,7 +164,7 @@ object TestListener {
                 )
             }
         finished.keys.forEach { testExecutionData.remove(it) }
-        return json.encodeToString(ListSerializer(TestInfo.serializer()), finished.values.toList())
+        return finished.values.toList()
     }
 
     fun reset() {
