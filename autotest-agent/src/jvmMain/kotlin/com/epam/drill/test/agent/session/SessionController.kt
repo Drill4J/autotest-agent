@@ -18,26 +18,27 @@ package com.epam.drill.test.agent.session
 import com.benasher44.uuid.*
 import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.*
-import com.epam.drill.test.agent.serialization.*
-import kotlinx.serialization.builtins.*
-import kotlin.concurrent.thread
 import com.epam.drill.common.agent.transport.AgentMessageDestination
 import com.epam.drill.common.agent.transport.ResponseStatus
 import com.epam.drill.test.agent.transport.AdminMessageSender
 import mu.KotlinLogging
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 actual object SessionController {
     var testHash = "undefined"
     var sessionId = ""
     private val logger = KotlinLogging.logger("com.epam.drill.test.agent.actions.SessionController")
+    private val scheduledThreadPool = Executors.newSingleThreadScheduledExecutor()
+    private val intervalMs: Long = 1000
 
     init {
-        thread {
-            while (true) {
-                Thread.sleep(1000)
-                getAndSendTests()
-            }
-        }
+        scheduledThreadPool.scheduleAtFixedRate(
+            { getAndSendTests() },
+            0,
+            intervalMs,
+            TimeUnit.MILLISECONDS
+        )
     }
 
     actual fun startSession(customSessionId: String) {
@@ -90,14 +91,7 @@ actual object SessionController {
 
 
     private fun getAndSendTests() {
-        runCatching {
-            val tests = runCatching {
-                json.decodeFromString(ListSerializer(TestInfo.serializer()), TestListener.getData())
-            }.getOrNull() ?: emptyList()
-            if (tests.any()) {
-                sendTests(tests)
-            }
-        }.onFailure { logger.error(it) { "Can't parse tests. Reason:" } }
+        sendTests(TestListener.getFinishedTests())
     }
 
 }
