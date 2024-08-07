@@ -28,7 +28,6 @@ object ParameterDefinitions {
     val LOG_LEVEL = AgentParameterDefinition.forString(name = "logLevel", defaultValue = "INFO")
     val LOG_FILE = AgentParameterDefinition.forString(name = "logFile")
     val LOG_LIMIT = AgentParameterDefinition.forInt(name = "logLimit", defaultValue = 512)
-    val IS_MANUALLY_CONTROLLED = AgentParameterDefinition.forBoolean(name = "isManuallyControlled")
     val WITH_JS_COVERAGE = AgentParameterDefinition.forBoolean(name = "withJsCoverage")
     val PROXY_ADDRESS = AgentParameterDefinition.forString(name = "browserProxyAddress")
     val DEVTOOLS_PROXY_ADDRESS = AgentParameterDefinition.forString(

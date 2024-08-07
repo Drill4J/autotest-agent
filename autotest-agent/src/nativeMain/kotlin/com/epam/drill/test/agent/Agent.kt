@@ -30,7 +30,6 @@ import com.epam.drill.jvmapi.gen.*
 import com.epam.drill.test.agent.configuration.AgentLoggingConfiguration
 import com.epam.drill.test.agent.configuration.Configuration
 import com.epam.drill.test.agent.configuration.ParameterDefinitions.FRAMEWORK_PLUGINS
-import com.epam.drill.test.agent.configuration.ParameterDefinitions.IS_MANUALLY_CONTROLLED
 import com.epam.drill.test.agent.configuration.ParameterDefinitions.SESSION_ID
 import com.epam.drill.test.agent.instrument.StrategyManager
 import mu.KotlinLogging
@@ -70,8 +69,7 @@ object Agent {
 
     fun agentOnUnload() {
         try {
-            if (!Configuration.parameters[IS_MANUALLY_CONTROLLED])
-                SessionController.stopSession()
+            SessionController.stopSession()
             logger.info { "agentOnUnload:  Autotest agent has been unloaded." }
         } catch (ex: Throwable) {
             logger.error { "Failed to unload the agent properly. Reason: ${ex.message}" }
@@ -87,12 +85,10 @@ object Agent {
         AgentLoggingConfiguration.updateJvmLoggingConfiguration()
         Configuration.initializeJvm()
 
-        if (!Configuration.parameters[IS_MANUALLY_CONTROLLED])
-            SessionController.startSession(Configuration.parameters[SESSION_ID])
+        SessionController.startSession(Configuration.parameters[SESSION_ID])
         logger.trace { "Initializing StrategyManager..." }
         StrategyManager.initialize(
-            Configuration.parameters[FRAMEWORK_PLUGINS].joinToString(";"),
-            Configuration.parameters[IS_MANUALLY_CONTROLLED]
+            Configuration.parameters[FRAMEWORK_PLUGINS].joinToString(";")
         )
     }
 

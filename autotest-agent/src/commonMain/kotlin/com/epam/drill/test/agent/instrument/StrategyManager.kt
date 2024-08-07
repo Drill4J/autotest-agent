@@ -16,5 +16,5 @@
 package com.epam.drill.test.agent.instrument
 
 expect object StrategyManager {
-    fun initialize(rawFrameworkPlugins: String, isManuallyControlled: Boolean)
+    fun initialize(rawFrameworkPlugins: String)
 }
