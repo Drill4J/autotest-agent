@@ -160,6 +160,7 @@ object TestListener {
                 startedAt = executionInfo.startedAt ?: 0L,
                 finishedAt = executionInfo.finishedAt ?: 0L,
                 details = testDetails,
+                testTaskId = Configuration.parameters[ParameterDefinitions.TEST_TASK_ID],
             )
         }.onEach {
             testExecutionData.remove(it.key)
