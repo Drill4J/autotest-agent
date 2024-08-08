@@ -1,13 +1,13 @@
-import java.net.URI
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.hierynomus.gradle.license.tasks.LicenseCheck
+import com.hierynomus.gradle.license.tasks.LicenseFormat
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.konan.target.presetName
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import com.hierynomus.gradle.license.tasks.LicenseCheck
-import com.hierynomus.gradle.license.tasks.LicenseFormat
+import java.net.URI
 
 @Suppress("RemoveRedundantBackticks")
 plugins {
@@ -29,7 +29,7 @@ val javassistVersion: String by parent!!.extra
 val uuidVersion: String by parent!!.extra
 val aesyDatasizeVersion: String by parent!!.extra
 val nativeAgentLibName: String by parent!!.extra
-val macosLd64 : String by parent!!.extra
+val macosLd64: String by parent!!.extra
 
 repositories {
     mavenCentral()
@@ -42,25 +42,30 @@ kotlin {
     val currentPlatformTarget: KotlinMultiplatformExtension.() -> KotlinNativeTarget = {
         targets.withType<KotlinNativeTarget>()[HostManager.host.presetName]
     }
-    targets {
-        jvm()
-        linuxX64(configure = configureNativeTarget)
-        mingwX64(configure = configureNativeTarget).apply {
+    jvm()
+    linuxX64(configure = configureNativeTarget)
+    mingwX64(configure = configureNativeTarget).apply {
+        binaries.all {
+            linkerOpts("-lpsapi", "-lwsock32", "-lws2_32", "-lmswsock")
+        }
+    }
+    macosX64(configure = configureNativeTarget).apply {
+        if (macosLd64.toBoolean()) {
             binaries.all {
-                linkerOpts("-lpsapi", "-lwsock32", "-lws2_32", "-lmswsock")
+                linkerOpts("-ld64")
             }
         }
-        macosX64(configure = configureNativeTarget).apply {
-            if (macosLd64.toBoolean()) {
-                binaries.all {
-                    linkerOpts("-ld64")
-                }
+    }
+    macosArm64(configure = configureNativeTarget).apply {
+        if (macosLd64.toBoolean()) {
+            binaries.all {
+                linkerOpts("-ld64")
             }
         }
-        currentPlatformTarget().compilations["main"].defaultSourceSet {
-            kotlin.srcDir("src/nativeMain/kotlin")
-            resources.srcDir("src/nativeMain/resources")
-        }
+    }
+    currentPlatformTarget().compilations["main"].defaultSourceSet {
+        kotlin.srcDir("src/nativeMain/kotlin")
+        resources.srcDir("src/nativeMain/resources")
     }
     @Suppress("UNUSED_VARIABLE")
     sourceSets {
@@ -115,10 +120,14 @@ kotlin {
         val linuxX64Main by getting(configuration = configureNativeDependencies)
         val mingwX64Main by getting(configuration = configureNativeDependencies)
         val macosX64Main by getting(configuration = configureNativeDependencies)
+        val macosArm64Main by getting(configuration = configureNativeDependencies)
         mingwX64Main.dependencies {
             implementation(project(":logging-native"))
         }
         macosX64Main.dependencies {
+            implementation(project(":logging-native"))
+        }
+        macosArm64Main.dependencies {
             implementation(project(":logging-native"))
         }
     }
