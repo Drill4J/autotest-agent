@@ -16,7 +16,6 @@ group = "com.epam.drill.autotest"
 version = rootProject.version
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 

@@ -12,7 +12,6 @@ val kotlinxCoroutinesVersion: String by extra
 val kotlinxSerializationVersion: String by extra
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 

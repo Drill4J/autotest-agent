@@ -32,7 +32,6 @@ val nativeAgentLibName: String by parent!!.extra
 val macosLd64 : String by parent!!.extra
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
@@ -108,6 +107,9 @@ kotlin {
             dependencies {
                 implementation(project(":jvmapi"))
                 implementation(project(":konform"))
+
+                implementation("io.ktor:ktor-io:1.6.8")
+                implementation("io.ktor:ktor-utils:1.6.8")
             }
         }
         val linuxX64Main by getting(configuration = configureNativeDependencies)
