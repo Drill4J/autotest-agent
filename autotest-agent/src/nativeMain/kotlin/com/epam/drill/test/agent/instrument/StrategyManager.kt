@@ -21,6 +21,7 @@ import kotlinx.cinterop.toByte
 import com.epam.drill.jvmapi.gen.CallVoidMethod
 import com.epam.drill.jvmapi.gen.NewStringUTF
 import com.epam.drill.jvmapi.getObjectMethod
+import kotlinx.cinterop.ExperimentalForeignApi
 
 actual object StrategyManager {
     actual fun initialize(rawFrameworkPlugins: String, isManuallyControlled: Boolean): Unit =
@@ -32,6 +33,7 @@ actual object StrategyManager {
         )
 }
 
+@OptIn(ExperimentalForeignApi::class)
 private fun callObjectVoidMethodWithStringAndBoolean(
     clazz: KClass<out Any>,
     method: String,

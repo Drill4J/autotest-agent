@@ -26,6 +26,7 @@ object ClassFileLoadHook {
     private val logger = KotlinLogging.logger("com.epam.drill.test.agent.instrumenting.ClassFileLoadHook")
     private const val DRILL_PACKAGE = "com/epam/drill"
 
+    @OptIn(ExperimentalForeignApi::class)
     operator fun invoke(
         loader: jobject?,
         kClassName: CPointer<ByteVar>?,
@@ -57,6 +58,7 @@ object ClassFileLoadHook {
         logger.debug { "Successfully instrumented class $className" }
     }
 
+    @OptIn(ExperimentalForeignApi::class)
     private fun notSuitableClass(
         loader: jobject?,
         protectionDomain: jobject?,

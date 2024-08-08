@@ -15,7 +15,7 @@
  */
 package com.epam.drill.test.agent.configuration
 
-import kotlin.native.concurrent.AtomicReference
+import kotlin.concurrent.AtomicReference
 import kotlin.native.concurrent.freeze
 import mu.KotlinLogging
 import com.epam.drill.agent.configuration.DefaultAgentConfiguration

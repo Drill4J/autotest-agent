@@ -33,8 +33,10 @@ import com.epam.drill.test.agent.configuration.ParameterDefinitions.FRAMEWORK_PL
 import com.epam.drill.test.agent.configuration.ParameterDefinitions.IS_MANUALLY_CONTROLLED
 import com.epam.drill.test.agent.configuration.ParameterDefinitions.SESSION_ID
 import com.epam.drill.test.agent.instrument.StrategyManager
+import kotlinx.cinterop.ExperimentalForeignApi
 import mu.KotlinLogging
 import platform.posix.getpid
+import kotlin.experimental.ExperimentalNativeApi
 
 object Agent {
 
@@ -51,6 +53,7 @@ object Agent {
          Autotest Agent (v${agentVersion})
         """.trimIndent()
 
+    @OptIn(ExperimentalForeignApi::class, ExperimentalNativeApi::class)
     fun agentOnLoad(options: String): Int = memScoped {
         println(logo)
 
@@ -78,6 +81,7 @@ object Agent {
         }
     }
 
+    @OptIn(ExperimentalForeignApi::class)
     fun agentOnVmInit() {
         logger.debug { "Init event" }
         initRuntimeIfNeeded()
@@ -100,6 +104,7 @@ object Agent {
         logger.debug { "Death Event" }
     }
 
+    @OptIn(ExperimentalForeignApi::class)
     private fun addCapabilities() = memScoped {
         val jvmtiCapabilities = alloc<jvmtiCapabilities>()
         jvmtiCapabilities.can_retransform_classes = 1.toUInt()
@@ -108,6 +113,7 @@ object Agent {
         AddCapabilities(jvmtiCapabilities.ptr)
     }
 
+    @OptIn(ExperimentalForeignApi::class)
     private fun setEventCallbacks() = memScoped {
         val eventCallbacks = alloc<jvmtiEventCallbacks>()
         eventCallbacks.VMInit = staticCFunction(::vmInitEvent)

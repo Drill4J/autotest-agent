@@ -23,6 +23,7 @@ import com.epam.drill.jvmapi.gen.jobject
 import com.epam.drill.jvmapi.getObjectMethod
 import com.epam.drill.jvmapi.toByteArray
 import com.epam.drill.jvmapi.toJByteArray
+import kotlinx.cinterop.ExperimentalForeignApi
 
 actual object AgentClassTransformer {
     actual fun transform(className: String, classBytes: ByteArray, loader: Any?, protectionDomain: Any?): ByteArray? =
@@ -36,6 +37,7 @@ actual object AgentClassTransformer {
         )
 }
 
+@OptIn(ExperimentalForeignApi::class)
 @Suppress("UNCHECKED_CAST")
 private fun callAgentClassTransformerTransformMethod(
     clazz: KClass<out Any>,

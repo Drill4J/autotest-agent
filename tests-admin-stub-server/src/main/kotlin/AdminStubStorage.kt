@@ -31,6 +31,7 @@ class AdminStubStorage {
                     tests[action.sessionId] = testsInfo + it.tests
                 }
             }
+            else -> {} //Ignore me
         }
     }
 
