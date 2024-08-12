@@ -13,47 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.agent
+package com.epam.drill.test.agent.testinfo
 
-import com.epam.drill.plugins.test2code.api.*
-import com.epam.drill.test.agent.configuration.*
-import com.epam.drill.test.agent.instrument.strategy.selenium.*
-import com.epam.drill.test.agent.session.*
-import java.util.zip.CRC32
+import com.epam.drill.common.agent.request.RequestHolder
+import com.epam.drill.plugins.test2code.api.TestDetails
+import com.epam.drill.plugins.test2code.api.TestInfo
+import com.epam.drill.plugins.test2code.api.TestResult
+import com.epam.drill.test.agent.TEST_ID_HEADER
+import com.epam.drill.test.agent.configuration.Configuration
+import com.epam.drill.test.agent.configuration.ParameterDefinitions
+import com.epam.drill.test.agent.session.ThreadStorage
 import mu.KotlinLogging
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.zip.CRC32
 
-object TestListener {
+const val METHOD_PARAMS_KEY = "methodParams"
+const val CLASS_PARAMS_KEY = "classParams"
 
-    const val methodParamsKey = "methodParams"
-    const val classParamsKey = "classParams"
-
+class ThreadTestExecutionRecorder(
+    private val requestHolder: RequestHolder,
+    private val listeners: List<TestExecutionListener> = emptyList()
+) : TestExecutionRecorder {
     private val logger = KotlinLogging.logger {}
-
     private val testExecutionData: ConcurrentHashMap<TestLaunchInfo, TestExecutionInfo> = ConcurrentHashMap()
 
-
-    //TODO EPMDJ-10251 add browser name for ui tests
-    @JvmOverloads
-    fun testStarted(
+    override fun recordTestStarting(
         engine: String,
-        className: String?,
-        method: String?,
-        methodParams: String = "()",
-        classParams: String = "",
+        className: String,
+        method: String,
+        methodParams: String,
+        classParams: String
     ) {
-        if (className == null || method == null)
-            return
-
         val testLaunchId = generateTestLaunchId()
         val testLaunchInfo = TestLaunchInfo(
             engine = engine,
             path = className,
             testName = method,
             params = mapOf(
-                classParamsKey to classParams,
-                methodParamsKey to methodParams,
+                METHOD_PARAMS_KEY to classParams,
+                CLASS_PARAMS_KEY to methodParams,
             ),
             testLaunchId = testLaunchId
         )
@@ -61,22 +60,19 @@ object TestListener {
             it.startedAt = System.currentTimeMillis()
         }
         addDrillHeaders(testLaunchId)
+        listeners.forEach { it.onTestStarted(testLaunchInfo) }
         logger.debug { "Test: $testLaunchInfo STARTED" }
     }
 
-    @JvmOverloads
-    fun testFinished(
+    override fun recordTestFinishing(
         engine: String,
-        className: String?,
-        method: String?,
-        status: String,
-        methodParams: String = "()",
-        classParams: String = "",
+        className: String,
+        method: String,
+        methodParams: String,
+        classParams: String,
+        status: String
     ) {
-        if (className == null || method == null)
-            return
-
-        val testLaunchId = ThreadStorage.retrieveTestLaunchId()
+        val testLaunchId = retrieveTestLaunchId()
         if (testLaunchId == null) {
             logger.warn { "Test $className::$method finished with result $status but no test launch id was found." }
             return
@@ -86,40 +82,36 @@ object TestListener {
             path = className,
             testName = method,
             params = mapOf(
-                classParamsKey to classParams,
-                methodParamsKey to methodParams,
+                CLASS_PARAMS_KEY to classParams,
+                METHOD_PARAMS_KEY to methodParams,
             ),
             testLaunchId = testLaunchId
         )
+        val testResult = mapToTestResult(status)
         updateTestInfo(testLaunchInfo) {
             it.finishedAt = System.currentTimeMillis()
-            it.result = getByMapping(status)
+            it.result = testResult
         }
-        if (Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE])
-            sendSessionData(testLaunchId)
         clearDrillHeaders()
+        listeners.forEach { it.onTestFinished(testLaunchInfo, testResult) }
         logger.debug { "Test: $testLaunchInfo FINISHED. Result: $status" }
     }
 
-    @JvmOverloads
-    fun testIgnored(
+    override fun recordTestIgnoring(
         engine: String,
-        className: String?,
-        method: String?,
-        methodParams: String = "()",
-        classParams: String = "",
+        className: String,
+        method: String,
+        methodParams: String,
+        classParams: String
     ) {
-        if (className == null || method == null)
-            return
-
-        val testLaunchId = ThreadStorage.retrieveTestLaunchId() ?: generateTestLaunchId()
+        val testLaunchId = retrieveTestLaunchId() ?: generateTestLaunchId()
         val testLaunchInfo = TestLaunchInfo(
             engine = engine,
             path = className,
             testName = method,
             params = mapOf(
-                classParamsKey to classParams,
-                methodParamsKey to methodParams,
+                CLASS_PARAMS_KEY to classParams,
+                METHOD_PARAMS_KEY to methodParams,
             ),
             testLaunchId = testLaunchId
         )
@@ -129,21 +121,15 @@ object TestListener {
             it.result = TestResult.SKIPPED
         }
         clearDrillHeaders()
+        listeners.forEach { it.onTestIgnored(testLaunchInfo) }
         logger.debug { "Test: $testLaunchInfo FINISHED. Result: ${TestResult.SKIPPED.name}" }
     }
 
-    private fun addDrillHeaders(testLaunchId: String) {
-        ThreadStorage.memorizeTestName(testLaunchId)
-        DevToolStorage.get()?.startIntercept()
-        WebDriverThreadStorage.addCookies()
+    override fun reset() {
+        testExecutionData.clear()
     }
 
-    private fun clearDrillHeaders() {
-        DevToolStorage.get()?.stopIntercept()
-        ThreadStorage.clear()
-    }
-
-    fun getFinishedTests(): List<TestInfo> = testExecutionData
+    override fun getFinishedTests(): List<TestInfo> = testExecutionData
         .filterValues { test -> test.result != TestResult.UNKNOWN }
         .mapValues { (launchInfo, executionInfo) ->
             val testDetails = TestDetails(
@@ -159,40 +145,11 @@ object TestListener {
                 result = executionInfo.result,
                 startedAt = executionInfo.startedAt ?: 0L,
                 finishedAt = executionInfo.finishedAt ?: 0L,
-                details = testDetails,
+                details = testDetails
             )
         }.onEach {
             testExecutionData.remove(it.key)
         }.values.toList()
-
-    fun reset() {
-        testExecutionData.clear()
-    }
-
-    private fun getByMapping(value: String): TestResult {
-        if (value == "SUCCESSFUL") return TestResult.PASSED
-        return TestResult.valueOf(value)
-    }
-
-    private fun sendSessionData(testLaunchId: String) = DevToolStorage.get()?.run {
-        val coverage = takePreciseCoverage()
-        if (coverage.isBlank()) {
-            logger.trace { "coverage is blank" }
-            return null
-        }
-        val scripts = scriptParsed()
-        if (scripts.isBlank()) {
-            logger.trace { "script parsed is blank" }
-            return null
-        }
-        logger.debug { "ThreadStorage.sendSessionData" }
-        ThreadStorage.sendSessionData(coverage, scripts, testLaunchId)
-    }
-
-    private fun TestDetails.hash(): String = CRC32().let {
-        it.update(this.toString().toByteArray())
-        java.lang.Long.toHexString(it.value)
-    }
 
     private fun updateTestInfo(
         testLaunchInfo: TestLaunchInfo,
@@ -207,6 +164,25 @@ object TestListener {
 
     private fun generateTestLaunchId() = UUID.randomUUID().toString()
 
+    private fun TestDetails.hash(): String = CRC32().let {
+        it.update(this.toString().toByteArray())
+        java.lang.Long.toHexString(it.value)
+    }
+
+    private fun addDrillHeaders(testLaunchId: String) {
+        ThreadStorage.memorizeTestName(testLaunchId)
+    }
+
+    private fun clearDrillHeaders() {
+        ThreadStorage.remove()
+    }
+
+    private fun mapToTestResult(value: String): TestResult {
+        if (value == "SUCCESSFUL") return TestResult.PASSED
+        return TestResult.valueOf(value)
+    }
+
+    private fun retrieveTestLaunchId(): String? = requestHolder.retrieve()?.headers?.get(TEST_ID_HEADER)
 }
 
 class TestExecutionInfo(

@@ -13,25 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.agent.session
+package com.epam.drill.test.agent.testinfo
 
-import com.epam.drill.test.agent.TestListener
+import com.epam.drill.plugins.test2code.api.TestResult
 
-object SessionProvider {
-
-    fun startSession(
-        sessionId: String
-    ) {
-        SessionController.startSession(sessionId)
-        TestListener.reset()
-    }
-
-    fun stopSession(sessionId: String) {
-        TestListener.reset()
-    }
-
-    fun setTestName(testName: String?) {
-        ThreadStorage.memorizeTestName(testName ?: "unspecified")
-    }
-
+interface TestExecutionListener {
+    fun onTestStarted(test: TestLaunchInfo) {}
+    fun onTestFinished(test: TestLaunchInfo, result: TestResult) {}
+    fun onTestIgnored(test: TestLaunchInfo) {}
 }

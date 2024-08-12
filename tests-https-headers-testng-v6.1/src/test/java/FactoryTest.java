@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import com.epam.drill.plugins.test2code.api.*;
-import com.epam.drill.test.agent.*;
 import com.epam.drill.test.agent.instrument.strategy.testing.testng.*;
+import com.epam.drill.test.agent.testinfo.TestController;
 import com.epam.drill.test.common.TestData;
 import com.epam.drill.test.common.TestDetailsHashKt;
 import org.testng.annotations.*;
@@ -58,7 +58,7 @@ public class FactoryTest extends BaseTest {
 
     TestData toData(String method) {
         HashMap<String, String> params = new HashMap<>();
-        params.put(TestListener.classParamsKey, "(" + param.getClass().getSimpleName() + "," + value.getClass().getSimpleName() + ",Consumer)[" + param + "]");
+        params.put(TestController.classParamsKey, "(" + param.getClass().getSimpleName() + "," + value.getClass().getSimpleName() + ",Consumer)[" + param + "]");
         params.put("methodParams", "()");
         return new TestData(TestDetailsHashKt.hash(new TestDetails(
                 TestNGStrategy.engineSegment,
