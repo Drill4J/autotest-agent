@@ -68,12 +68,7 @@ object Agent {
     }
 
     fun agentOnUnload() {
-        try {
-            SessionController.stopSession()
-            logger.info { "agentOnUnload:  Autotest agent has been unloaded." }
-        } catch (ex: Throwable) {
-            logger.error { "Failed to unload the agent properly. Reason: ${ex.message}" }
-        }
+        logger.info { "agentOnUnload:  Autotest agent has been unloaded." }
     }
 
     fun agentOnVmInit() {
@@ -85,7 +80,7 @@ object Agent {
         AgentLoggingConfiguration.updateJvmLoggingConfiguration()
         Configuration.initializeJvm()
 
-        SessionController.startSession(Configuration.parameters[SESSION_ID])
+        SessionController.startSession()
         logger.trace { "Initializing StrategyManager..." }
         StrategyManager.initialize(
             Configuration.parameters[FRAMEWORK_PLUGINS].joinToString(";")

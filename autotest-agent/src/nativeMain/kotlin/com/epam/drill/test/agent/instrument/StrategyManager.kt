@@ -35,7 +35,7 @@ private fun callObjectVoidMethodWithString(
     clazz: KClass<out Any>,
     method: String,
     string: String?
-) = getObjectMethod(clazz, method, "(Ljava/lang/String;Z)V").run {
+) = getObjectMethod(clazz, method, "(Ljava/lang/String;)V").run {
     CallVoidMethod(this.first, this.second, string?.let(::NewStringUTF))
 }
 
