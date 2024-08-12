@@ -57,4 +57,6 @@ object ParameterDefinitions {
 
     val JS_AGENT_BUILD_VERSION = AgentParameterDefinition.forString(name = "jsAgentBuildVersion")
     val JS_AGENT_ID = AgentParameterDefinition.forString(name = "jsAgentId")
+
+    val TEST_TASK_ID = AgentParameterDefinition.forString(name = "testTaskId")
 }
