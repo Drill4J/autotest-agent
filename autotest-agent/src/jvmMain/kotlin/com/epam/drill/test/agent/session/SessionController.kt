@@ -17,81 +17,47 @@ package com.epam.drill.test.agent.session
 
 import com.benasher44.uuid.*
 import com.epam.drill.plugins.test2code.api.*
-import com.epam.drill.test.agent.*
 import com.epam.drill.common.agent.transport.AgentMessageDestination
 import com.epam.drill.common.agent.transport.ResponseStatus
-import com.epam.drill.test.agent.transport.AdminMessageSender
+import com.epam.drill.test.agent.configuration.Configuration
+import com.epam.drill.test.agent.configuration.ParameterDefinitions
+import com.epam.drill.test.agent.serialization.json
+import com.epam.drill.test.agent.testinfo.IntervalTestInfoSender
+import com.epam.drill.test.agent.testinfo.TestInfoSender
+import com.epam.drill.test.agent.testinfo.TestController
+import com.epam.drill.test.agent.transport.TestAgentMessageSender
 import mu.KotlinLogging
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 actual object SessionController {
-    var testHash = "undefined"
-    var sessionId = ""
-    private val logger = KotlinLogging.logger("com.epam.drill.test.agent.actions.SessionController")
-    private val scheduledThreadPool = Executors.newSingleThreadScheduledExecutor()
-    private val intervalMs: Long = 1000
+    private val logger = KotlinLogging.logger {}
+    private val sessionSender: SessionSender = SessionSenderImpl(
+        messageSender = TestAgentMessageSender
+    )
+    private val testInfoSender: TestInfoSender = IntervalTestInfoSender(
+        messageSender = TestAgentMessageSender,
+        collectTests = { TestController.getFinishedTests() }
+    )
+    private lateinit var sessionId: String
 
     init {
-        scheduledThreadPool.scheduleAtFixedRate(
-            { getAndSendTests() },
-            0,
-            intervalMs,
-            TimeUnit.MILLISECONDS
+        Runtime.getRuntime().addShutdownHook(Thread { testInfoSender.stopSendingTests() })
+    }
+
+    actual fun startSession() {
+        val customSessionId = Configuration.parameters[ParameterDefinitions.SESSION_ID]
+        this.sessionId = customSessionId.takeIf(String::isNotBlank) ?: uuid4().toString()
+        TestController.init()
+        logger.info { "Test session started: $sessionId" }
+        sessionSender.sendSession(
+            SessionPayload(
+                id = sessionId,
+                groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID],
+                testTaskId = Configuration.parameters[ParameterDefinitions.TEST_TASK_ID],
+                startedAt = System.currentTimeMillis(),
+            )
         )
+        testInfoSender.startSendingTests()
     }
 
-    actual fun startSession(customSessionId: String) {
-        runCatching {
-            val sessionId = customSessionId.takeIf(String::isNotBlank) ?: uuid4().toString()
-            SessionController.sessionId = sessionId
-        }.getOrNull()
-            .also { TestListener.reset() }
-    }
-
-    actual fun stopSession() {
-        runCatching {
-            getAndSendTests()
-        }.getOrNull()
-            .also {  TestListener.reset() }
-    }
-
-    private fun sendTests(tests: List<TestInfo>) = runCatching {
-        val addTestsPayload = AddTestsPayload(sessionId = sessionId, tests)
-        sendToAdmin(
-            destination = AgentMessageDestination(
-                "POST",
-                "tests-metadata"
-            ),
-            payload = addTestsPayload
-        )
-    }.onFailure {
-        logger.warn(it) { "can't send test metadata by session $sessionId" }
-    }
-
-    fun sendSessionData(data: String) = runCatching {
-        val payload = AddSessionData(sessionId = sessionId, data = data)
-        sendToAdmin(
-            AgentMessageDestination(
-                "POST",
-                "raw-javascript-coverage"
-            ),
-            payload
-        )
-    }.onFailure {
-        logger.warn(it) { "can't send js raw coverage $sessionId" }
-    }.getOrNull().also { TestListener.reset() }
-
-    private fun sendToAdmin(destination: AgentMessageDestination, payload: Action): ResponseStatus {
-        return AdminMessageSender.send(destination, payload)
-            .also {
-                if (!it.success) error("request ${destination.target} failed with ${it.statusObject}")
-            }
-    }
-
-
-    private fun getAndSendTests() {
-        sendTests(TestListener.getFinishedTests())
-    }
-
+    fun getSessionId(): String = sessionId
 }
