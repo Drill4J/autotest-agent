@@ -23,7 +23,4 @@ actual object SessionController {
     actual fun startSession(): Unit =
         callObjectVoidMethod(SessionController::class, SessionController::startSession)
 
-//    actual fun stopSession(): Unit =
-//        callObjectVoidMethod(SessionController::class, SessionController::stopSession)
-
 }
