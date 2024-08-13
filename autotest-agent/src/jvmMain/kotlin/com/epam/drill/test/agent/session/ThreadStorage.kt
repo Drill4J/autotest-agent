@@ -47,6 +47,6 @@ object ThreadStorage : RequestHolder {
     }
 
     @Deprecated("Use explicit retrieve() instead", ReplaceWith("retrieve()"))
-    fun retrieveTestLaunchId(): String? = retrieve()?.headers?.get(TEST_ID_HEADER)
+    fun getTestLaunchId(): String? = retrieve()?.headers?.get(TEST_ID_HEADER)
 
 }

@@ -55,7 +55,7 @@ class ThreadTestExecutionRecorder(
         testMethod: TestMethodInfo,
         status: String
     ) {
-        val testLaunchId = retrieveTestLaunchId()
+        val testLaunchId = getTestLaunchId()
         if (testLaunchId == null) {
             logger.warn { "Test ${testMethod.className}::${testMethod.method} finished with result $status but no test launch id was found." }
             return
@@ -74,7 +74,7 @@ class ThreadTestExecutionRecorder(
     override fun recordTestIgnoring(
         testMethod: TestMethodInfo
     ) {
-        val testLaunchId = retrieveTestLaunchId() ?: generateTestLaunchId()
+        val testLaunchId = getTestLaunchId() ?: generateTestLaunchId()
         val testLaunchInfo = mapToLaunchInfo(testMethod, testLaunchId)
         updateTestInfo(testLaunchInfo) {
             it.startedAt = 0L
@@ -143,7 +143,7 @@ class ThreadTestExecutionRecorder(
         return TestResult.valueOf(value)
     }
 
-    private fun retrieveTestLaunchId(): String? = requestHolder.retrieve()?.headers?.get(TEST_ID_HEADER)
+    private fun getTestLaunchId(): String? = requestHolder.retrieve()?.headers?.get(TEST_ID_HEADER)
 
     private fun mapToLaunchInfo(
         testMethod: TestMethodInfo,
