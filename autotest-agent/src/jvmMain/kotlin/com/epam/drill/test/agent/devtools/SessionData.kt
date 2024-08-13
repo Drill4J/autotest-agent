@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.agent.jscoverage
+package com.epam.drill.test.agent.devtools
 
 import kotlinx.serialization.*
 

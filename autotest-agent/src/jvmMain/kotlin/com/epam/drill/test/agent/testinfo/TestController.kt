@@ -16,8 +16,8 @@
 package com.epam.drill.test.agent.testinfo
 
 import com.epam.drill.test.agent.configuration.*
-import com.epam.drill.test.agent.jscoverage.ChromeDevToolTestExecutionListener
-import com.epam.drill.test.agent.jscoverage.JsCoverageSenderImpl
+import com.epam.drill.test.agent.devtools.ChromeDevToolTestExecutionListener
+import com.epam.drill.test.agent.devtools.JsCoverageSenderImpl
 import com.epam.drill.test.agent.session.ThreadStorage
 import mu.KotlinLogging
 
