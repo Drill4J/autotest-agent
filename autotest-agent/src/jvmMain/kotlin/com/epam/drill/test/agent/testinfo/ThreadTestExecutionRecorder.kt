@@ -131,7 +131,7 @@ class ThreadTestExecutionRecorder(
     }
 
     private fun addDrillHeaders(testLaunchId: String) {
-        ThreadStorage.memorizeTestName(testLaunchId)
+        ThreadStorage.storeTestLaunchId(testLaunchId)
     }
 
     private fun clearDrillHeaders() {

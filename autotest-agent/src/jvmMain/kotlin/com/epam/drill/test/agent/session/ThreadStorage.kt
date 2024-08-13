@@ -18,7 +18,6 @@ package com.epam.drill.test.agent.session
 import com.epam.drill.common.agent.request.DrillRequest
 import com.epam.drill.common.agent.request.RequestHolder
 import com.epam.drill.test.agent.TEST_ID_HEADER
-import java.net.*
 import mu.KotlinLogging
 
 object ThreadStorage : RequestHolder {
@@ -26,11 +25,10 @@ object ThreadStorage : RequestHolder {
     private var threadStorage: InheritableThreadLocal<DrillRequest> =  InheritableThreadLocal()
 
     @Suppress("unused")
-    fun memorizeTestName(testName: String?) {
-        val value = testName?.let { URLEncoder.encode(it, Charsets.UTF_8.name()) }
+    fun storeTestLaunchId(testLaunchId: String) {
         store(DrillRequest(
             drillSessionId = SessionController.getSessionId(),
-            headers = mapOf(TEST_ID_HEADER to (value ?: "unspecified"))
+            headers = mapOf(TEST_ID_HEADER to (testLaunchId))
         ))
     }
 

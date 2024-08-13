@@ -23,6 +23,9 @@ import org.testng.annotations.*;
 import java.util.*;
 import java.util.function.Consumer;
 
+import static com.epam.drill.test.agent.testinfo.ThreadTestExecutionRecorderKt.CLASS_PARAMS_KEY;
+import static com.epam.drill.test.agent.testinfo.ThreadTestExecutionRecorderKt.METHOD_PARAMS_KEY;
+
 @Ignore
 public class FactoryTest extends BaseTest {
     private Integer param;
@@ -58,8 +61,8 @@ public class FactoryTest extends BaseTest {
 
     TestData toData(String method) {
         HashMap<String, String> params = new HashMap<>();
-        params.put(TestController.classParamsKey, "(" + param.getClass().getSimpleName() + "," + value.getClass().getSimpleName() + ",Consumer)[" + param + "]");
-        params.put("methodParams", "()");
+        params.put(CLASS_PARAMS_KEY, "(" + param.getClass().getSimpleName() + "," + value.getClass().getSimpleName() + ",Consumer)[" + param + "]");
+        params.put(METHOD_PARAMS_KEY, "()");
         return new TestData(TestDetailsHashKt.hash(new TestDetails(
                 TestNGStrategy.engineSegment,
                 getClass().getSimpleName(),
