@@ -23,5 +23,5 @@ class SessionPayload(
     val id: String,
     val groupId: String,
     val testTaskId: String,
-    val startedAt: Long
+    val startedAt: String
 ): AgentMessage()

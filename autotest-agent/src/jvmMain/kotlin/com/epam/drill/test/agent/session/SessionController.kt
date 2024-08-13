@@ -16,17 +16,15 @@
 package com.epam.drill.test.agent.session
 
 import com.benasher44.uuid.*
-import com.epam.drill.plugins.test2code.api.*
-import com.epam.drill.common.agent.transport.AgentMessageDestination
-import com.epam.drill.common.agent.transport.ResponseStatus
 import com.epam.drill.test.agent.configuration.Configuration
 import com.epam.drill.test.agent.configuration.ParameterDefinitions
-import com.epam.drill.test.agent.serialization.json
 import com.epam.drill.test.agent.testinfo.IntervalTestInfoSender
 import com.epam.drill.test.agent.testinfo.TestInfoSender
 import com.epam.drill.test.agent.testinfo.TestController
 import com.epam.drill.test.agent.transport.TestAgentMessageSender
 import mu.KotlinLogging
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 actual object SessionController {
     private val logger = KotlinLogging.logger {}
@@ -53,7 +51,7 @@ actual object SessionController {
                 id = sessionId,
                 groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID],
                 testTaskId = Configuration.parameters[ParameterDefinitions.TEST_TASK_ID],
-                startedAt = System.currentTimeMillis(),
+                startedAt = ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
             )
         )
         testInfoSender.startSendingTests()

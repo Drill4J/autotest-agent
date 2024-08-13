@@ -29,7 +29,7 @@ class SessionSenderImpl(
 
     override fun sendSession(payload: SessionPayload) {
         messageSender.send(
-            AgentMessageDestination("POST", "session"),
+            AgentMessageDestination("PUT", "sessions"),
             payload
         )
     }
