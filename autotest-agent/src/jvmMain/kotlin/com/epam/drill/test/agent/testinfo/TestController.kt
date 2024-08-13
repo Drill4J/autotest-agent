@@ -53,11 +53,13 @@ object TestController {
             return
 
         testExecutionRecorder.recordTestStarting(
-            engine,
-            className,
-            method,
-            methodParams,
-            classParams
+            TestMethodInfo(
+                engine,
+                className,
+                method,
+                methodParams,
+                classParams
+            )
         )
     }
 
@@ -74,11 +76,13 @@ object TestController {
             return
 
         testExecutionRecorder.recordTestFinishing(
-            engine,
-            className,
-            method,
-            methodParams,
-            classParams,
+            TestMethodInfo(
+                engine,
+                className,
+                method,
+                methodParams,
+                classParams
+            ),
             status
         )
     }
@@ -95,11 +99,13 @@ object TestController {
             return
 
         testExecutionRecorder.recordTestIgnoring(
-            engine,
-            className,
-            method,
-            methodParams,
-            classParams
+            TestMethodInfo(
+                engine,
+                className,
+                method,
+                methodParams,
+                classParams
+            )
         )
     }
 

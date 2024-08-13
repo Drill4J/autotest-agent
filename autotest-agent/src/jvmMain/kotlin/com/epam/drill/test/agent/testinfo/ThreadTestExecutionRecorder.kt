@@ -39,23 +39,10 @@ class ThreadTestExecutionRecorder(
     private val testExecutionData: ConcurrentHashMap<TestLaunchInfo, TestExecutionInfo> = ConcurrentHashMap()
 
     override fun recordTestStarting(
-        engine: String,
-        className: String,
-        method: String,
-        methodParams: String,
-        classParams: String
+        testMethod: TestMethodInfo
     ) {
         val testLaunchId = generateTestLaunchId()
-        val testLaunchInfo = TestLaunchInfo(
-            engine = engine,
-            path = className,
-            testName = method,
-            params = mapOf(
-                METHOD_PARAMS_KEY to classParams,
-                CLASS_PARAMS_KEY to methodParams,
-            ),
-            testLaunchId = testLaunchId
-        )
+        val testLaunchInfo = mapToLaunchInfo(testMethod, testLaunchId)
         updateTestInfo(testLaunchInfo) {
             it.startedAt = System.currentTimeMillis()
         }
@@ -65,28 +52,15 @@ class ThreadTestExecutionRecorder(
     }
 
     override fun recordTestFinishing(
-        engine: String,
-        className: String,
-        method: String,
-        methodParams: String,
-        classParams: String,
+        testMethod: TestMethodInfo,
         status: String
     ) {
         val testLaunchId = retrieveTestLaunchId()
         if (testLaunchId == null) {
-            logger.warn { "Test $className::$method finished with result $status but no test launch id was found." }
+            logger.warn { "Test ${testMethod.className}::${testMethod.method} finished with result $status but no test launch id was found." }
             return
         }
-        val testLaunchInfo = TestLaunchInfo(
-            engine = engine,
-            path = className,
-            testName = method,
-            params = mapOf(
-                CLASS_PARAMS_KEY to classParams,
-                METHOD_PARAMS_KEY to methodParams,
-            ),
-            testLaunchId = testLaunchId
-        )
+        val testLaunchInfo = mapToLaunchInfo(testMethod, testLaunchId)
         val testResult = mapToTestResult(status)
         updateTestInfo(testLaunchInfo) {
             it.finishedAt = System.currentTimeMillis()
@@ -98,23 +72,10 @@ class ThreadTestExecutionRecorder(
     }
 
     override fun recordTestIgnoring(
-        engine: String,
-        className: String,
-        method: String,
-        methodParams: String,
-        classParams: String
+        testMethod: TestMethodInfo
     ) {
         val testLaunchId = retrieveTestLaunchId() ?: generateTestLaunchId()
-        val testLaunchInfo = TestLaunchInfo(
-            engine = engine,
-            path = className,
-            testName = method,
-            params = mapOf(
-                CLASS_PARAMS_KEY to classParams,
-                METHOD_PARAMS_KEY to methodParams,
-            ),
-            testLaunchId = testLaunchId
-        )
+        val testLaunchInfo = mapToLaunchInfo(testMethod, testLaunchId)
         updateTestInfo(testLaunchInfo) {
             it.startedAt = 0L
             it.finishedAt = 0L
@@ -183,6 +144,20 @@ class ThreadTestExecutionRecorder(
     }
 
     private fun retrieveTestLaunchId(): String? = requestHolder.retrieve()?.headers?.get(TEST_ID_HEADER)
+
+    private fun mapToLaunchInfo(
+        testMethod: TestMethodInfo,
+        testLaunchId: String
+    ) = TestLaunchInfo(
+        engine = testMethod.engine,
+        path = testMethod.className,
+        testName = testMethod.method,
+        params = mapOf(
+            METHOD_PARAMS_KEY to testMethod.classParams,
+            CLASS_PARAMS_KEY to testMethod.methodParams,
+        ),
+        testLaunchId = testLaunchId
+    )
 }
 
 class TestExecutionInfo(

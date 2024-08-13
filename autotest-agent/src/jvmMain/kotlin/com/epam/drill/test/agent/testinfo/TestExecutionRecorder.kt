@@ -19,31 +19,27 @@ import com.epam.drill.plugins.test2code.api.TestInfo
 
 interface TestExecutionRecorder {
     fun recordTestStarting(
-        engine: String,
-        className: String,
-        method: String,
-        methodParams: String = "()",
-        classParams: String = "",
+        testMethod: TestMethodInfo
     )
 
     fun recordTestFinishing(
-        engine: String,
-        className: String,
-        method: String,
-        methodParams: String = "()",
-        classParams: String = "",
+        testMethod: TestMethodInfo,
         status: String
     )
 
     fun recordTestIgnoring(
-        engine: String,
-        className: String,
-        method: String,
-        methodParams: String = "()",
-        classParams: String = ""
+        testMethod: TestMethodInfo
     )
-    
+
     fun getFinishedTests(): List<TestInfo>
-    
+
     fun reset()
 }
+
+class TestMethodInfo(
+    val engine: String,
+    val className: String,
+    val method: String,
+    val methodParams: String,
+    val classParams: String
+)
