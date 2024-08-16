@@ -27,10 +27,9 @@ val kotlinxSerializationVersion: String by parent!!.extra
 val atomicfuVersion: String by parent!!.extra
 val javassistVersion: String by parent!!.extra
 val uuidVersion: String by parent!!.extra
-val javaWebsocketVersion: String by parent!!.extra
-val cdtJavaClientVersion: String by parent!!.extra
-val squareupOkHttpVersion: String by parent!!.extra
+val aesyDatasizeVersion: String by parent!!.extra
 val nativeAgentLibName: String by parent!!.extra
+val macosLd64 : String by parent!!.extra
 
 repositories {
     mavenLocal()
@@ -52,7 +51,13 @@ kotlin {
                 linkerOpts("-lpsapi", "-lwsock32", "-lws2_32", "-lmswsock")
             }
         }
-        macosX64(configure = configureNativeTarget)
+        macosX64(configure = configureNativeTarget).apply {
+            if (macosLd64.toBoolean()) {
+                binaries.all {
+                    linkerOpts("-ld64")
+                }
+            }
+        }
         currentPlatformTarget().compilations["main"].defaultSourceSet {
             kotlin.srcDir("src/nativeMain/kotlin")
             resources.srcDir("src/nativeMain/resources")
@@ -68,38 +73,41 @@ kotlin {
             languageSettings.optIn("kotlinx.serialization.InternalSerializationApi")
         }
         val commonMain by getting {
+            kotlin.srcDir("src/commonGenerated/kotlin")
+            file("src/commonGenerated/kotlin/com/epam/drill/test/agent").apply {
+                mkdirs()
+                resolve("Version.kt").writeText(
+                    """
+                    package com.epam.drill.test.agent
+                    
+                    internal val agentVersion = "${project.version}"
+                    """.trimIndent()
+                )
+            }
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
                 implementation(project(":logging"))
-                implementation(project(":knasm"))
-                implementation(project(":http-clients-instrumentation"))
+                implementation(project(":common"))
+                implementation(project(":agent-instrumentation"))
+                implementation(project(":agent-config"))
                 implementation(project(":test2code-api"))
             }
         }
         val jvmMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:$kotlinxCollectionsVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
                 implementation("org.jetbrains.kotlinx:atomicfu:$atomicfuVersion")
-                implementation("org.java-websocket:Java-WebSocket:$javaWebsocketVersion")
-                implementation("com.github.kklisura.cdt:cdt-java-client:$cdtJavaClientVersion")
-                implementation("com.squareup.okhttp3:okhttp:$squareupOkHttpVersion")
+                implementation("org.javassist:javassist:$javassistVersion")
+                implementation("io.aesy:datasize:$aesyDatasizeVersion")
+                implementation("com.benasher44:uuid:$uuidVersion")
+                implementation(project(":agent-transport"))
                 implementation(project(":knasm"))
-                implementation(project(":http-clients-instrumentation"))
-                implementation(project(":autotest-runtime"))
-
-                api("org.javassist:javassist:$javassistVersion")
             }
         }
         val configureNativeDependencies: KotlinSourceSet.() -> Unit = {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-properties:$kotlinxSerializationVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:$kotlinxSerializationVersion")
-                implementation("com.benasher44:uuid:$uuidVersion")
                 implementation(project(":jvmapi"))
+                implementation(project(":konform"))
             }
         }
         val linuxX64Main by getting(configuration = configureNativeDependencies)
@@ -113,11 +121,12 @@ kotlin {
         }
     }
     val copyNativeClassesForTarget: TaskContainer.(KotlinNativeTarget) -> Task = {
-        val copyNativeClasses:TaskProvider<Copy> = register("copyNativeClasses${it.targetName.capitalize()}", Copy::class) {
-            group = "build"
-            from("src/nativeMain/kotlin")
-            into("src/${it.targetName}Main/kotlin/gen")
-        }
+        val copyNativeClasses: TaskProvider<Copy> =
+            register("copyNativeClasses${it.targetName.capitalize()}", Copy::class) {
+                group = "build"
+                from("src/nativeMain/kotlin")
+                into("src/${it.targetName}Main/kotlin/gen")
+            }
         copyNativeClasses.get()
     }
     val filterOutCurrentPlatform: (KotlinNativeTarget) -> Boolean = {
@@ -137,26 +146,26 @@ kotlin {
             from(rootDir.resolve("drill-header-transmitter"))
         }
         val relocatePackages = setOf(
-            "javax.websocket",
+            "javax.validation",
             "javassist",
             "ch.qos.logback",
-            "com.fasterxml",
-            "com.github.kklisura",
+            "io.aesy.datasize",
+            "com.alibaba",
+            "com.benasher44",
             "io.ktor",
-            "okhttp3",
-            "okio",
-            "org.glassfish.grizzly",
-            "org.glassfish.tyrus",
+            "net.bytebuddy",
+            "org.objectweb.asm",
+            "org.slf4j",
+            "org.apache",
             "org.intellij.lang.annotations",
             "org.jetbrains.annotations",
-            "org.java_websocket",
-            "org.objectweb.asm",
-            "org.slf4j"
+            "org.petitparser",
+            "mu",
         )
         val runtimeJar by registering(ShadowJar::class) {
             group = "shadow"
             isZip64 = true
-            archiveFileName.set("drillRuntime.jar")
+            archiveFileName.set("drill-runtime.jar")
             from(jvmMainCompilation.output, jvmMainCompilation.runtimeDependencyFiles)
             from(extensionZip)
             relocate("kotlin", "kruntime")
@@ -189,7 +198,8 @@ distributions {
     val enabledNativeTargets = kotlin.targets.withType<KotlinNativeTarget>().filter(filterEnabledNativeTargets)
     enabledNativeTargets.forEach {
         val runtimeJarTask = tasks["runtimeJar"]
-        val nativeAgentLinkTask = tasks["link${nativeAgentLibName.capitalize()}DebugShared${it.targetName.capitalize()}"]
+        val nativeAgentLinkTask =
+            tasks["link${nativeAgentLibName.capitalize()}DebugShared${it.targetName.capitalize()}"]
         create(it.targetName) {
             distributionBaseName.set(it.targetName)
             contents {

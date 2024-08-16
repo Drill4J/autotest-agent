@@ -16,15 +16,11 @@
 package com.epam.drill.test.agent.runner
 
 open class AgentConfiguration : Configuration() {
-    var pluginId: String = "test2code"
-    var plugins: Set<String> = mutableSetOf()
     var labels: Map<String, String>? = null
     override val repositoryName: String = "autotest-agent"
 
     override fun jvmArgs(): Map<String, String> {
         val args = mutableMapOf<String, String>()
-        args[AgentConfiguration::pluginId.name] = pluginId
-        args[AgentConfiguration::plugins.name] = plugins.joinToString(separator = ";")
         labels?.let {
             args[AgentConfiguration::labels.name] = it.map { (k, v) -> "$k:$v" }.joinToString(";")
         }

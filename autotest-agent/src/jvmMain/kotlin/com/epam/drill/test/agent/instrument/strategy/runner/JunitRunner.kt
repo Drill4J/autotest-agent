@@ -15,26 +15,24 @@
  */
 package com.epam.drill.test.agent.instrument.strategy.runner
 
-import com.epam.drill.instrument.*
+import com.epam.drill.agent.instrument.*
+import com.epam.drill.test.agent.instrument.RuntimeClassPathProvider
 import javassist.*
-import java.security.*
 import java.util.*
+import mu.KotlinLogging
 
-class JunitRunner : TransformStrategy() {
+class JunitRunner : AbstractTransformerObject(), ClassPathProvider by RuntimeClassPathProvider {
+
+    override val logger = KotlinLogging.logger {}
+
     override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
         return className == "org/junit/runner/JUnitCore"
     }
 
-    override fun instrument(
-        ctClass: CtClass,
-        pool: ClassPool,
-        classLoader: ClassLoader?,
-        protectionDomain: ProtectionDomain?,
-    ): ByteArray? {
+    override fun transform(className: String, ctClass: CtClass) {
         val sessionId = UUID.randomUUID()
         val method = ctClass.getMethod("run", "(Lorg/junit/runner/Runner;)Lorg/junit/runner/Result;")
         method.insertBefore("com.epam.drill.test.agent.Drill.startSession(\"$sessionId\");")
         method.insertAfter("com.epam.drill.test.agent.Drill.stopSession(\"$sessionId\");")
-        return ctClass.toBytecode()
     }
 }

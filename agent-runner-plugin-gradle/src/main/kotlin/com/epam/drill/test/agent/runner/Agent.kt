@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 @file:Suppress("unused")
+
 package com.epam.drill.test.agent.runner
 
 import org.gradle.api.GradleException
@@ -32,12 +33,13 @@ abstract class Agent : Plugin<Project> {
     abstract val taskType: Set<KClass<out JavaForkOptions>>
 
     private fun TaskContainer.configure() {
-        filter { task -> taskType.any { it.java.isInstance(task) } }.map { it as JavaForkOptions }.forEach {
+        filter { task -> taskType.any { it.java.isInstance(task) } }.map { it as JavaForkOptions }.forEach { it ->
             println("Task ${(it as Task).name} is modified by Drill")
             with(it) {
                 (it as Task).doFirst {
                     with(project) {
                         prepare()
+                        validate()
                         val toJvmArgs: List<String> = config.toJvmArgs()
                         println("Drill agent line: $toJvmArgs")
                         it.setJvmArgs(toJvmArgs.asIterable())
@@ -75,6 +77,10 @@ abstract class Agent : Plugin<Project> {
                 dynamicLibExtensions.any { it == file.extension }
             } ?: throw GradleException("can't find agent")
         }
+    }
+
+    private fun Project.validate() {
+        validateConfiguration(this.config)
     }
 }
 

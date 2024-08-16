@@ -18,16 +18,17 @@ package com.epam.drill.test.agent.runner
 import java.io.File
 
 abstract class Configuration {
-    lateinit var adminHost: String
-    var agentId: String? = null
+    var drillApiUrl: String? = null
+    var drillApiKey: String? = null
     var groupId: String? = null
-    var adminPort: Int = 8080
-    var adminUserName: String? = null
-    var adminPassword: String? = null
+    var appId: String? = null
+
+    var jsAgentBuildVersion: String? = null
+    var jsAgentId: String? = null
     var version: String = "+"
     var agentPath: File? = null
     var runtimePath: File? = null
-    var logLevel: LogLevels = LogLevels.ERROR
+    var logLevel: String = "ERROR"
     var logFile: File? = null
     var additionalParams: Map<String, String>? = null
     var jvmArgs: Set<String> = mutableSetOf()
@@ -38,14 +39,15 @@ abstract class Configuration {
     fun toJvmArgs(): List<String> {
         val args = mutableMapOf<String, Any?>()
         args["drillInstallationDir"] = runtimePath
-        args["adminAddress"] = "$adminHost:$adminPort"
-        args[Configuration::agentId.name] = agentId
-        args[Configuration::logLevel.name] = logLevel.name
+        args[Configuration::drillApiUrl.name] = drillApiUrl
+        drillApiKey?.let { args[Configuration::drillApiKey.name] = it }
+        args[Configuration::groupId.name] = groupId
+        args[Configuration::appId.name] = appId
+        args[Configuration::logLevel.name] = logLevel
         args[Configuration::directUrlToZip.name] = directUrlToZip
         args[Configuration::directLocalPathToZip.name] = directLocalPathToZip
-        adminUserName?.let { args[Configuration::adminUserName.name] = it }
-        adminPassword?.let { args[Configuration::adminPassword.name] = it }
-        groupId?.let { args[Configuration::groupId.name] = it }
+        jsAgentBuildVersion?.let { args[Configuration::jsAgentBuildVersion.name] = it }
+        jsAgentId?.let { args[Configuration::jsAgentId.name] = it }
         logFile?.let { args[Configuration::logFile.name] = it.absolutePath }
         additionalParams?.let { args.putAll(it) }
         args.putAll(jvmArgs())

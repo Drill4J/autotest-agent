@@ -18,30 +18,21 @@ package com.epam.drill.test.agent
 import com.epam.drill.plugins.test2code.api.*
 import com.epam.drill.test.agent.configuration.*
 import com.epam.drill.test.agent.instrument.strategy.selenium.*
-import com.epam.drill.test.agent.serialization.*
 import com.epam.drill.test.agent.session.*
-import com.epam.drill.test.agent.util.*
-import kotlinx.atomicfu.*
-import kotlinx.collections.immutable.*
-import kotlinx.serialization.builtins.*
+import java.util.zip.CRC32
 import mu.KotlinLogging
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
-actual object TestListener {
+object TestListener {
 
     const val methodParamsKey = "methodParams"
     const val classParamsKey = "classParams"
 
     private val logger = KotlinLogging.logger {}
 
-    private val _testInfo = atomic(persistentHashMapOf<TestDetails, PersistentMap<String, Any>>())
+    private val testExecutionData: ConcurrentHashMap<TestLaunchInfo, TestExecutionInfo> = ConcurrentHashMap()
 
-    private fun addTestInfo(
-        testId: TestDetails,
-        vararg vals: Pair<String, Any>,
-    ) = _testInfo.update { testProperties ->
-        val currentInfo = testProperties[testId] ?: persistentHashMapOf()
-        testProperties.put(testId, currentInfo + vals)
-    }
 
     //TODO EPMDJ-10251 add browser name for ui tests
     @JvmOverloads
@@ -52,47 +43,25 @@ actual object TestListener {
         methodParams: String = "()",
         classParams: String = "",
     ) {
-        if (className != null && method != null) {
-            val test = TestDetails(
-                engine = engine,
-                path = className,
-                testName = method,
-                params = mapOf(
-                    classParamsKey to classParams,
-                    methodParamsKey to methodParams,
-                )
-            )
-            val testHash = test.hash()
-            if (test !in _testInfo.value) {
-                logger.info { "Test: $test STARTED" }
-                addTestInfo(
-                    test,
-                    TestInfo::id.name to testHash,
-                    TestInfo::details.name to test,
-                    TestInfo::startedAt.name to System.currentTimeMillis()
-                )
-                addDrillHeaders(testHash)
-            } else if (isFinalizeTestState(test)) {
-                restartTest(testHash, test)
-                addDrillHeaders(testHash)
-            }
-        }
-    }
+        if (className == null || method == null)
+            return
 
-    private fun restartTest(testHash: String, test: TestDetails) {
-        val prevDuration = _testInfo.value[test]?.let { testProperties ->
-            val startedAt = testProperties[TestInfo::startedAt.name] as Long
-            val finishedAt = testProperties[TestInfo::finishedAt.name] as Long
-            finishedAt - startedAt
-        } ?: 0L
-        logger.trace { "Test: $test was repeated, prev duration $prevDuration. Change status to UNKNOWN" }
-        addTestInfo(
-            test,
-            TestInfo::id.name to testHash,
-            TestInfo::details.name to test,
-            TestInfo::result.name to TestResult.UNKNOWN,
-            TestInfo::startedAt.name to System.currentTimeMillis() - prevDuration
+        val testLaunchId = generateTestLaunchId()
+        val testLaunchInfo = TestLaunchInfo(
+            engine = engine,
+            path = className,
+            testName = method,
+            params = mapOf(
+                classParamsKey to classParams,
+                methodParamsKey to methodParams,
+            ),
+            testLaunchId = testLaunchId
         )
+        updateTestInfo(testLaunchInfo) {
+            it.startedAt = System.currentTimeMillis()
+        }
+        addDrillHeaders(testLaunchId)
+        logger.debug { "Test: $testLaunchInfo STARTED" }
     }
 
     @JvmOverloads
@@ -104,43 +73,33 @@ actual object TestListener {
         methodParams: String = "()",
         classParams: String = "",
     ) {
-        if (className != null && method != null) {
-            val test = TestDetails(
-                engine = engine,
-                path = className,
-                testName = method,
-                params = mapOf(
-                    classParamsKey to classParams,
-                    methodParamsKey to methodParams,
-                ),
-            )
-            logger.trace { "Test: $test is finishing with status $status..." }
-            if (isNotFinalizeTestState(test)) {
-                addTestResult(test, status)
-            }
+        if (className == null || method == null)
+            return
+
+        val testLaunchId = ThreadStorage.retrieveTestLaunchId()
+        if (testLaunchId == null) {
+            logger.warn { "Test $className::$method finished with result $status but no test launch id was found." }
+            return
         }
+        val testLaunchInfo = TestLaunchInfo(
+            engine = engine,
+            path = className,
+            testName = method,
+            params = mapOf(
+                classParamsKey to classParams,
+                methodParamsKey to methodParams,
+            ),
+            testLaunchId = testLaunchId
+        )
+        updateTestInfo(testLaunchInfo) {
+            it.finishedAt = System.currentTimeMillis()
+            it.result = getByMapping(status)
+        }
+        if (Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE])
+            sendSessionData(testLaunchId)
+        clearDrillHeaders()
+        logger.debug { "Test: $testLaunchInfo FINISHED. Result: $status" }
     }
-
-    private fun addTestResult(test: TestDetails?, status: String) {
-        test?.takeIf { it in _testInfo.value }?.let {
-            addTestInfo(
-                test,
-                TestInfo::finishedAt.name to System.currentTimeMillis(),
-                TestInfo::result.name to getByMapping(status)
-            )
-            logger.info { "Test: $test FINISHED. Result:$status" }
-            clearDrillHeaders(it)
-            if (AgentConfig.withJsCoverage()) sendSessionData(test.hash())
-        }
-    }
-
-    private fun isFinalizeTestState(test: TestDetails?): Boolean = !isNotFinalizeTestState(test)
-
-    private fun isNotFinalizeTestState(test: TestDetails?): Boolean = _testInfo.value[test]?.let { testProperties ->
-        testProperties[TestInfo::result.name]?.let { result ->
-            result as TestResult == TestResult.UNKNOWN
-        }
-    } ?: true
 
     @JvmOverloads
     fun testIgnored(
@@ -150,63 +109,65 @@ actual object TestListener {
         methodParams: String = "()",
         classParams: String = "",
     ) {
-        if (className != null && method != null) {
-            val test = TestDetails(
-                engine = engine,
-                path = className,
-                testName = method,
-                params = mapOf(
-                    classParamsKey to classParams,
-                    methodParamsKey to methodParams,
-                )
-            )
-            clearDrillHeaders(test)
-            addTestInfo(
-                test,
-                TestInfo::id.name to test.hash(),
-                TestInfo::details.name to test,
-                TestInfo::startedAt.name to 0L,
-                TestInfo::finishedAt.name to 0L,
-                TestInfo::result.name to TestResult.SKIPPED
-            )
-            logger.trace { "Test: $test FINISHED. Result:${TestResult.SKIPPED.name}" }
+        if (className == null || method == null)
+            return
+
+        val testLaunchId = ThreadStorage.retrieveTestLaunchId() ?: generateTestLaunchId()
+        val testLaunchInfo = TestLaunchInfo(
+            engine = engine,
+            path = className,
+            testName = method,
+            params = mapOf(
+                classParamsKey to classParams,
+                methodParamsKey to methodParams,
+            ),
+            testLaunchId = testLaunchId
+        )
+        updateTestInfo(testLaunchInfo) {
+            it.startedAt = 0L
+            it.finishedAt = 0L
+            it.result = TestResult.SKIPPED
         }
+        clearDrillHeaders()
+        logger.debug { "Test: $testLaunchInfo FINISHED. Result: ${TestResult.SKIPPED.name}" }
     }
 
-    private fun addDrillHeaders(testHash: String) {
-        ThreadStorage.startSession(testHash)
-        ThreadStorage.memorizeTestName(testHash)
+    private fun addDrillHeaders(testLaunchId: String) {
+        ThreadStorage.memorizeTestName(testLaunchId)
         DevToolStorage.get()?.startIntercept()
         WebDriverThreadStorage.addCookies()
     }
 
-    /**
-     * Removing headers only for started tests
-     */
-    private fun clearDrillHeaders(test: TestDetails) {
-        if (test in _testInfo.value) {
-            ThreadStorage.stopSession()
-            DevToolStorage.get()?.stopIntercept()
-            ThreadStorage.clear()
-        }
+    private fun clearDrillHeaders() {
+        DevToolStorage.get()?.stopIntercept()
+        ThreadStorage.clear()
     }
 
-    actual fun getData(): String {
-        val finished = runCatching {
-            _testInfo.value.filterKeys { test -> isFinalizeTestState(test) }.values.map { properties ->
-                TestInfo.serializer().deserialize(PropertyDecoder(properties))
-            }
-        }.getOrElse {
-            logger.error(it) { "Can't get tests list. Reason:" }
-            emptyList()
-        }
-        _testInfo.update { tests -> tests - finished.map { it.details } }
+    fun getFinishedTests(): List<TestInfo> = testExecutionData
+        .filterValues { test -> test.result != TestResult.UNKNOWN }
+        .mapValues { (launchInfo, executionInfo) ->
+            val testDetails = TestDetails(
+                engine = launchInfo.engine,
+                path = launchInfo.path,
+                testName = launchInfo.testName,
+                params = launchInfo.params
+            )
+            TestInfo(
+                groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID],
+                id = launchInfo.testLaunchId,
+                testDefinitionId = testDetails.hash(),
+                result = executionInfo.result,
+                startedAt = executionInfo.startedAt ?: 0L,
+                finishedAt = executionInfo.finishedAt ?: 0L,
+                details = testDetails,
+                testTaskId = Configuration.parameters[ParameterDefinitions.TEST_TASK_ID],
+            )
+        }.onEach {
+            testExecutionData.remove(it.key)
+        }.values.toList()
 
-        return json.encodeToString(ListSerializer(TestInfo.serializer()), finished)
-    }
-
-    actual fun reset() {
-        _testInfo.update { it.clear() }
+    fun reset() {
+        testExecutionData.clear()
     }
 
     private fun getByMapping(value: String): TestResult {
@@ -214,12 +175,51 @@ actual object TestListener {
         return TestResult.valueOf(value)
     }
 
-    private fun sendSessionData(testId: String) = DevToolStorage.get()?.run {
+    private fun sendSessionData(testLaunchId: String) = DevToolStorage.get()?.run {
         val coverage = takePreciseCoverage()
-        if (coverage.isBlank()) return null
+        if (coverage.isBlank()) {
+            logger.trace { "coverage is blank" }
+            return null
+        }
         val scripts = scriptParsed()
-        if (scripts.isBlank()) return null
-        ThreadStorage.sendSessionData(coverage, scripts, testId)
+        if (scripts.isBlank()) {
+            logger.trace { "script parsed is blank" }
+            return null
+        }
+        logger.debug { "ThreadStorage.sendSessionData" }
+        ThreadStorage.sendSessionData(coverage, scripts, testLaunchId)
     }
 
+    private fun TestDetails.hash(): String = CRC32().let {
+        it.update(this.toString().toByteArray())
+        java.lang.Long.toHexString(it.value)
+    }
+
+    private fun updateTestInfo(
+        testLaunchInfo: TestLaunchInfo,
+        updateTestExecutionInfo: (TestExecutionInfo) -> Unit,
+    ) {
+        testExecutionData.compute(testLaunchInfo) { _, value ->
+            val testExecutionInfo = value ?: TestExecutionInfo()
+            updateTestExecutionInfo(testExecutionInfo)
+            testExecutionInfo
+        }
+    }
+
+    private fun generateTestLaunchId() = UUID.randomUUID().toString()
+
 }
+
+class TestExecutionInfo(
+    var result: TestResult = TestResult.UNKNOWN,
+    var startedAt: Long? = null,
+    var finishedAt: Long? = null,
+)
+
+data class TestLaunchInfo(
+    val engine: String = "",
+    val path: String = "",
+    val testName: String = "",
+    val params: Map<String, String> = emptyMap(),
+    val testLaunchId: String,
+)

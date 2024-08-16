@@ -15,21 +15,9 @@
  */
 package com.epam.drill.test.agent
 
-import com.epam.drill.jvmapi.gen.AddCapabilities
-import com.epam.drill.jvmapi.gen.AddToBootstrapClassLoaderSearch
-import com.epam.drill.jvmapi.gen.JNI_OK
-import com.epam.drill.jvmapi.gen.SetEventCallbacks
-import com.epam.drill.jvmapi.gen.jvmtiCapabilities
-import com.epam.drill.jvmapi.gen.jvmtiEventCallbacks
-import com.epam.drill.logging.LoggingConfiguration
-import com.epam.drill.test.agent.configuration.AgentConfig
-import com.epam.drill.test.agent.configuration.AgentRawConfig
-import com.epam.drill.test.agent.jvmti.enableJvmtiEventVmDeath
-import com.epam.drill.test.agent.jvmti.enableJvmtiEventVmInit
-import com.epam.drill.test.agent.jvmti.event.classFileLoadHook
-import com.epam.drill.test.agent.jvmti.event.vmDeathEvent
-import com.epam.drill.test.agent.jvmti.event.vmInitEvent
-import com.epam.drill.test.agent.serialization.StringPropertyDecoder
+import com.epam.drill.test.agent.jvmti.classFileLoadHook
+import com.epam.drill.test.agent.jvmti.vmInitEvent
+import com.epam.drill.test.agent.jvmti.vmDeathEvent
 import com.epam.drill.test.agent.session.SessionController
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
@@ -37,83 +25,97 @@ import kotlinx.cinterop.ptr
 import kotlinx.cinterop.sizeOf
 import kotlinx.cinterop.staticCFunction
 import kotlin.native.concurrent.freeze
+import com.epam.drill.agent.configuration.DefaultParameterDefinitions.INSTALLATION_DIR
+import com.epam.drill.jvmapi.gen.*
+import com.epam.drill.test.agent.configuration.AgentLoggingConfiguration
+import com.epam.drill.test.agent.configuration.Configuration
+import com.epam.drill.test.agent.configuration.ParameterDefinitions.FRAMEWORK_PLUGINS
+import com.epam.drill.test.agent.configuration.ParameterDefinitions.IS_MANUALLY_CONTROLLED
+import com.epam.drill.test.agent.configuration.ParameterDefinitions.SESSION_ID
+import com.epam.drill.test.agent.instrument.StrategyManager
 import mu.KotlinLogging
+import platform.posix.getpid
 
 object Agent {
 
     private val logger = KotlinLogging.logger("com.epam.drill.test.agent.Agent")
 
+    private val logo = """
+          ____    ____                 _       _          _  _                _      
+         |  _"\U |  _"\ u     ___     |"|     |"|        | ||"|            U |"| u   
+        /| | | |\| |_) |/    |_"_|  U | | u U | | u      | || |_          _ \| |/    
+        U| |_| |\|  _ <       | |    \| |/__ \| |/__     |__   _|        | |_| |_,-. 
+         |____/ u|_| \_\    U/| |\u   |_____| |_____|      /|_|\          \___/-(_/  
+          |||_   //   \\_.-,_|___|_,-.//  \\  //  \\      u_|||_u          _//       
+         (__)_) (__)  (__)\_)-' '-(_/(_")("_)(_")("_)     (__)__)         (__)  
+         Autotest Agent (v${agentVersion})
+        """.trimIndent()
+
     fun agentOnLoad(options: String): Int = memScoped {
-        try {
-            val config = options.toAgentParams().freeze()
-            setUnhandledExceptionHook({ thr: Throwable ->
-                logger.error(thr) { "Unhandled event $thr" }
-            }.freeze())
-            val jvmtiCapabilities = alloc<jvmtiCapabilities>()
-            jvmtiCapabilities.can_retransform_classes = 1.toUInt()
-            jvmtiCapabilities.can_retransform_any_class = 1.toUInt()
-            jvmtiCapabilities.can_maintain_original_method_order = 1.toUInt()
-            AddCapabilities(jvmtiCapabilities.ptr)
-            AddToBootstrapClassLoaderSearch("${config.drillInstallationDir}/drillRuntime.jar")
-            callbackRegister()
+        println(logo)
 
-            config.browserProxyAddress?.takeIf { "/" in it }?.let {
-                logger.warn { "Expected format for a browser proxy is hostname.com:1234" }
-            }
+        AgentLoggingConfiguration.defaultNativeLoggingConfiguration()
+        Configuration.initializeNative(options)
+        AgentLoggingConfiguration.updateNativeLoggingConfiguration()
 
-            if (config.devToolsProxyAddress.isNullOrBlank()) {
-                logger.error { "UI coverage will be lost. Please specify devToolsProxyAddress" }
-            }
-            AgentConfig.updateConfig(config)
-        } catch (ex: Throwable) {
-            logger.error(ex) { "Can't load the agent. Reason:" }
-        }
+        addCapabilities()
+        setEventCallbacks()
+        setUnhandledExceptionHook({ thr: Throwable -> logger.error(thr) { "Unhandled event $thr" } }.freeze())
+        AddToBootstrapClassLoaderSearch("${Configuration.parameters[INSTALLATION_DIR]}/drill-runtime.jar")
+
+        logger.info { "agentOnLoad: Autotest agent has been loaded. Pid is: " + getpid() }
+
         return JNI_OK
     }
 
     fun agentOnUnload() {
         try {
-            logger.info { "Shutting the agent down" }
-            val agentConfig = AgentConfig.config
-            if (!agentConfig.isManuallyControlled && !agentConfig.sessionForEachTest)
+            if (!Configuration.parameters[IS_MANUALLY_CONTROLLED])
                 SessionController.stopSession()
+            logger.info { "agentOnUnload:  Autotest agent has been unloaded." }
         } catch (ex: Throwable) {
             logger.error { "Failed to unload the agent properly. Reason: ${ex.message}" }
         }
     }
 
-    private fun callbackRegister() = memScoped {
+    fun agentOnVmInit() {
+        logger.debug { "Init event" }
+        initRuntimeIfNeeded()
+        SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, null)
+
+        AgentLoggingConfiguration.defaultJvmLoggingConfiguration()
+        AgentLoggingConfiguration.updateJvmLoggingConfiguration()
+        Configuration.initializeJvm()
+
+        if (!Configuration.parameters[IS_MANUALLY_CONTROLLED])
+            SessionController.startSession(Configuration.parameters[SESSION_ID])
+        logger.trace { "Initializing StrategyManager..." }
+        StrategyManager.initialize(
+            Configuration.parameters[FRAMEWORK_PLUGINS].joinToString(";"),
+            Configuration.parameters[IS_MANUALLY_CONTROLLED]
+        )
+    }
+
+    fun agentOnVmDeath() {
+        logger.debug { "Death Event" }
+    }
+
+    private fun addCapabilities() = memScoped {
+        val jvmtiCapabilities = alloc<jvmtiCapabilities>()
+        jvmtiCapabilities.can_retransform_classes = 1.toUInt()
+        jvmtiCapabilities.can_retransform_any_class = 1.toUInt()
+        jvmtiCapabilities.can_maintain_original_method_order = 1.toUInt()
+        AddCapabilities(jvmtiCapabilities.ptr)
+    }
+
+    private fun setEventCallbacks() = memScoped {
         val eventCallbacks = alloc<jvmtiEventCallbacks>()
         eventCallbacks.VMInit = staticCFunction(::vmInitEvent)
         eventCallbacks.VMDeath = staticCFunction(::vmDeathEvent)
         eventCallbacks.ClassFileLoadHook = staticCFunction(::classFileLoadHook)
         SetEventCallbacks(eventCallbacks.ptr, sizeOf<jvmtiEventCallbacks>().toInt())
-        enableJvmtiEventVmInit()
-        enableJvmtiEventVmDeath()
+        SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_VM_INIT, null)
+        SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_VM_DEATH, null)
     }
 
 }
-
-private const val WRONG_PARAMS = "Agent parameters are not specified correctly."
-
-private fun String?.toAgentParams() =
-    AgentRawConfig.serializer().deserialize(StringPropertyDecoder(this.asParams())).also {
-        println(it)
-        if (it.agentId.isBlank() && it.groupId.isBlank()) {
-            error(WRONG_PARAMS)
-        }
-        LoggingConfiguration.readDefaultConfiguration()
-        LoggingConfiguration.setLoggingFilename(it.logFile)
-        LoggingConfiguration.setLoggingLevels(it.logLevel)
-        LoggingConfiguration.setLogMessageLimit(it.logLimit)
-    }
-
-private fun String?.asParams(): Map<String, String> =
-    try {
-        this?.split(",")?.filter(String::isNotEmpty)?.associate {
-            val (key, value) = it.split("=")
-            key to value
-        } ?: emptyMap()
-    } catch (parseException: Exception) {
-        throw IllegalArgumentException(WRONG_PARAMS)
-    }

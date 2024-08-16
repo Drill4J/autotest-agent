@@ -15,17 +15,14 @@
  */
 package com.epam.drill.test.agent.instrument
 
-import com.epam.drill.instrument.*
-import com.epam.drill.instrument.http.*
-import com.epam.drill.test.agent.*
+import com.epam.drill.agent.instrument.*
+import com.epam.drill.test.agent.instrument.clients.*
+import com.epam.drill.test.agent.instrument.servers.ReactorTransformer
 import com.epam.drill.test.agent.instrument.strategy.selenium.*
 import com.epam.drill.test.agent.instrument.strategy.kafka.*
 import com.epam.drill.test.agent.instrument.strategy.runner.*
-import com.epam.drill.test.agent.session.*
-import javassist.*
 import org.objectweb.asm.*
 import java.io.*
-import java.security.*
 import java.util.jar.*
 import mu.KotlinLogging
 
@@ -33,32 +30,18 @@ actual object StrategyManager {
 
     private val logger = KotlinLogging.logger {}
 
-    internal var allStrategies: MutableMap<String, MutableSet<TransformStrategy>> = mutableMapOf()
-    private var strategies: MutableSet<TransformStrategy> = HashSet()
-    private var systemStrategies: MutableSet<TransformStrategy> = HashSet()
+    internal var allStrategies: MutableMap<String, MutableSet<Transformer>> = mutableMapOf()
+    private var strategies: MutableSet<Transformer> = HashSet()
+    private var systemStrategies: MutableSet<Transformer> = HashSet()
 
     init {
+        systemStrategies.add(ReactorTransformer)
         systemStrategies.add(OkHttpClientStub)
-        systemStrategies.add(ApacheClient)
-        systemStrategies.add(JavaHttpUrlConnection)
+        systemStrategies.add(WebClientTransformer)
+        systemStrategies.add(ApacheHttpClientTransformer)
+        systemStrategies.add(JavaHttpClientTransformer)
         systemStrategies.add(Selenium)
         systemStrategies.add(Kafka)
-        ClientsCallback.initRequestCallback {
-            mutableMapOf<String, String>().apply {
-                ThreadStorage.sessionId()?.let {
-                    put(SESSION_ID_HEADER, it)
-                }
-                ThreadStorage.storage.get()?.let {
-                    put(TEST_ID_HEADER, it)
-                }
-            }
-        }
-
-        ClientsCallback.initSendConditionCallback {
-            ClientsCallback.getHeaders().run {
-                isNotEmpty() && get(SESSION_ID_HEADER) != null && get(TEST_ID_HEADER) != null
-            }
-        }
     }
 
     actual fun initialize(rawFrameworkPlugins: String, isManuallyControlled: Boolean) {
@@ -105,20 +88,20 @@ actual object StrategyManager {
                 transformedClassBytes.add(strategy.transform(className, classBytes, loader, protectionDomain))
             }
         }
-        return transformedClassBytes.firstOrNull { it != null }
+        return transformedClassBytes.firstOrNull { it != null && !it.contentEquals(classBytes) }
     }
 }
 
 //TODO EPMDJ-8916 Replace with [com.epam.drill.agent.instrument.http.ok.OkHttpClient]
-private object OkHttpClientStub : TransformStrategy() {
+private object OkHttpClientStub : Transformer {
     override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
         //todo EPMDJ-10494 no need drill suffix after removing dependency
         return interfaces.any { "drill/$it" == "okhttp3/internal/http/HttpCodec" }
     }
-    override fun instrument(
-        ctClass: CtClass,
-        pool: ClassPool,
-        classLoader: ClassLoader?,
-        protectionDomain: ProtectionDomain?,
-    ): ByteArray? = OkHttpClient.instrument(ctClass, pool, classLoader, protectionDomain)
+    override fun transform(
+        className: String,
+        classFileBuffer: ByteArray,
+        loader: Any?,
+        protectionDomain: Any?
+    ) = OkHttp3ClientTransformer.transform(className, classFileBuffer, loader, protectionDomain)
 }

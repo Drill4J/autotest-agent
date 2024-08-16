@@ -3,7 +3,6 @@ import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.konan.target.presetName
 import com.hierynomus.gradle.license.tasks.LicenseCheck
 import com.hierynomus.gradle.license.tasks.LicenseFormat
-import com.epam.drill.test.agent.runner.LogLevels
 
 plugins {
     kotlin("jvm")
@@ -23,8 +22,7 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":http-clients-instrumentation"))
-    implementation(project(":autotest-runtime"))
+    implementation(project(":agent-instrumentation"))
     implementation(project(":tests-common"))
 
     api(project(":autotest-agent")) { isTransitive = false }
@@ -50,10 +48,10 @@ val nativeAgentFile = "${HostManager.host.family.dynamicPrefix}${nativeAgentLibN
 drill {
     runtimePath = nativeAgentDir
     agentPath = nativeAgentDir.resolve(nativeAgentFile)
-    agentId = "test-pet-standalone"
-    adminHost = rootProject.extra["testsAdminStubServerHost"] as String
-    adminPort = rootProject.extra["testsAdminStubServerPort"] as Int
-    logLevel = LogLevels.TRACE
+    appId = "test-pet-standalone"
+    groupId = "drill-tests"
+    drillApiUrl = "http://" + rootProject.extra["testsAdminStubServerHost"] as String + ":" + rootProject.extra["testsAdminStubServerPort"] as Int
+    logLevel = "TRACE"
     jvmArgs += "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5016"
     labels = mapOf("User" to "Test", "Team" to "Drill4j")
     additionalParams = mapOf(
