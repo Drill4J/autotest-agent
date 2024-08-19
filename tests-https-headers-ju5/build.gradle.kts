@@ -45,6 +45,8 @@ tasks {
 
 val nativeAgentDir = project(":autotest-agent").buildDir.resolve("install").resolve(HostManager.host.presetName)
 val nativeAgentFile = "${HostManager.host.family.dynamicPrefix}${nativeAgentLibName.replace("-", "_")}.${HostManager.host.family.dynamicSuffix}"
+println("CAT123: nativeAgentDir $nativeAgentDir")
+println("CAT123: nativeAgentFile $nativeAgentFile")
 drill {
     runtimePath = nativeAgentDir
     agentPath = nativeAgentDir.resolve(nativeAgentFile)
