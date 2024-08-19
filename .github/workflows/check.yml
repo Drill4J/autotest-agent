@@ -50,12 +50,12 @@ jobs:
       - uses: gradle/gradle-build-action@v2
         continue-on-error: true
         with:
-          arguments: -i assemble
+          arguments: -i :tests-https-headers-ju5:test
       #      - if: always()
 #        uses: actions/upload-artifact@v3
 #        with:
 #          name: test-reports-${{ matrix.config.preset }}
 #          path: ${{ github.workspace }}/*/build/reports/*
       - name: read error file
-        run: cat /Users/runner/work/autotest-agent/autotest-agent/tests-https-headers-ju4/hs_err_pid*.log
+        run: cat /Users/runner/work/autotest-agent/autotest-agent/tests-https-headers-ju5/hs_err_pid*.log
 

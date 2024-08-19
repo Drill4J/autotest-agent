@@ -54,6 +54,7 @@ drill {
     logLevel = "TRACE"
     jvmArgs += "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5016"
     labels = mapOf("User" to "Test", "Team" to "Drill4j")
+    logLevel = "TRACE"
     additionalParams = mapOf(
         "sessionId" to "testSession",
         "browserProxyAddress" to "host.docker.internal:7777",
