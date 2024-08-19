@@ -61,7 +61,7 @@ object Agent {
         Configuration.initializeNative(options)
         AgentLoggingConfiguration.updateNativeLoggingConfiguration()
 
-        addCapabilities()
+//        addCapabilities()
         setEventCallbacks()
         setUnhandledExceptionHook({ thr: Throwable -> logger.error(thr) { "Unhandled event $thr" } }.freeze())
         AddToBootstrapClassLoaderSearch("${Configuration.parameters[INSTALLATION_DIR]}/drill-runtime.jar")
