@@ -19,7 +19,7 @@ jobs:
       - run: ${{ github.workspace }}/setup-shared-libs.sh
       - uses: gradle/gradle-build-action@v2
         with:
-          arguments: assemble
+          arguments: check
       - if: always()
         uses: actions/upload-artifact@v3
         with:
