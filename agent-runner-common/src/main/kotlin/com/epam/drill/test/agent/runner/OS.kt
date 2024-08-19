@@ -23,17 +23,22 @@ object OS {
     const val FAMILY_UNIX = "unix"
 
     private var OS_NAME: String = System.getProperty("os.name").lowercase(Locale.ENGLISH)
+    private var OS_ARCH: String = System.getProperty("os.arch").lowercase(Locale.ENGLISH)
 
 
     fun isFamily(st: String): Boolean {
         return OS_NAME.contains(st)
+    }
+
+    fun isArch(st: String): Boolean {
+        return OS_ARCH.contains(st)
     }
 }
 
 
 val presetName: String =
     when {
-        OS.isFamily(OS.FAMILY_MAC) -> "macosX64"
+        OS.isFamily(OS.FAMILY_MAC) -> if (OS.isArch("aarch64")) "macosArm64" else "macosX64"
         OS.isFamily(OS.FAMILY_WINDOWS) -> "mingwX64"
         else -> "linuxX64"
     }
