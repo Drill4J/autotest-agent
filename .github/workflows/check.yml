@@ -27,8 +27,8 @@ jobs:
         config:
 #          - {os: ubuntu-latest, preset: linuxX64}
 #          - {os: windows-latest, preset: mingwX64}
-          - {os: macos-12, preset: macosX64}
-#          - {os: macos-14, preset: macosArm64}
+#          - {os: macos-12, preset: macosX64}
+          - {os: macos-14, preset: macosArm64}
     runs-on: ${{ matrix.config.os }}
     steps:
       - uses: actions/checkout@v3
@@ -50,7 +50,7 @@ jobs:
       - uses: gradle/gradle-build-action@v2
         continue-on-error: true
         with:
-          arguments: -i :tests-https-headers-ju5:test
+          arguments: -i assemble
       #      - if: always()
 #        uses: actions/upload-artifact@v3
 #        with:
