@@ -156,7 +156,7 @@ kotlin {
             "net.bytebuddy",
             "org.objectweb.asm",
             "org.slf4j",
-            "org.apache",
+            "org.apache.hc",
             "org.intellij.lang.annotations",
             "org.jetbrains.annotations",
             "org.petitparser",
