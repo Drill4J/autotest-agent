@@ -153,8 +153,8 @@ class ThreadTestExecutionRecorder(
         path = testMethod.className,
         testName = testMethod.method,
         params = mapOf(
-            METHOD_PARAMS_KEY to testMethod.classParams,
-            CLASS_PARAMS_KEY to testMethod.methodParams,
+            CLASS_PARAMS_KEY to testMethod.classParams,
+            METHOD_PARAMS_KEY to testMethod.methodParams,
         ),
         testLaunchId = testLaunchId
     )
