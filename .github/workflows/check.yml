@@ -48,7 +48,6 @@ jobs:
       - if: matrix.config.preset == 'mingwX64'
         run: ${{ github.workspace }}/setup-shared-libs.bat
       - uses: gradle/gradle-build-action@v2
-        continue-on-error: true
         with:
           #FYI: Tests modules take wrong files to execute autest-agent due to that check job was replaced with assemble.
           #Have to wait until tests modules will be migrated to compatibility-matrix tests
