@@ -17,7 +17,6 @@ These autotest-agents add Drill headers to HTTP requests in order to track cover
 ## Modules
 
 - **autotest-agent**: Autotest agent classes
-- **autotest-runtime**: Autotest agent SessionProvider classes
 - **tests-common**: Common classes for tests-* modules
 - **tests-admin-stub-server**: Stub server (emulating test2code-plugin) for agent communications during testing
 - **tests-***: Modules contains the tests for autotest agent
