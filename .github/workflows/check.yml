@@ -49,8 +49,8 @@ jobs:
         run: ${{ github.workspace }}/setup-shared-libs.bat
       - uses: gradle/gradle-build-action@v2
         with:
-          #FYI: Tests modules take wrong files to execute autest-agent due to that check job was replaced with assemble.
-          #Have to wait until tests modules will be migrated to compatibility-matrix tests
+          #FYI: Test modules are selecting the wrong files to execute the autest-agent, because the check job was replaced with assemble.
+          # We'll need to wait until the test modules are migrated to compatibility-matrix tests.
           arguments: assemble
       - if: always()
         uses: actions/upload-artifact@v3
