@@ -49,6 +49,12 @@ object TestNGStrategyV6 : TestNGStrategy() {
         }
     """.trimIndent()
 
+    override fun getTestClassNameMethod(): String = """
+        private String getTestClassName($ITestResult result) {            
+            return result.getTestClass().getName();
+        }
+    """.trimIndent()
+
     fun paramNumber(
         instance: Any?,
         instances: Array<Any?>?
