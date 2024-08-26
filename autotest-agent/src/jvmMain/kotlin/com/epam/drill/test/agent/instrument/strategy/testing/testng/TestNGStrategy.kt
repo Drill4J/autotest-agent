@@ -175,11 +175,11 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
 
     abstract fun getFactoryParams(): String
 
-    private fun CtClass.supportIgnoredTestsTracking() = getDeclaredMethod("run").insertAfter(
+    private fun CtClass.supportIgnoredTestsTracking() = getDeclaredMethod("run").insertBefore(
         """
             java.util.Iterator disabledTests = getExcludedMethods().iterator();
-            while(disabledTests.hasNext()) {
-                java.lang.Object baseMethod = disabledTests.next();
+            while(disabledTests.hasNext()) {                
+                java.lang.Object baseMethod = disabledTests.next();                
                 if (baseMethod instanceof $TestNGMethod) {
                     $TestNGMethod test = ($TestNGMethod) baseMethod;
                     ${TestController::class.java.name}.INSTANCE.${TestController::testIgnored.name}("$engineSegment", test.getTestClass().getName(), test.getMethodName());     
