@@ -15,10 +15,11 @@
  */
 package com.epam.drill.test.agent.testinfo
 
+import com.epam.drill.agent.request.DrillRequestHolder
+import com.epam.drill.test.agent.TEST_ID_HEADER
 import com.epam.drill.test.agent.configuration.*
 import com.epam.drill.test.agent.devtools.ChromeDevToolTestExecutionListener
 import com.epam.drill.test.agent.devtools.JsCoverageSenderImpl
-import com.epam.drill.test.agent.session.ThreadStorage
 import mu.KotlinLogging
 
 object TestController {
@@ -35,7 +36,7 @@ object TestController {
             )
         }
         testExecutionRecorder = ThreadTestExecutionRecorder(
-            requestHolder = ThreadStorage,
+            requestHolder = DrillRequestHolder,
             listeners = listeners
         )
     }
@@ -110,4 +111,8 @@ object TestController {
     }
 
     fun getFinishedTests() = testExecutionRecorder.getFinishedTests()
+
+
+    @Deprecated("Use explicit retrieve() instead", ReplaceWith("retrieve()"))
+    fun getTestLaunchId(): String? = DrillRequestHolder.retrieve()?.headers?.get(TEST_ID_HEADER)
 }

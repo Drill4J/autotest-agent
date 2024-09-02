@@ -17,12 +17,12 @@ package com.epam.drill.test.agent
 
 import com.epam.drill.test.agent.instrument.strategy.selenium.*
 import com.epam.drill.test.agent.session.SessionController
-import com.epam.drill.test.agent.session.ThreadStorage
+import com.epam.drill.test.agent.testinfo.TestController
 
 const val TEST_ID_HEADER = "drill-test-id"
 const val SESSION_ID_HEADER = "drill-session-id"
 
-val TEST_NAME_VALUE_CALC_LINE = "((String)${ThreadStorage::class.qualifiedName}.INSTANCE.${ThreadStorage::getTestLaunchId.name}())"
+val TEST_NAME_VALUE_CALC_LINE = "((String)${TestController::class.qualifiedName}.INSTANCE.${TestController::getTestLaunchId.name}())"
 val TEST_NAME_CALC_LINE = "\"$TEST_ID_HEADER\", $TEST_NAME_VALUE_CALC_LINE"
 val SESSION_ID_VALUE_CALC_LINE = "${SessionController::class.qualifiedName}.INSTANCE.${SessionController::getSessionId.name}()"
 val SESSION_ID_CALC_LINE = "\"$SESSION_ID_HEADER\", $SESSION_ID_VALUE_CALC_LINE"

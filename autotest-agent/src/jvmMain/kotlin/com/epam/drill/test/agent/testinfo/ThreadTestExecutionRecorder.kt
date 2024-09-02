@@ -15,6 +15,8 @@
  */
 package com.epam.drill.test.agent.testinfo
 
+import com.epam.drill.agent.request.DrillRequestHolder
+import com.epam.drill.common.agent.request.DrillRequest
 import com.epam.drill.common.agent.request.RequestHolder
 import com.epam.drill.plugins.test2code.api.TestDetails
 import com.epam.drill.plugins.test2code.api.TestInfo
@@ -22,7 +24,7 @@ import com.epam.drill.plugins.test2code.api.TestResult
 import com.epam.drill.test.agent.TEST_ID_HEADER
 import com.epam.drill.test.agent.configuration.Configuration
 import com.epam.drill.test.agent.configuration.ParameterDefinitions
-import com.epam.drill.test.agent.session.ThreadStorage
+import com.epam.drill.test.agent.session.SessionController
 import mu.KotlinLogging
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -131,11 +133,16 @@ class ThreadTestExecutionRecorder(
     }
 
     private fun addDrillHeaders(testLaunchId: String) {
-        ThreadStorage.storeTestLaunchId(testLaunchId)
+        DrillRequestHolder.store(
+            DrillRequest(
+                drillSessionId = SessionController.getSessionId(),
+                headers = mapOf(TEST_ID_HEADER to (testLaunchId))
+            )
+        )
     }
 
     private fun clearDrillHeaders() {
-        ThreadStorage.remove()
+        DrillRequestHolder.remove()
     }
 
     private fun mapToTestResult(value: String): TestResult {

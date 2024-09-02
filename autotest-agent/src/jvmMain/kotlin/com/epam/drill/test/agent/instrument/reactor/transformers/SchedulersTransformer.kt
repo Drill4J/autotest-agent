@@ -17,11 +17,11 @@ package com.epam.drill.test.agent.instrument.reactor.transformers
 
 import com.epam.drill.agent.instrument.TransformerObject
 import com.epam.drill.agent.instrument.ClassPathProvider
+import com.epam.drill.agent.request.DrillRequestHolder
 import com.epam.drill.agent.instrument.reactor.transformers.SchedulersTransformerObject
 import com.epam.drill.test.agent.instrument.RuntimeClassPathProvider
-import com.epam.drill.test.agent.session.ThreadStorage
 
 object SchedulersTransformer : TransformerObject,
     SchedulersTransformerObject(),
-    com.epam.drill.common.agent.request.RequestHolder by ThreadStorage,
+    com.epam.drill.common.agent.request.RequestHolder by DrillRequestHolder,
     ClassPathProvider by RuntimeClassPathProvider
