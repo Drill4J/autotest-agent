@@ -148,7 +148,7 @@ object Selenium : AbstractTransformerObject(), ClassPathProvider by RuntimeClass
             CtMethod.make(
                 """
                     public boolean $isFirefoxBrowser(org.openqa.selenium.Capabilities capabilities){
-                       return org.openqa.selenium.remote.BrowserType.FIREFOX.equals(capabilities.getBrowserName());
+                       return capabilities.getBrowserName().equalsIgnoreCase("firefox");
                     }
                 """.trimIndent(),
                 ctClass
