@@ -78,12 +78,12 @@ object Selenium : AbstractTransformerObject(), ClassPathProvider by RuntimeClass
                 .getConstructor("(Lorg/openqa/selenium/remote/CommandExecutor;Lorg/openqa/selenium/Capabilities;)V")
                 .insertBefore(
                     """
-                        try {
-                            java.lang.System.out.println("Constructor called - (Lorg/openqa/selenium/remote/CommandExecutor;Lorg/openqa/selenium/Capabilities;)V");
-                            
-                            org.openqa.selenium.remote.HttpCommandExecutor drillHttpCommandExecutor = (org.openqa.selenium.remote.HttpCommandExecutor) $1;
-                            drillRemoteAddress = drillHttpCommandExecutor.getAddressOfRemoteServer().getAuthority();
-                            
+                        try {                            
+                            if ($1 instanceof org.openqa.selenium.remote.HttpCommandExecutor) {
+                                java.lang.System.out.println("Constructor called - (Lorg/openqa/selenium/remote/CommandExecutor;Lorg/openqa/selenium/Capabilities;)V");
+                                org.openqa.selenium.remote.HttpCommandExecutor drillHttpCommandExecutor = (org.openqa.selenium.remote.HttpCommandExecutor) $1;
+                                drillRemoteAddress = drillHttpCommandExecutor.getAddressOfRemoteServer().getAuthority();                                
+                            }                                                       
                         } catch (Exception e) {
                             java.lang.System.out.println(
                                 "Drill4J: failed to get remote address - Constructor: RemoteWebDriver(CommandExecutor executor, Capabilities desiredCapabilities) - Error: " + e.toString() 
