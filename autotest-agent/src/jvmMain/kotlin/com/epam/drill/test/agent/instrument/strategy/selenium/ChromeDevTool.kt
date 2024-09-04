@@ -60,8 +60,10 @@ class ChromeDevTool(
      */
     fun connect(browserSessionId: String?, currentUrl: String) = runCatching {
         logger.debug { "starting connectToDevTools with cap='$capabilities' sessionId='$sessionId' remote='$remoteHost'..." }
-        retrieveDevToolAddress(capabilities, browserSessionId, remoteHost)?.let {
-            trackTime("connect to devtools") { connect(it, currentUrl) }
+        retrieveDevToolAddress(capabilities ?: emptyMap<String, Any>(), browserSessionId, remoteHost).let {
+            trackTime("connect to devtools") {
+                connect(it, currentUrl)
+            }
         }
         /**
          * Add this to thread local only if successfully connected
@@ -172,38 +174,39 @@ class ChromeDevTool(
     }
 
     private fun retrieveDevToolAddress(
-        capabilities: Map<*, *>?,
+        capabilities: Map<*, *>,
         sessionId: String?,
         remoteHost: String?
-    ): String? {
-        return when (launchType) {
+    ): String = when (launchType) {
 
-            // selenoid provides no access to /json/version, but allows to connect to debugger directly
-            // see https://aerokube.com/selenoid/latest/#_accessing_browser_developer_tools
-            "selenoid" -> {
-                if (remoteHost.isNullOrBlank() || sessionId.isNullOrBlank()) return null
-                return "ws://$remoteHost/devtools/$sessionId"
+        // selenoid provides no access to /json/version, but allows to connect to debugger directly
+        // see https://aerokube.com/selenoid/latest/#_accessing_browser_developer_tools
+        "selenoid" -> {
+            if (sessionId.isNullOrBlank())
+                throw RuntimeException("Can't connect to debugger directly, because 'sessionId' is null")
+            if (remoteHost.isNullOrBlank())
+                throw RuntimeException("Can't connect to debugger directly, because 'remoteHost' is null")
+            "ws://$remoteHost/devtools/$sessionId"
+        }
+
+        else -> capabilities.run {
+            val debuggerURL = get(DEBUGGER_ADDRESS)?.toString()
+
+            if (debuggerURL.isNullOrBlank()) {
+                throw RuntimeException("Can't get debugger address by field name $DEBUGGER_ADDRESS from capabilities: $capabilities}")
             }
 
-            else -> capabilities?.run {
-                val debuggerURL = get(DEBUGGER_ADDRESS)?.toString()
-
-                if (debuggerURL.isNullOrBlank()) {
-                    logger.warn { "Can't get debugger address by field name $DEBUGGER_ADDRESS from capabilities: $capabilities}" }
-                    return null
-                }
-
-                val response = DevToolsMessageSender.send("http://$debuggerURL", "GET", "/json/version", "")
-                if (!response.success) {
-                    logger.warn { "Can't get debugger address from http://$debuggerURL/json/version: code=${response.statusObject}, body:${response.content}" }
-                    return null
-                }
-                logger.debug { "/json/version: ${response.content}" }
-                val chromeInfo = Json.parseToJsonElement(response.content) as JsonObject
-                return chromeInfo[DEV_TOOL_DEBUGGER_URL]?.jsonPrimitive?.contentOrNull
+            val response = DevToolsMessageSender.send("http://$debuggerURL", "GET", "/json/version", "")
+            if (!response.success) {
+                throw RuntimeException("Can't get debugger address from http://$debuggerURL/json/version: code=${response.statusObject}, body:${response.content}")
             }
+            logger.debug { "/json/version: ${response.content}" }
+            val chromeInfo = Json.parseToJsonElement(response.content) as JsonObject
+            return chromeInfo[DEV_TOOL_DEBUGGER_URL]?.jsonPrimitive?.contentOrNull
+                ?: throw RuntimeException("Can't get debugger address from '$DEV_TOOL_DEBUGGER_URL' field from $chromeInfo")
         }
     }
+
 
     private fun connect(devToolAddress: String, currentUrl: String) {
         if (REPLACE_LOCALHOST.isNotBlank()) {
