@@ -177,10 +177,10 @@ object Selenium : AbstractTransformerObject(), ClassPathProvider by RuntimeClass
             """
                     if (${this::class.java.name}.INSTANCE.${this::devToolsProxyAddress.name}() != null){
                         ${ChromeDevTool::class.java.name} drillDevTools = new ${ChromeDevTool::class.java.name}(
-                            ((java.util.Map)getCapabilities().getCapability("goog:chromeOptions")),
+                            ((java.util.Map)this.capabilities.getCapability("goog:chromeOptions")),
                             drillRemoteAddress
                         );
-                       drillDevTools.${ChromeDevTool::connect.name}(sessionId.toString(), getCurrentUrl());
+                        drillDevTools.${ChromeDevTool::connect.name}(sessionId.toString(), getCurrentUrl());
                     }
                     try {
                         if (this instanceof $FirefoxDriver) {
