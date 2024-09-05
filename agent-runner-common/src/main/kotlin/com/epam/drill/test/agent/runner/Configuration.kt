@@ -18,8 +18,8 @@ package com.epam.drill.test.agent.runner
 import java.io.File
 
 abstract class Configuration {
-    var drillApiUrl: String? = null
-    var drillApiKey: String? = null
+    var apiUrl: String? = null
+    var apiKey: String? = null
     var groupId: String? = null
     var appId: String? = null
 
@@ -39,8 +39,8 @@ abstract class Configuration {
     fun toJvmArgs(): List<String> {
         val args = mutableMapOf<String, Any?>()
         args["drillInstallationDir"] = runtimePath
-        args[Configuration::drillApiUrl.name] = drillApiUrl
-        drillApiKey?.let { args[Configuration::drillApiKey.name] = it }
+        args[Configuration::apiUrl.name] = apiUrl
+        apiKey?.let { args[Configuration::apiKey.name] = it }
         args[Configuration::groupId.name] = groupId
         args[Configuration::appId.name] = appId
         args[Configuration::logLevel.name] = logLevel
