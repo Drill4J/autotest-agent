@@ -27,10 +27,10 @@ val validateConfig = Validation<Configuration> {
         identifier()
         minLength(3)
     }
-    Configuration::drillApiUrl required {
+    Configuration::apiUrl required {
         validTransportUrl()
     }
-    Configuration::drillApiKey ifPresent {
+    Configuration::apiKey ifPresent {
         minLength(1)
     }
     Configuration::logLevel ifPresent {

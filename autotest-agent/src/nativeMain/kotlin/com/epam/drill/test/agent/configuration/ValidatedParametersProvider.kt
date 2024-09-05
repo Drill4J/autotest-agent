@@ -37,8 +37,8 @@ class ValidatedParametersProvider(
         val appId by provider
         val groupId by provider
         val drillInstallationDir by provider
-        val drillApiUrl by provider
-        val drillApiKey by provider
+        val apiUrl by provider
+        val apiKey by provider
         val devToolsProxyAddress by provider
         val browserProxyAddress by provider
         val logLevel by provider
@@ -51,7 +51,7 @@ class ValidatedParametersProvider(
         ValidatingParameters::drillInstallationDir required {
             minLength(1)
         }
-        ValidatingParameters::drillApiUrl required {
+        ValidatingParameters::apiUrl required {
             validTransportUrl()
         }
     }
@@ -65,7 +65,7 @@ class ValidatedParametersProvider(
             identifier()
             minLength(3)
         }
-        ValidatingParameters::drillApiKey ifPresent {
+        ValidatingParameters::apiKey ifPresent {
             minLength(3)
         }
         ValidatingParameters::logLevelAsList onEach {

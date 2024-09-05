@@ -48,7 +48,7 @@ drill {
     agentPath = nativeAgentDir.resolve(nativeAgentFile)
     appId = "test-pet-standalone"
     groupId = "drill-tests"
-    drillApiUrl = "http://" + rootProject.extra["testsAdminStubServerHost"] as String + ":" + rootProject.extra["testsAdminStubServerPort"] as Int
+    apiUrl = "http://" + rootProject.extra["testsAdminStubServerHost"] as String + ":" + rootProject.extra["testsAdminStubServerPort"] as Int
     logLevel = "TRACE"
     jvmArgs += "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5014"
     labels = mapOf("User" to "Test", "Team" to "Drill4j")
