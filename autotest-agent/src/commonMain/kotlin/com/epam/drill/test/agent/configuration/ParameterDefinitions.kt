@@ -20,8 +20,8 @@ import com.epam.drill.plugins.test2code.api.Label
 
 object ParameterDefinitions {
     val GROUP_ID = AgentParameterDefinition.forString(name = "groupId")
-    val DRILL_API_URL = AgentParameterDefinition.forString(name = "drillApiUrl", parser = { if (!it.endsWith("/") ) "$it/" else it })
-    val DRILL_API_KEY = AgentParameterDefinition.forString(name = "drillApiKey")
+    val API_URL = AgentParameterDefinition.forString(name = "apiUrl", parser = { if (!it.endsWith("/") ) "$it/" else it })
+    val API_KEY = AgentParameterDefinition.forString(name = "apiKey")
     val MESSAGE_QUEUE_LIMIT = AgentParameterDefinition.forString(name = "coverageRetentionLimit", defaultValue = "512Mb")
     val SSL_TRUSTSTORE = AgentParameterDefinition.forString(name = "sslTruststore")
     val SSL_TRUSTSTORE_PASSWORD = AgentParameterDefinition.forString(name = "sslTruststorePassword")
