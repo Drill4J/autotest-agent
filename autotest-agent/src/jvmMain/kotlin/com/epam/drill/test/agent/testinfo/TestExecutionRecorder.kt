@@ -13,15 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.agent.instrument.reactor.transformers
+package com.epam.drill.test.agent.testinfo
 
-import com.epam.drill.agent.instrument.ClassPathProvider
-import com.epam.drill.agent.request.DrillRequestHolder
-import com.epam.drill.agent.instrument.TransformerObject
-import com.epam.drill.agent.instrument.reactor.transformers.FluxTransformerObject
-import com.epam.drill.test.agent.instrument.RuntimeClassPathProvider
+import com.epam.drill.plugins.test2code.api.TestInfo
 
-object FluxTransformer : TransformerObject,
-    FluxTransformerObject(),
-    com.epam.drill.common.agent.request.RequestHolder by DrillRequestHolder,
-    ClassPathProvider by RuntimeClassPathProvider
+interface TestExecutionRecorder {
+    fun recordTestStarting(
+        testMethod: TestMethodInfo
+    )
+
+    fun recordTestFinishing(
+        testMethod: TestMethodInfo,
+        status: String
+    )
+
+    fun recordTestIgnoring(
+        testMethod: TestMethodInfo
+    )
+
+    fun getFinishedTests(): List<TestInfo>
+
+    fun reset()
+}
+
+class TestMethodInfo(
+    val engine: String,
+    val className: String,
+    val method: String,
+    val methodParams: String,
+    val classParams: String
+)

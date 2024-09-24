@@ -15,8 +15,8 @@
  */
 package com.epam.drill.test.agent.instrument.strategy.testing.testng
 
-import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrument.strategy.*
+import com.epam.drill.test.agent.testinfo.TestController
 import javassist.*
 import java.lang.reflect.*
 import java.security.*
@@ -62,17 +62,23 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
         val testListener = pool.makeClass(DrillTestNGTestListner)
         testListener.interfaces = arrayOf(pool.get("org.testng.ITestListener"))
         testListener.addMethod(
-            CtMethod.make(getParamsString(), testListener)
+            CtMethod.make(getParamsMethod(), testListener)
         )
         testListener.addMethod(
             CtMethod.make(getFactoryParams(), testListener)
+        )
+        testListener.addMethod(
+            CtMethod.make(getTestClassNameMethod(), testListener)
+        )
+        testListener.addMethod(
+            CtMethod.make(getTestNameMethod(), testListener)
         )
         testListener.addMethod(
             CtMethod.make(
                 """
                         public void onTestStart($ITestResult result) {
                             if (result.getThrowable() == null) {
-                                ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment", result.getInstanceName(), result.getName(), getParamsString(result), getFactoryParams(result));
+                                ${TestController::class.java.name}.INSTANCE.${TestController::testStarted.name}("$engineSegment", getTestClassName(result), getTestName(result), getParamsString(result), getFactoryParams(result));
                             } else {
                                 ${this::class.java.name}.INSTANCE.${this::debug.name}("The start of the test " + result.getName() + " is ignored by the drill");
                             }
@@ -85,7 +91,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                        public void onTestSuccess($ITestResult result) {
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment", result.getInstanceName(), result.getName(), "PASSED", getParamsString(result), getFactoryParams(result));
+                            ${TestController::class.java.name}.INSTANCE.${TestController::testFinished.name}("$engineSegment", getTestClassName(result), getTestName(result), "PASSED", getParamsString(result), getFactoryParams(result));
                        }
                     """.trimIndent(),
                 testListener
@@ -95,7 +101,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                         public void onTestFailure($ITestResult result) {
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment", result.getInstanceName(), result.getName(), "FAILED", getParamsString(result));      
+                            ${TestController::class.java.name}.INSTANCE.${TestController::testFinished.name}("$engineSegment", getTestClassName(result), getTestName(result), "FAILED", getParamsString(result));      
                         }
                     """.trimIndent(),
                 testListener
@@ -105,7 +111,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                         public void onTestSkipped($ITestResult result) {
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment", result.getInstanceName(), result.getName(), getParamsString(result), getFactoryParams(result));     
+                            ${TestController::class.java.name}.INSTANCE.${TestController::testIgnored.name}("$engineSegment", getTestClassName(result), getTestName(result), getParamsString(result), getFactoryParams(result));     
                         }
                     """.trimIndent(),
                 testListener
@@ -144,7 +150,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
         testListener.toClass(classLoader, protectionDomain)
     }
 
-    private fun getParamsString(): String = """
+    protected open fun getParamsMethod(): String = """
         private String getParamsString($ITestResult result) {
             Object[] parameters = result.getParameters();
             String paramString = ${this::class.java.name}.INSTANCE.${this::paramTypes.name}(parameters);
@@ -155,16 +161,28 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
         }
     """.trimIndent()
 
+    protected open fun getTestClassNameMethod(): String = """
+        private String getTestClassName($ITestResult result) {            
+            return result.getInstanceName();
+        }
+    """.trimIndent()
+
+    protected open fun getTestNameMethod(): String = """
+        private String getTestName($ITestResult result) {            
+            return result.getName();
+        }
+    """.trimIndent()
+
     abstract fun getFactoryParams(): String
 
-    private fun CtClass.supportIgnoredTestsTracking() = getDeclaredMethod("run").insertAfter(
+    private fun CtClass.supportIgnoredTestsTracking() = getDeclaredMethod("run").insertBefore(
         """
             java.util.Iterator disabledTests = getExcludedMethods().iterator();
-            while(disabledTests.hasNext()) {
-                java.lang.Object baseMethod = disabledTests.next();
+            while(disabledTests.hasNext()) {                
+                java.lang.Object baseMethod = disabledTests.next();                
                 if (baseMethod instanceof $TestNGMethod) {
                     $TestNGMethod test = ($TestNGMethod) baseMethod;
-                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment", test.getTestClass().getName(), test.getMethodName());     
+                    ${TestController::class.java.name}.INSTANCE.${TestController::testIgnored.name}("$engineSegment", test.getTestClass().getName(), test.getMethodName());     
                 }
             }
         """.trimIndent()

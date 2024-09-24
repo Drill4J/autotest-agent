@@ -15,10 +15,9 @@
  */
 package com.epam.drill.test.agent.instrument.strategy.testing.testng
 
-import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrument.strategy.*
+import com.epam.drill.test.agent.testinfo.TestController
 import javassist.*
-import org.objectweb.asm.*
 import java.security.*
 
 // Only for testng 7.4.0
@@ -48,7 +47,7 @@ object IgnoredTests : AbstractTestStrategy() {
             ).insertAfter(
                 """ 
             if ($3 == $IIgnoreAnnotation.class && ${'$'}_) {
-                ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("${TestNGStrategy.engineSegment}", $2.getDeclaringClass().getName(), $2.getName());
+                ${TestController::class.java.name}.INSTANCE.${TestController::testIgnored.name}("${TestNGStrategy.engineSegment}", $2.getDeclaringClass().getName(), $2.getName());
             }
         """.trimIndent()
             )

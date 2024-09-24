@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.agent.instrument.reactor.transformers
+package com.epam.drill.test.agent.testinfo
 
-import com.epam.drill.agent.instrument.ClassPathProvider
-import com.epam.drill.agent.request.DrillRequestHolder
-import com.epam.drill.agent.instrument.TransformerObject
-import com.epam.drill.agent.instrument.reactor.transformers.FluxTransformerObject
-import com.epam.drill.test.agent.instrument.RuntimeClassPathProvider
+import com.epam.drill.plugins.test2code.api.TestResult
 
-object FluxTransformer : TransformerObject,
-    FluxTransformerObject(),
-    com.epam.drill.common.agent.request.RequestHolder by DrillRequestHolder,
-    ClassPathProvider by RuntimeClassPathProvider
+interface TestExecutionListener {
+    fun onTestStarted(test: TestLaunchInfo) {}
+    fun onTestFinished(test: TestLaunchInfo, result: TestResult) {}
+    fun onTestIgnored(test: TestLaunchInfo) {}
+}

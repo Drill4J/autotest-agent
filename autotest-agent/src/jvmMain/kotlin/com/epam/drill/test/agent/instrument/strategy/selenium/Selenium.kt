@@ -78,12 +78,12 @@ object Selenium : AbstractTransformerObject(), ClassPathProvider by RuntimeClass
                 .getConstructor("(Lorg/openqa/selenium/remote/CommandExecutor;Lorg/openqa/selenium/Capabilities;)V")
                 .insertBefore(
                     """
-                        try {
-                            java.lang.System.out.println("Constructor called - (Lorg/openqa/selenium/remote/CommandExecutor;Lorg/openqa/selenium/Capabilities;)V");
-                            
-                            org.openqa.selenium.remote.HttpCommandExecutor drillHttpCommandExecutor = (org.openqa.selenium.remote.HttpCommandExecutor) $1;
-                            drillRemoteAddress = drillHttpCommandExecutor.getAddressOfRemoteServer().getAuthority();
-                            
+                        try {                            
+                            if ($1 instanceof org.openqa.selenium.remote.HttpCommandExecutor) {
+                                java.lang.System.out.println("Constructor called - (Lorg/openqa/selenium/remote/CommandExecutor;Lorg/openqa/selenium/Capabilities;)V");
+                                org.openqa.selenium.remote.HttpCommandExecutor drillHttpCommandExecutor = (org.openqa.selenium.remote.HttpCommandExecutor) $1;
+                                drillRemoteAddress = drillHttpCommandExecutor.getAddressOfRemoteServer().getAuthority();                                
+                            }                                                       
                         } catch (Exception e) {
                             java.lang.System.out.println(
                                 "Drill4J: failed to get remote address - Constructor: RemoteWebDriver(CommandExecutor executor, Capabilities desiredCapabilities) - Error: " + e.toString() 
@@ -148,7 +148,7 @@ object Selenium : AbstractTransformerObject(), ClassPathProvider by RuntimeClass
             CtMethod.make(
                 """
                     public boolean $isFirefoxBrowser(org.openqa.selenium.Capabilities capabilities){
-                       return org.openqa.selenium.remote.BrowserType.FIREFOX.equals(capabilities.getBrowserName());
+                       return capabilities.getBrowserName().equalsIgnoreCase("firefox");
                     }
                 """.trimIndent(),
                 ctClass
@@ -177,10 +177,10 @@ object Selenium : AbstractTransformerObject(), ClassPathProvider by RuntimeClass
             """
                     if (${this::class.java.name}.INSTANCE.${this::devToolsProxyAddress.name}() != null){
                         ${ChromeDevTool::class.java.name} drillDevTools = new ${ChromeDevTool::class.java.name}(
-                            ((java.util.Map)getCapabilities().getCapability("goog:chromeOptions")),
+                            ((java.util.Map)this.capabilities.getCapability("goog:chromeOptions")),
                             drillRemoteAddress
                         );
-                       drillDevTools.${ChromeDevTool::connect.name}(sessionId.toString(), getCurrentUrl());
+                        drillDevTools.${ChromeDevTool::connect.name}(sessionId.toString(), getCurrentUrl());
                     }
                     try {
                         if (this instanceof $FirefoxDriver) {

@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.agent.instrument.reactor.transformers
+package com.epam.drill.test.agent.devtools
 
-import com.epam.drill.agent.instrument.ClassPathProvider
-import com.epam.drill.agent.request.DrillRequestHolder
-import com.epam.drill.agent.instrument.TransformerObject
-import com.epam.drill.agent.instrument.reactor.transformers.FluxTransformerObject
-import com.epam.drill.test.agent.instrument.RuntimeClassPathProvider
+import kotlinx.serialization.*
 
-object FluxTransformer : TransformerObject,
-    FluxTransformerObject(),
-    com.epam.drill.common.agent.request.RequestHolder by DrillRequestHolder,
-    ClassPathProvider by RuntimeClassPathProvider
+@Serializable
+data class SessionData(
+    val coverage: String,
+    val scripts: String,
+    val testId: String,
+)
