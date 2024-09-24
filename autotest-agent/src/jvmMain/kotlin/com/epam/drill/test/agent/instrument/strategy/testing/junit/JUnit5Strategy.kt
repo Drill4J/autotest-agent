@@ -15,10 +15,9 @@
  */
 package com.epam.drill.test.agent.instrument.strategy.testing.junit
 
-import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrument.strategy.*
+import com.epam.drill.test.agent.testinfo.TestController
 import javassist.*
-import org.objectweb.asm.*
 import java.security.*
 
 @Suppress("unused")
@@ -83,7 +82,7 @@ object JUnit5Strategy : AbstractTestStrategy() {
                         mainRunner.executionSkipped(testDescriptor, reason);
                         if (!testDescriptor.isContainer()) {
                             ${getSpitedTestName()}
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}(engine, classPath, method, params);
+                            ${TestController::class.java.name}.INSTANCE.${TestController::testIgnored.name}(engine, classPath, method, params);
                         }
                     }
                         """.trimIndent(),
@@ -97,7 +96,7 @@ object JUnit5Strategy : AbstractTestStrategy() {
                         mainRunner.executionStarted(testDescriptor);
                         if (!testDescriptor.isContainer()) {
                             ${getSpitedTestName()}
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}(engine, classPath, method, params);
+                            ${TestController::class.java.name}.INSTANCE.${TestController::testStarted.name}(engine, classPath, method, params);
                         }
                     }
                         """.trimIndent(),
@@ -111,7 +110,7 @@ object JUnit5Strategy : AbstractTestStrategy() {
                         mainRunner.executionFinished(testDescriptor, testExecutionResult);
                         if (!testDescriptor.isContainer()) {
                             ${getSpitedTestName()}
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}(engine, classPath, method, testExecutionResult.getStatus().name(), params);
+                            ${TestController::class.java.name}.INSTANCE.${TestController::testFinished.name}(engine, classPath, method, testExecutionResult.getStatus().name(), params);
                         }
                     }
                         """.trimIndent(),

@@ -20,7 +20,6 @@ import com.epam.drill.test.agent.instrument.clients.*
 import com.epam.drill.test.agent.instrument.servers.ReactorTransformer
 import com.epam.drill.test.agent.instrument.strategy.selenium.*
 import com.epam.drill.test.agent.instrument.strategy.kafka.*
-import com.epam.drill.test.agent.instrument.strategy.runner.*
 import org.objectweb.asm.*
 import java.io.*
 import java.util.jar.*
@@ -44,14 +43,13 @@ actual object StrategyManager {
         systemStrategies.add(Kafka)
     }
 
-    actual fun initialize(rawFrameworkPlugins: String, isManuallyControlled: Boolean) {
+    actual fun initialize(rawFrameworkPlugins: String) {
         hotLoad()
         val plugins = rawFrameworkPlugins.split(";".toRegex()).toTypedArray()
         strategies.addAll(allStrategies.filterKeys { plugins.contains(it) }.values.flatten())
         if (strategies.isEmpty()) {
             strategies.addAll(allStrategies.values.flatten())
         }
-        if (isManuallyControlled) strategies.add(JunitRunner())
         strategies.addAll(systemStrategies)
         logger.debug { "Added strategies: ${strategies.map { it::class.simpleName }.joinToString()}" }
     }

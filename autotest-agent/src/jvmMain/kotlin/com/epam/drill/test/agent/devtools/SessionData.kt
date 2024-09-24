@@ -13,25 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.agent.session
+package com.epam.drill.test.agent.devtools
 
-import com.epam.drill.test.agent.TestListener
+import kotlinx.serialization.*
 
-object SessionProvider {
-
-    fun startSession(
-        sessionId: String
-    ) {
-        SessionController.startSession(sessionId)
-        TestListener.reset()
-    }
-
-    fun stopSession(sessionId: String) {
-        TestListener.reset()
-    }
-
-    fun setTestName(testName: String?) {
-        ThreadStorage.memorizeTestName(testName ?: "unspecified")
-    }
-
-}
+@Serializable
+data class SessionData(
+    val coverage: String,
+    val scripts: String,
+    val testId: String,
+)

@@ -13,8 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.agent.instrument
+package com.epam.drill.test.agent.testinfo
 
-expect object StrategyManager {
-    fun initialize(rawFrameworkPlugins: String)
+import com.epam.drill.plugins.test2code.api.TestInfo
+
+interface TestExecutionRecorder {
+    fun recordTestStarting(
+        testMethod: TestMethodInfo
+    )
+
+    fun recordTestFinishing(
+        testMethod: TestMethodInfo,
+        status: String
+    )
+
+    fun recordTestIgnoring(
+        testMethod: TestMethodInfo
+    )
+
+    fun getFinishedTests(): List<TestInfo>
+
+    fun reset()
 }
+
+class TestMethodInfo(
+    val engine: String,
+    val className: String,
+    val method: String,
+    val methodParams: String,
+    val classParams: String
+)

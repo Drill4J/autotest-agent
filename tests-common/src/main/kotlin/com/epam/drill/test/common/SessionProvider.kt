@@ -13,8 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.test.agent.instrument
+package com.epam.drill.test.common
 
-expect object StrategyManager {
-    fun initialize(rawFrameworkPlugins: String)
+import com.epam.drill.test.agent.testinfo.TestController
+import com.epam.drill.test.agent.session.SessionController
+
+object SessionProvider {
+
+    fun startSession(
+        sessionId: String
+    ) {
+        SessionController.startSession()
+
+    }
+
+    fun stopSession(sessionId: String) {
+
+    }
+
 }

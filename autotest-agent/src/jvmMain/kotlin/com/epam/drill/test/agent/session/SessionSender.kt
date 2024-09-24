@@ -15,11 +15,22 @@
  */
 package com.epam.drill.test.agent.session
 
-import kotlinx.serialization.*
+import com.epam.drill.common.agent.transport.AgentMessage
+import com.epam.drill.common.agent.transport.AgentMessageDestination
+import com.epam.drill.common.agent.transport.AgentMessageSender
 
-@Serializable
-data class SessionData(
-    val coverage: String,
-    val scripts: String,
-    val testId: String,
-)
+interface SessionSender {
+    fun sendSession(payload: SessionPayload)
+}
+
+class SessionSenderImpl(
+    private val messageSender: AgentMessageSender<AgentMessage>
+) : SessionSender {
+
+    override fun sendSession(payload: SessionPayload) {
+        messageSender.send(
+            AgentMessageDestination("PUT", "sessions"),
+            payload
+        )
+    }
+}

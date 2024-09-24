@@ -18,8 +18,6 @@ package com.epam.drill.test.agent.session
 import com.epam.drill.common.agent.request.DrillRequest
 import com.epam.drill.common.agent.request.RequestHolder
 import com.epam.drill.test.agent.TEST_ID_HEADER
-import java.net.*
-import com.epam.drill.test.agent.serialization.json
 import mu.KotlinLogging
 
 object ThreadStorage : RequestHolder {
@@ -27,34 +25,11 @@ object ThreadStorage : RequestHolder {
     private var threadStorage: InheritableThreadLocal<DrillRequest> =  InheritableThreadLocal()
 
     @Suppress("unused")
-    fun memorizeTestName(testName: String?) {
-        val value = testName?.let { URLEncoder.encode(it, Charsets.UTF_8.name()) }
-        SessionController.testHash = value ?: ""
+    fun storeTestLaunchId(testLaunchId: String) {
         store(DrillRequest(
-            drillSessionId = sessionId(),
-            headers = mapOf(TEST_ID_HEADER to (value ?: "unspecified"))
+            drillSessionId = SessionController.getSessionId(),
+            headers = mapOf(TEST_ID_HEADER to (testLaunchId))
         ))
-    }
-
-    fun clear() {
-        remove()
-    }
-
-    fun sessionId(): String {
-        return SessionController.sessionId
-    }
-
-    fun startSession() {
-
-    }
-
-    fun stopSession() = SessionController.run {
-
-    }
-
-    fun sendSessionData(preciseCoverage: String, scriptParsed: String, testId: String) {
-        val data = SessionData(preciseCoverage, scriptParsed, testId)
-        SessionController.sendSessionData(json.encodeToString(SessionData.serializer(), data))
     }
 
     override fun remove() {
@@ -71,6 +46,7 @@ object ThreadStorage : RequestHolder {
         logger.trace { "store: Request ${drillRequest.drillSessionId} saved, threadId = ${Thread.currentThread().id}" }
     }
 
-    fun retrieveTestLaunchId(): String? = retrieve()?.headers?.get(TEST_ID_HEADER)
+    @Deprecated("Use explicit retrieve() instead", ReplaceWith("retrieve()"))
+    fun getTestLaunchId(): String? = retrieve()?.headers?.get(TEST_ID_HEADER)
 
 }

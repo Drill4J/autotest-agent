@@ -16,6 +16,5 @@
 package com.epam.drill.test.agent.session
 
 expect object SessionController {
-    fun startSession(customSessionId: String)
-    fun stopSession()
+    fun startSession()
 }

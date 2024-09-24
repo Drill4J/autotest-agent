@@ -15,8 +15,8 @@
  */
 package com.epam.drill.test.agent.instrument.strategy.testing.cucumber
 
-import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrument.strategy.*
+import com.epam.drill.test.agent.testinfo.TestController
 import javassist.*
 import java.security.*
 
@@ -62,14 +62,14 @@ abstract class CucumberStrategy : AbstractTestStrategy() {
                     public void send($Event event) {
                         mainEventBus.send(event);   
                         if (event instanceof $testPackage.TestStepStarted) {
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment", featurePath, (($testPackage.TestStepStarted) event).getTestCase().getName());  
+                            ${TestController::class.java.name}.INSTANCE.${TestController::testStarted.name}("$engineSegment", featurePath, (($testPackage.TestStepStarted) event).getTestCase().getName());  
                         } else if (event instanceof $testPackage.TestStepFinished) {
                             $testPackage.TestStepFinished finishedTest = ($testPackage.TestStepFinished) event;
                             $Status status = ${getTestStatus()}
                             if (status != $Status.PASSED) {
                                 status = $Status.FAILED;
                             }
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment", featurePath, finishedTest.getTestCase().getName(), status.name());                                    
+                            ${TestController::class.java.name}.INSTANCE.${TestController::testFinished.name}("$engineSegment", featurePath, finishedTest.getTestCase().getName(), status.name());                                    
                         }
                     }
                 """.trimIndent(),

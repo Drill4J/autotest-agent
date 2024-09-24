@@ -1,5 +1,5 @@
-/*
- * Copyright 2020 EPAM Systems
+/**
+ * Copyright 2020 - 2022 EPAM Systems
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import spock.lang.Specification
+package com.epam.drill.test.agent.testinfo
 
-class UncaTest extends Specification {
+import com.epam.drill.plugins.test2code.api.TestResult
 
-//    def messageService = new MessageService()
-
-    def 'Should not be run'() {
-        expect: 'Should return the correct message'
-        println 'Should not be run'
-//        messageService.getMessage() == 'Hello World!'
-    }
+interface TestExecutionListener {
+    fun onTestStarted(test: TestLaunchInfo) {}
+    fun onTestFinished(test: TestLaunchInfo, result: TestResult) {}
+    fun onTestIgnored(test: TestLaunchInfo) {}
 }

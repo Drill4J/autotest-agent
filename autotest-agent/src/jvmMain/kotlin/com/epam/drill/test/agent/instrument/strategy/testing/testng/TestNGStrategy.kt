@@ -15,8 +15,8 @@
  */
 package com.epam.drill.test.agent.instrument.strategy.testing.testng
 
-import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrument.strategy.*
+import com.epam.drill.test.agent.testinfo.TestController
 import javassist.*
 import java.lang.reflect.*
 import java.security.*
@@ -72,7 +72,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
                 """
                         public void onTestStart($ITestResult result) {
                             if (result.getThrowable() == null) {
-                                ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment", result.getInstanceName(), result.getName(), getParamsString(result), getFactoryParams(result));
+                                ${TestController::class.java.name}.INSTANCE.${TestController::testStarted.name}("$engineSegment", result.getInstanceName(), result.getName(), getParamsString(result), getFactoryParams(result));
                             } else {
                                 ${this::class.java.name}.INSTANCE.${this::debug.name}("The start of the test " + result.getName() + " is ignored by the drill");
                             }
@@ -85,7 +85,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                        public void onTestSuccess($ITestResult result) {
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment", result.getInstanceName(), result.getName(), "PASSED", getParamsString(result), getFactoryParams(result));
+                            ${TestController::class.java.name}.INSTANCE.${TestController::testFinished.name}("$engineSegment", result.getInstanceName(), result.getName(), "PASSED", getParamsString(result), getFactoryParams(result));
                        }
                     """.trimIndent(),
                 testListener
@@ -95,7 +95,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                         public void onTestFailure($ITestResult result) {
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment", result.getInstanceName(), result.getName(), "FAILED", getParamsString(result));      
+                            ${TestController::class.java.name}.INSTANCE.${TestController::testFinished.name}("$engineSegment", result.getInstanceName(), result.getName(), "FAILED", getParamsString(result));      
                         }
                     """.trimIndent(),
                 testListener
@@ -105,7 +105,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                         public void onTestSkipped($ITestResult result) {
-                            ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment", result.getInstanceName(), result.getName(), getParamsString(result), getFactoryParams(result));     
+                            ${TestController::class.java.name}.INSTANCE.${TestController::testIgnored.name}("$engineSegment", result.getInstanceName(), result.getName(), getParamsString(result), getFactoryParams(result));     
                         }
                     """.trimIndent(),
                 testListener
@@ -164,7 +164,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
                 java.lang.Object baseMethod = disabledTests.next();
                 if (baseMethod instanceof $TestNGMethod) {
                     $TestNGMethod test = ($TestNGMethod) baseMethod;
-                    ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment", test.getTestClass().getName(), test.getMethodName());     
+                    ${TestController::class.java.name}.INSTANCE.${TestController::testIgnored.name}("$engineSegment", test.getTestClass().getName(), test.getMethodName());     
                 }
             }
         """.trimIndent()

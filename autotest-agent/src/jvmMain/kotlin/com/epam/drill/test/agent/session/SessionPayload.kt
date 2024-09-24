@@ -1,5 +1,5 @@
-/*
- * Copyright 2020 EPAM Systems
+/**
+ * Copyright 2020 - 2022 EPAM Systems
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-interface UnitTest {
+package com.epam.drill.test.agent.session
 
-}
+import com.epam.drill.common.agent.transport.AgentMessage
+import kotlinx.serialization.Serializable
+
+@Serializable
+class SessionPayload(
+    val id: String,
+    val groupId: String,
+    val testTaskId: String,
+    val startedAt: String
+): AgentMessage()
