@@ -15,10 +15,10 @@
  */
 package com.epam.drill.test.agent.instrument
 
+import com.epam.drill.agent.request.DrillRequestHolder
 import com.epam.drill.agent.instrument.HeadersProcessor
 import com.epam.drill.test.agent.SESSION_ID_HEADER
 import com.epam.drill.test.agent.TEST_ID_HEADER
-import com.epam.drill.test.agent.session.ThreadStorage
 
 object TestSessionHeadersProcessor : HeadersProcessor {
 
@@ -27,7 +27,7 @@ object TestSessionHeadersProcessor : HeadersProcessor {
     override fun storeHeaders(headers: Map<String, String>) = Unit
 
     override fun retrieveHeaders() = mutableMapOf<String, String>().apply {
-        ThreadStorage.retrieve()?.let {
+        DrillRequestHolder.retrieve()?.let {
             put(SESSION_ID_HEADER, it.drillSessionId)
             putAll(it.headers)
         }

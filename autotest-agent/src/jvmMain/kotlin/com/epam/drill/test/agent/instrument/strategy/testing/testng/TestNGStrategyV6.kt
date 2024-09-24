@@ -20,7 +20,7 @@ import java.security.*
 
 @Suppress("unused")
 object TestNGStrategyV6 : TestNGStrategy() {
-    override val versionRegex: Regex = "6\\.[0-9]+(\\.[0-9]+)*".toRegex()
+    override val versionRegex: Regex = "testng-6\\.[0-9]+(\\.[0-9]+)*".toRegex()
 
     override fun instrument(
         ctClass: CtClass,
@@ -46,6 +46,12 @@ object TestNGStrategyV6 : TestNGStrategy() {
                 params += ${this::class.java.name}.INSTANCE.${this::paramNumber.name}(instance, instances);
             }
             return params;
+        }
+    """.trimIndent()
+
+    override fun getTestClassNameMethod(): String = """
+        private String getTestClassName($ITestResult result) {            
+            return result.getTestClass().getName();
         }
     """.trimIndent()
 
