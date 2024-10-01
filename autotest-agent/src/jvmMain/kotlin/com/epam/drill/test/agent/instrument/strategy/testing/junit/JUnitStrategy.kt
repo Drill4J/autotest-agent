@@ -16,10 +16,9 @@
 package com.epam.drill.test.agent.instrument.strategy.testing.junit
 
 import com.epam.drill.plugins.test2code.api.*
-import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.instrument.strategy.*
+import com.epam.drill.test.agent.testinfo.TestController
 import javassist.*
-import org.objectweb.asm.*
 import java.security.*
 
 @Suppress("unused")
@@ -68,7 +67,7 @@ object JUnitStrategy : AbstractTestStrategy() {
                 """
                     public void testStarted(org.junit.runner.Description $dp) throws Exception {
                         this.mainRunner.testStarted($dp);
-                        ${TestListener::class.java.name}.INSTANCE.${TestListener::testStarted.name}("$engineSegment", $dp.getClassName(), $dp.getMethodName());
+                        ${TestController::class.java.name}.INSTANCE.${TestController::testStarted.name}("$engineSegment", $dp.getClassName(), $dp.getMethodName());
                     }
                         """.trimIndent(),
                 cc
@@ -81,7 +80,7 @@ object JUnitStrategy : AbstractTestStrategy() {
                 """
                     public void testFinished(org.junit.runner.Description $dp) throws Exception {
                         this.mainRunner.testFinished(description);
-                        ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment", $dp.getClassName(), $dp.getMethodName(), "${TestResult.PASSED.name}");
+                        ${TestController::class.java.name}.INSTANCE.${TestController::testFinished.name}("$engineSegment", $dp.getClassName(), $dp.getMethodName(), "${TestResult.PASSED.name}");
                     }
                         """.trimIndent(),
                 cc
@@ -107,7 +106,7 @@ object JUnitStrategy : AbstractTestStrategy() {
                 """
                     public void testFailure(org.junit.runner.notification.Failure $failureParamName) throws Exception {
                         this.mainRunner.testFailure($failureParamName);
-                        ${TestListener::class.java.name}.INSTANCE.${TestListener::testFinished.name}("$engineSegment", $desct.getClassName(), $desct.getMethodName(), "${TestResult.FAILED.name}");
+                        ${TestController::class.java.name}.INSTANCE.${TestController::testFinished.name}("$engineSegment", $desct.getClassName(), $desct.getMethodName(), "${TestResult.FAILED.name}");
                     }
                         """.trimIndent(),
                 cc
@@ -133,7 +132,7 @@ object JUnitStrategy : AbstractTestStrategy() {
                 """
                     public void testIgnored(org.junit.runner.Description $dp) throws Exception {
                         this.mainRunner.testIgnored($dp);
-                        ${TestListener::class.java.name}.INSTANCE.${TestListener::testIgnored.name}("$engineSegment", $dp.getClassName(), $dp.getMethodName());      
+                        ${TestController::class.java.name}.INSTANCE.${TestController::testIgnored.name}("$engineSegment", $dp.getClassName(), $dp.getMethodName());      
                     }
                         """.trimIndent(),
                 cc

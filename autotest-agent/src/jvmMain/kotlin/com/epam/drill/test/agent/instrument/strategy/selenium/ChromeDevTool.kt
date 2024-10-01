@@ -17,13 +17,16 @@ package com.epam.drill.test.agent.instrument.strategy.selenium
 
 import com.epam.drill.test.agent.*
 import com.epam.drill.test.agent.configuration.*
-import com.epam.drill.test.agent.http.*
 import com.epam.drill.test.agent.serialization.*
 import com.epam.drill.test.agent.session.*
-import com.epam.drill.test.agent.util.*
-import kotlinx.atomicfu.*
+import com.epam.drill.agent.transport.http.HttpResponseContent
+import com.epam.drill.common.agent.transport.AgentMessage
+import com.epam.drill.test.agent.instrument.TestSessionHeadersProcessor
+import com.epam.drill.test.agent.devtools.DevToolsMessageSender
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
+import kotlin.time.DurationUnit
+import kotlin.time.measureTimedValue
 import java.net.*
 import java.util.*
 import mu.KotlinLogging
@@ -31,8 +34,10 @@ import mu.KotlinLogging
 private const val DEBUGGER_ADDRESS = "debuggerAddress"
 private const val DEV_TOOL_DEBUGGER_URL = "webSocketDebuggerUrl"
 private val JAVA_TOGGLES = listOf("Network")
-private val JS_TOGGLES = listOf("Debugger", "Profiler").takeIf { AgentConfig.withJsCoverage() } ?: emptyList()
-private val REPLACE_LOCALHOST = AgentConfig.devtoolsAddressReplaceLocalhost()
+private val JS_TOGGLES = listOf("Debugger", "Profiler")
+    .takeIf { Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE] }
+    ?: emptyList()
+private val REPLACE_LOCALHOST = Configuration.parameters[ParameterDefinitions.DEVTOOLS_REPLACE_LOCALHOST]
 
 /**
  * Works with local or Selenoid DevTools by websocket
@@ -42,15 +47,8 @@ class ChromeDevTool(
     private val remoteHost: String?
 ) {
     private val logger = KotlinLogging.logger {}
-    private val launchType = AgentConfig.launchType()
-    private val devToolsProxyAddress = AgentConfig.devToolsProxyAddress()?.let {
-        if (it.startsWith("http")) it else "http://$it"
-    }
-    private val isClosed = atomic(false)
-
-    private val json = Json {
-        ignoreUnknownKeys = true
-    }
+    private val launchType = Configuration.parameters[ParameterDefinitions.LAUNCH_TYPE]
+    private var isClosed = false
 
     private lateinit var targetUrl: String
     private lateinit var targetId: String
@@ -62,8 +60,10 @@ class ChromeDevTool(
      */
     fun connect(browserSessionId: String?, currentUrl: String) = runCatching {
         logger.debug { "starting connectToDevTools with cap='$capabilities' sessionId='$sessionId' remote='$remoteHost'..." }
-        retrieveDevToolAddress(capabilities, browserSessionId, remoteHost)?.let {
-            trackTime("connect to devtools") { connect(it, currentUrl) }
+        retrieveDevToolAddress(capabilities ?: emptyMap<String, Any>(), browserSessionId, remoteHost).let {
+            trackTime("connect to devtools") {
+                connect(it, currentUrl)
+            }
         }
         /**
          * Add this to thread local only if successfully connected
@@ -85,8 +85,6 @@ class ChromeDevTool(
         }
     }
 
-    fun resetHeaders() = setHeaders(emptyMap())
-
     fun switchSession(url: String) {
         val targetId = retrieveTargetId(url)
         logger.trace { "Reconnect to target: $targetId, sessionId: ${sessionId.sessionId}, url $url" }
@@ -100,114 +98,121 @@ class ChromeDevTool(
 
     fun isHeadersAdded(): Boolean = this.headersAdded
 
-    private fun startCollectJsCoverage() = AgentConfig.takeIf { it.withJsCoverage() }?.let {
-        disableCache() && startPreciseCoverage() && enableScriptParsed()
-    }?.also { success ->
-        if (!success) logger.warn { "JS coverage may be lost" }
-    }
+    private fun startCollectJsCoverage() =
+        Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE].takeIf(true::equals)?.let {
+            disableCache() && startPreciseCoverage() && enableScriptParsed()
+        }?.also { success ->
+            if (!success) logger.warn { "JS coverage may be lost" }
+        }
 
     private fun startPreciseCoverage() = mapOf("detailed" to true, "callCount" to false).let { params ->
         executeCommand(
             "Profiler.startPreciseCoverage",
             DevToolsRequest(targetUrl, sessionId.sessionId, params.toOutput())
-        ).code == HttpURLConnection.HTTP_OK
+        ).success
     }
 
     private fun disableCache() = executeCommand(
         "Network.setCacheDisabled",
         DevToolsRequest(targetUrl, sessionId.sessionId, mapOf("cacheDisabled" to true).toOutput())
-    ).code == HttpURLConnection.HTTP_OK
+    ).success
 
-    private fun enableScriptParsed() = HttpClient.request("$devToolsProxyAddress/event/Debugger.scriptParsed") {
-        body = json.encodeToString(DevToolsMessage.serializer(), DevToolsRequest(targetUrl, sessionId.sessionId))
-    }.code == HttpURLConnection.HTTP_OK
+    private fun enableScriptParsed() = DevToolsMessageSender.send(
+        "POST",
+        "/event/Debugger.scriptParsed",
+        DevToolsRequest(targetUrl, sessionId.sessionId)
+    ).success
 
     fun takePreciseCoverage(): String = executeCommand(
         "Profiler.takePreciseCoverage",
         DevToolsRequest(targetUrl, sessionId.sessionId)
-    ).takeIf { it.code == HttpURLConnection.HTTP_OK }?.body ?: ""
+    ).takeIf(HttpResponseContent<String>::success)?.content ?: ""
 
-    fun scriptParsed(): String = HttpClient.request("$devToolsProxyAddress/event/Debugger.scriptParsed/get-data") {
-        body = json.encodeToString(DevToolsMessage.serializer(), DevToolsRequest(targetUrl, sessionId.sessionId))
-    }.takeIf { it.code == HttpURLConnection.HTTP_OK }?.body ?: ""
+    fun scriptParsed(): String = DevToolsMessageSender.send(
+        "POST",
+        "/event/Debugger.scriptParsed/get-data",
+        DevToolsRequest(targetUrl, sessionId.sessionId)
+    ).takeIf(HttpResponseContent<String>::success)?.content ?: ""
 
     fun close() {
-        if (!isClosed.value) {
+        if (!isClosed) {
             disableToggles()
             stopCollectJsCoverage()
-            HttpClient.request("$devToolsProxyAddress/connection") {
-                method = HttpMethod.DELETE
-                body = json.encodeToString(DevToolsRequest.serializer(), DevToolsRequest(targetUrl))
-            }
+            DevToolsMessageSender.send(
+                "DELETE",
+                "/connection",
+                DevToolsRequest(targetUrl)
+            )
         }
-        isClosed.update { true }
+        isClosed = true
     }
 
-    private fun stopCollectJsCoverage() = AgentConfig.takeIf { it.withJsCoverage() }?.let {
-        HttpClient.request("$devToolsProxyAddress/event/Debugger.scriptParsed") {
-            method = HttpMethod.DELETE
-            body = json.encodeToString(
-                DevToolsMessage.serializer(),
+    private fun stopCollectJsCoverage() =
+        Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE].takeIf(true::equals)?.let {
+            DevToolsMessageSender.send(
+                "DELETE",
+                "/event/Debugger.scriptParsed",
                 DevToolsRequest(targetUrl, sessionId.sessionId)
             )
         }
-    }
 
     // todo is it necessary to disable toggles when browser exit?
     private fun disableToggles() = (JAVA_TOGGLES + JS_TOGGLES).map {
         executeCommand(
             "$it.disable",
             DevToolsRequest(targetUrl, sessionId.sessionId)
-        ).code == HttpURLConnection.HTTP_OK
+        ).success
     }.all { it }
 
     private fun enableToggles() = (JAVA_TOGGLES + JS_TOGGLES).map {
         executeCommand(
             "$it.enable",
             DevToolsRequest(targetUrl, sessionId.sessionId)
-        ).code == HttpURLConnection.HTTP_OK
+        ).success
     }.all { it }.also {
         if (!it) logger.warn { "Toggles wasn't enable" } else logger.info { "Toggles enabled" }
     }
 
     private fun retrieveDevToolAddress(
-        capabilities: Map<*, *>?,
+        capabilities: Map<*, *>,
         sessionId: String?,
         remoteHost: String?
-    ): String? {
-        return when (launchType) {
+    ): String = when (launchType) {
 
-            // selenoid provides no access to /json/version, but allows to connect to debugger directly
-            // see https://aerokube.com/selenoid/latest/#_accessing_browser_developer_tools
-            "selenoid" -> {
-                if (remoteHost.isNullOrBlank() || sessionId.isNullOrBlank()) return null
-                return "ws://$remoteHost/devtools/$sessionId"
+        // selenoid provides no access to /json/version, but allows to connect to debugger directly
+        // see https://aerokube.com/selenoid/latest/#_accessing_browser_developer_tools
+        "selenoid" -> {
+            if (sessionId.isNullOrBlank())
+                throw RuntimeException("Can't connect to debugger directly, because 'sessionId' is null")
+            if (remoteHost.isNullOrBlank())
+                throw RuntimeException("Can't connect to debugger directly, because 'remoteHost' is null")
+            "ws://$remoteHost/devtools/$sessionId"
+        }
+
+        else -> capabilities.run {
+            val debuggerURL = get(DEBUGGER_ADDRESS)?.toString()
+
+            if (debuggerURL.isNullOrBlank()) {
+                throw RuntimeException("Can't get debugger address by field name $DEBUGGER_ADDRESS from capabilities: $capabilities}")
             }
 
-            else -> capabilities?.run {
-                val debuggerURL = get(DEBUGGER_ADDRESS)?.toString()
-
-                if (debuggerURL.isNullOrBlank()) {
-                    logger.warn { "Can't get debugger address by field name $DEBUGGER_ADDRESS from capabilities: $capabilities}" }
-                    return null
-                }
-
-                val response = HttpClient.request("http://$debuggerURL/json/version")
-                if (response.code != HttpURLConnection.HTTP_OK) {
-                    logger.warn { "Can't get debugger address from http://$debuggerURL/json/version: code=${response.code}, body:${response.body}" }
-                    return null
-                }
-
-                logger.debug { "/json/version: ${response.body}" }
-                val chromeInfo = Json.parseToJsonElement(response.body) as JsonObject
-                return chromeInfo[DEV_TOOL_DEBUGGER_URL]?.jsonPrimitive?.contentOrNull
+            val response = DevToolsMessageSender.send("http://$debuggerURL", "GET", "/json/version", "")
+            if (!response.success) {
+                throw RuntimeException("Can't get debugger address from http://$debuggerURL/json/version: code=${response.statusObject}, body:${response.content}")
             }
+            logger.debug { "/json/version: ${response.content}" }
+            val chromeInfo = Json.parseToJsonElement(response.content) as JsonObject
+            return chromeInfo[DEV_TOOL_DEBUGGER_URL]?.jsonPrimitive?.contentOrNull
+                ?: throw RuntimeException("Can't get debugger address from '$DEV_TOOL_DEBUGGER_URL' field from $chromeInfo")
         }
     }
 
+
     private fun connect(devToolAddress: String, currentUrl: String) {
-        if (!REPLACE_LOCALHOST.isNullOrBlank()) {
+        if (REPLACE_LOCALHOST.isNotBlank()) {
             targetUrl = devToolAddress.replace("localhost", REPLACE_LOCALHOST)
+        } else {
+            targetUrl = devToolAddress
         }
         val success: Boolean = connectToDevTools().takeIf { it }?.also {
             val targetId = retrieveTargetId(currentUrl)
@@ -227,37 +232,36 @@ class ChromeDevTool(
 
     private fun connectToDevTools(): Boolean {
         logger.debug { "DevTools URL: $targetUrl" }
-        val response = HttpClient.request("$devToolsProxyAddress/connection") {
-            method = HttpMethod.POST
-            body = json.encodeToString(DevToolsRequest.serializer(), DevToolsRequest(targetUrl))
-        }
-        return response.code == HttpURLConnection.HTTP_OK
+        val response = DevToolsMessageSender.send(
+            "POST",
+            "/connection",
+            DevToolsRequest(targetUrl)
+        )
+        return response.success
     }
 
-    fun startIntercept(): Boolean = ThreadStorage.storage.get()?.let { testHash ->
-        val headers = mapOf(
-            TEST_ID_HEADER to testHash,
-            SESSION_ID_HEADER to (ThreadStorage.sessionId() ?: "")
-        )
+    fun startIntercept(): Boolean {
+        val headers = TestSessionHeadersProcessor.retrieveHeaders()
+        if (headers.isEmpty()) return false
         logger.debug { "Start intercepting. Headers: $headers, sessionId: $sessionId" }
-        val response = HttpClient.request("$devToolsProxyAddress/intercept") {
-            method = HttpMethod.POST
-            body = json.encodeToString(
-                DevToolInterceptRequest.serializer(),
-                DevToolInterceptRequest(targetUrl, params = mapOf("headers" to headers))
-            )
-        }
-        response.code == HttpURLConnection.HTTP_OK
-    } ?: false
+        val response = DevToolsMessageSender.send(
+            "POST",
+            "/intercept",
+            DevToolInterceptRequest(targetUrl, params = mapOf("headers" to headers))
+        )
+        return response.success
+    }
+
 
     fun stopIntercept(): Boolean {
         logger.debug { "Stop intercepting: $targetUrl, sessionId $sessionId" }
-        val response = HttpClient.request("$devToolsProxyAddress/intercept") {
-            method = HttpMethod.DELETE
-            body = json.encodeToString(DevToolInterceptRequest.serializer(), DevToolInterceptRequest(targetUrl))
-        }
+        val response = DevToolsMessageSender.send(
+            "DELETE",
+            "/intercept",
+            DevToolInterceptRequest(targetUrl)
+        )
         setHeaders(mapOf())
-        return response.code == HttpURLConnection.HTTP_OK
+        return response.success
     }
 
     private fun setHeaders(
@@ -265,7 +269,7 @@ class ChromeDevTool(
     ): Boolean = executeCommand(
         "Network.setExtraHTTPHeaders",
         DevToolsHeaderRequest(targetUrl, sessionId.sessionId, mapOf("headers" to params))
-    ).code == HttpURLConnection.HTTP_OK
+    ).success
 
     @Deprecated(message = "Useless")
     private fun autoAttach(): Boolean {
@@ -273,18 +277,18 @@ class ChromeDevTool(
         return executeCommand(
             "Target.setAutoAttach",
             DevToolsRequest(targetUrl, sessionId.sessionId, params = params)
-        ).code == HttpURLConnection.HTTP_OK
+        ).success
     }
 
     private fun attachToTarget(targetId: String): SessionId? {
         val params = mapOf("targetId" to targetId, "flatten" to true).toOutput()
         val response = executeCommand(
             "Target.attachToTarget",
-            DevToolsRequest(target = targetUrl, params = params)
+            DevToolsRequest(target = targetUrl, params = params),
+            SessionId.serializer()
         )
-        return response.takeIf { it.code == HttpURLConnection.HTTP_OK }?.let {
-            json.decodeFromString(SessionId.serializer(), it.body)
-        }
+        return response.takeIf(HttpResponseContent<SessionId?>::success)
+            ?.let(HttpResponseContent<SessionId?>::content)
     }
 
     private fun retrieveTargetId(currentUrl: String): String? = targets()
@@ -295,26 +299,49 @@ class ChromeDevTool(
 
     private fun targets(): List<Target> = executeCommand(
         "Target.getTargets",
-        DevToolsRequest(target = targetUrl)
-    ).takeIf { it.code == HttpURLConnection.HTTP_OK }?.let { response ->
-        json.decodeFromString(TargetInfos.serializer(), response.body).targetInfos
-    } ?: emptyList()
+        DevToolsRequest(target = targetUrl),
+        TargetInfos.serializer()
+    ).takeIf(HttpResponseContent<TargetInfos?>::success)
+        ?.let(HttpResponseContent<TargetInfos?>::content)
+        ?.let(TargetInfos::targetInfos)
+        ?: emptyList()
 
     private fun executeCommand(
         commandName: String,
         request: DevToolsMessage,
-        httpMethod: HttpMethod = HttpMethod.POST,
-    ) = HttpClient.request("$devToolsProxyAddress/command/$commandName") {
-        method = httpMethod
-        timeout = 15_000
-        body = json.encodeToString(DevToolsMessage.serializer(), request)
+        httpMethod: String = "POST"
+    ) = DevToolsMessageSender.send(httpMethod, "/command/$commandName", request)
+
+    private fun <T : AgentMessage> executeCommand(
+        commandName: String,
+        request: DevToolsMessage,
+        strategy: DeserializationStrategy<T>,
+        httpMethod: String = "POST"
+    ) = DevToolsMessageSender.send(httpMethod, "/command/$commandName", request, strategy)
+
+    private fun Map<String, Any>.toOutput(): Map<String, JsonElement> = mapValues { (_, value) ->
+        val serializer = value::class.serializer().cast()
+        json.encodeToJsonElement(serializer, value)
     }
-}
 
-private fun Map<String, Any>.toOutput(): Map<String, JsonElement> = mapValues { (_, value) ->
-    val serializer = value::class.serializer().cast()
-    json.encodeToJsonElement(serializer, value)
-}
+    @Suppress("NOTHING_TO_INLINE", "UNCHECKED_CAST")
+    private inline fun <T> KSerializer<out T>.cast(): KSerializer<T> = this as KSerializer<T>
 
-@Suppress("NOTHING_TO_INLINE", "UNCHECKED_CAST")
-private inline fun <T> KSerializer<out T>.cast(): KSerializer<T> = this as KSerializer<T>
+    private inline fun <T> trackTime(tag: String = "", debug: Boolean = false, block: () -> T) =
+        measureTimedValue { block() }.apply {
+            val logger = KotlinLogging.logger {}
+            val message = "[$tag] took: $duration"
+            when {
+                duration.toDouble(DurationUnit.SECONDS) > 1 -> {
+                    logger.warn { message }
+                }
+
+                duration.toDouble(DurationUnit.SECONDS) > 30 -> {
+                    logger.error { message }
+                }
+
+                else -> if (debug) logger.debug { message } else logger.trace { message }
+            }
+        }.value
+
+}

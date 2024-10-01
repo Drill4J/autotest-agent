@@ -23,27 +23,24 @@ import com.epam.drill.jvmapi.gen.NewStringUTF
 import com.epam.drill.jvmapi.getObjectMethod
 
 actual object StrategyManager {
-    actual fun initialize(rawFrameworkPlugins: String, isManuallyControlled: Boolean): Unit =
-        callObjectVoidMethodWithStringAndBoolean(
+    actual fun initialize(rawFrameworkPlugins: String): Unit =
+        callObjectVoidMethodWithString(
             StrategyManager::class,
             StrategyManager::initialize,
-            rawFrameworkPlugins,
-            isManuallyControlled
+            rawFrameworkPlugins
         )
 }
 
-private fun callObjectVoidMethodWithStringAndBoolean(
+private fun callObjectVoidMethodWithString(
     clazz: KClass<out Any>,
     method: String,
-    string: String?,
-    bool: Boolean?
-) = getObjectMethod(clazz, method, "(Ljava/lang/String;Z)V").run {
-    CallVoidMethod(this.first, this.second, string?.let(::NewStringUTF), (bool ?: false).toByte().toUByte())
+    string: String?
+) = getObjectMethod(clazz, method, "(Ljava/lang/String;)V").run {
+    CallVoidMethod(this.first, this.second, string?.let(::NewStringUTF))
 }
 
-private fun callObjectVoidMethodWithStringAndBoolean(
+private fun callObjectVoidMethodWithString(
     clazz: KClass<out Any>,
     method: KCallable<Any?>,
-    string: String?,
-    bool: Boolean?
-) = callObjectVoidMethodWithStringAndBoolean(clazz, method.name, string, bool)
+    string: String?
+) = callObjectVoidMethodWithString(clazz, method.name, string)

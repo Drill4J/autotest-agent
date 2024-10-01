@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress("unused")
 package com.epam.drill.test.agent.jvmti
 
 import kotlin.Int
 import kotlin.Long
 import kotlin.String
-import kotlin.Unit
 import kotlin.native.CName
 import kotlin.native.concurrent.freeze
 import kotlinx.cinterop.CPointer
@@ -41,7 +41,7 @@ import com.epam.drill.jvmapi.jvmti
 import com.epam.drill.jvmapi.vmGlobal
 import com.epam.drill.test.agent.Agent
 
-@Suppress("UNUSED", "UNUSED_PARAMETER")
+@Suppress("unused_parameter")
 @CName("Agent_OnLoad")
 fun agentOnLoad(vmPointer: CPointer<JavaVMVar>, options: String, reservedPtr: Long): Int = memScoped {
     vmGlobal.value = vmPointer.freeze()
@@ -53,22 +53,18 @@ fun agentOnLoad(vmPointer: CPointer<JavaVMVar>, options: String, reservedPtr: Lo
     Agent.agentOnLoad(options)
 }
 
-@Suppress("UNUSED", "UNUSED_PARAMETER")
+@Suppress("unused_parameter")
 @CName("Agent_OnUnload")
 fun agentOnUnload(vmPointer: CPointer<JavaVMVar>) = Agent.agentOnUnload()
 
-@Suppress("UNUSED")
 @CName("checkEx")
 fun checkEx(errCode: jvmtiError, funName: String) = checkEx(errCode, funName)
 
-@Suppress("UNUSED")
 @CName("currentEnvs")
 fun currentEnvs() = env
 
-@Suppress("UNUSED")
 @CName("jvmtii")
 fun jvmtii() = jvmti.value
 
-@Suppress("UNUSED")
 @CName("getJvm")
 fun getJvm() = vmGlobal.value
