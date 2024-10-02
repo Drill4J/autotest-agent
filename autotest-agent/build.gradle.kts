@@ -29,11 +29,10 @@ val javassistVersion: String by parent!!.extra
 val uuidVersion: String by parent!!.extra
 val aesyDatasizeVersion: String by parent!!.extra
 val nativeAgentLibName: String by parent!!.extra
-val macosLd64 : String by parent!!.extra
+val macosLd64: String by parent!!.extra
 val ktorVersion : String by parent!!.extra
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
@@ -44,32 +43,30 @@ kotlin {
     val currentPlatformTarget: KotlinMultiplatformExtension.() -> KotlinNativeTarget = {
         targets.withType<KotlinNativeTarget>()[HostManager.host.presetName]
     }
-    targets {
-        jvm()
-        linuxX64(configure = configureNativeTarget)
-        mingwX64(configure = configureNativeTarget).apply {
+    jvm()
+    linuxX64(configure = configureNativeTarget)
+    mingwX64(configure = configureNativeTarget).apply {
+        binaries.all {
+            linkerOpts("-lpsapi", "-lwsock32", "-lws2_32", "-lmswsock")
+        }
+    }
+    macosX64(configure = configureNativeTarget).apply {
+        if (macosLd64.toBoolean()) {
             binaries.all {
-                linkerOpts("-lpsapi", "-lwsock32", "-lws2_32", "-lmswsock")
+                linkerOpts("-ld64")
             }
         }
-        macosX64(configure = configureNativeTarget).apply {
-            if (macosLd64.toBoolean()) {
-                binaries.all {
-                    linkerOpts("-ld64")
-                }
+    }
+    macosArm64(configure = configureNativeTarget).apply {
+        if (macosLd64.toBoolean()) {
+            binaries.all {
+                linkerOpts("-ld64")
             }
         }
-        macosArm64(configure = configureNativeTarget).apply {
-            if (macosLd64.toBoolean()) {
-                binaries.all {
-                    linkerOpts("-ld64")
-                }
-            }
-        }
-        currentPlatformTarget().compilations["main"].defaultSourceSet {
-            kotlin.srcDir("src/nativeMain/kotlin")
-            resources.srcDir("src/nativeMain/resources")
-        }
+    }
+    currentPlatformTarget().compilations["main"].defaultSourceSet {
+        kotlin.srcDir("src/nativeMain/kotlin")
+        resources.srcDir("src/nativeMain/resources")
     }
     @Suppress("UNUSED_VARIABLE")
     sourceSets {

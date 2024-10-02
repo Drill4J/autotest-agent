@@ -51,7 +51,7 @@ object Agent {
          Autotest Agent (v${agentVersion})
         """.trimIndent()
 
-    @OptIn(ExperimentalNativeApi::class, ExperimentalForeignApi::class)
+    @OptIn(ExperimentalForeignApi::class, ExperimentalNativeApi::class)
     fun agentOnLoad(options: String): Int = memScoped {
         println(logo)
 
@@ -70,7 +70,13 @@ object Agent {
     }
 
     fun agentOnUnload() {
-        logger.info { "agentOnUnload:  Autotest agent has been unloaded." }
+        try {
+            if (!Configuration.parameters[IS_MANUALLY_CONTROLLED])
+                SessionController.stopSession()
+            logger.info { "agentOnUnload:  Autotest agent has been unloaded." }
+        } catch (ex: Throwable) {
+            logger.error { "Failed to unload the agent properly. Reason: ${ex.message}" }
+        }
     }
 
     @OptIn(ExperimentalForeignApi::class)
@@ -83,10 +89,12 @@ object Agent {
         AgentLoggingConfiguration.updateJvmLoggingConfiguration()
         Configuration.initializeJvm()
 
-        SessionController.startSession()
+        if (!Configuration.parameters[IS_MANUALLY_CONTROLLED])
+            SessionController.startSession(Configuration.parameters[SESSION_ID])
         logger.trace { "Initializing StrategyManager..." }
         StrategyManager.initialize(
-            Configuration.parameters[FRAMEWORK_PLUGINS].joinToString(";")
+            Configuration.parameters[FRAMEWORK_PLUGINS].joinToString(";"),
+            Configuration.parameters[IS_MANUALLY_CONTROLLED]
         )
     }
 
