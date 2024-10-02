@@ -30,6 +30,7 @@ val uuidVersion: String by parent!!.extra
 val aesyDatasizeVersion: String by parent!!.extra
 val nativeAgentLibName: String by parent!!.extra
 val macosLd64 : String by parent!!.extra
+val ktorVersion : String by parent!!.extra
 
 repositories {
     mavenLocal()
@@ -58,6 +59,13 @@ kotlin {
                 }
             }
         }
+        macosArm64(configure = configureNativeTarget).apply {
+            if (macosLd64.toBoolean()) {
+                binaries.all {
+                    linkerOpts("-ld64")
+                }
+            }
+        }
         currentPlatformTarget().compilations["main"].defaultSourceSet {
             kotlin.srcDir("src/nativeMain/kotlin")
             resources.srcDir("src/nativeMain/resources")
@@ -71,6 +79,7 @@ kotlin {
             languageSettings.optIn("kotlinx.coroutines.DelicateCoroutinesApi")
             languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")
             languageSettings.optIn("kotlinx.serialization.InternalSerializationApi")
+            languageSettings.optIn("io.ktor.utils.io.core.ExperimentalIoApi")
         }
         val commonMain by getting {
             kotlin.srcDir("src/commonGenerated/kotlin")
@@ -85,10 +94,11 @@ kotlin {
                 )
             }
             dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
                 implementation(project(":logging"))
                 implementation(project(":common"))
-                implementation(project(":agent-instrumentation"))
                 implementation(project(":agent-config"))
+                implementation(project(":agent-instrumentation"))
                 implementation(project(":test2code-api"))
             }
         }
@@ -108,17 +118,13 @@ kotlin {
             dependencies {
                 implementation(project(":jvmapi"))
                 implementation(project(":konform"))
+                implementation("io.ktor:ktor-utils:$ktorVersion")
             }
         }
         val linuxX64Main by getting(configuration = configureNativeDependencies)
         val mingwX64Main by getting(configuration = configureNativeDependencies)
         val macosX64Main by getting(configuration = configureNativeDependencies)
-        mingwX64Main.dependencies {
-            implementation(project(":logging-native"))
-        }
-        macosX64Main.dependencies {
-            implementation(project(":logging-native"))
-        }
+        val macosArm64Main by getting(configuration = configureNativeDependencies)
     }
     val copyNativeClassesForTarget: TaskContainer.(KotlinNativeTarget) -> Task = {
         val copyNativeClasses: TaskProvider<Copy> =
