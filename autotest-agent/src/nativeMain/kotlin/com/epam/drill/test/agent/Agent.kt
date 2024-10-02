@@ -70,13 +70,7 @@ object Agent {
     }
 
     fun agentOnUnload() {
-        try {
-            if (!Configuration.parameters[IS_MANUALLY_CONTROLLED])
-                SessionController.stopSession()
-            logger.info { "agentOnUnload:  Autotest agent has been unloaded." }
-        } catch (ex: Throwable) {
-            logger.error { "Failed to unload the agent properly. Reason: ${ex.message}" }
-        }
+        logger.info { "agentOnUnload:  Autotest agent has been unloaded." }
     }
 
     @OptIn(ExperimentalForeignApi::class)
@@ -89,12 +83,10 @@ object Agent {
         AgentLoggingConfiguration.updateJvmLoggingConfiguration()
         Configuration.initializeJvm()
 
-        if (!Configuration.parameters[IS_MANUALLY_CONTROLLED])
-            SessionController.startSession(Configuration.parameters[SESSION_ID])
+        SessionController.startSession()
         logger.trace { "Initializing StrategyManager..." }
         StrategyManager.initialize(
-            Configuration.parameters[FRAMEWORK_PLUGINS].joinToString(";"),
-            Configuration.parameters[IS_MANUALLY_CONTROLLED]
+            Configuration.parameters[FRAMEWORK_PLUGINS].joinToString(";")
         )
     }
 
