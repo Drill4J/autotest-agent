@@ -16,12 +16,12 @@
 package com.epam.drill.test.agent.instrument.clients
 
 import com.epam.drill.agent.instrument.*
-import com.epam.drill.agent.instrument.clients.WebClientTransformerObject
+import com.epam.drill.agent.instrument.clients.SpringWebClientTransformerObject
 import com.epam.drill.test.agent.instrument.RuntimeClassPathProvider
 import com.epam.drill.test.agent.instrument.TestSessionHeadersProcessor
 
-actual object WebClientTransformer:
+actual object SpringWebClientTransformer:
     TransformerObject,
-    WebClientTransformerObject(),
+    SpringWebClientTransformerObject(),
     HeadersProcessor by TestSessionHeadersProcessor,
     ClassPathProvider by RuntimeClassPathProvider

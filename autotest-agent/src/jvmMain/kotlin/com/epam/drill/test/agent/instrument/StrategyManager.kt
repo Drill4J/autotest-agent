@@ -36,7 +36,7 @@ actual object StrategyManager {
     init {
         systemStrategies.add(ReactorTransformer)
         systemStrategies.add(OkHttpClientStub)
-        systemStrategies.add(WebClientTransformer)
+        systemStrategies.add(SpringWebClientTransformer)
         systemStrategies.add(ApacheHttpClientTransformer)
         systemStrategies.add(JavaHttpClientTransformer)
         systemStrategies.add(Selenium)
