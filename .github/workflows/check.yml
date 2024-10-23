@@ -4,21 +4,7 @@ on:
   push:
     branches:
       - 'main'
-      - 'release/*'
-      - 'adoption/*'
-    paths:
-      - '**/src/**'
-      - '**.gradle.kts'
-      - 'gradle.properties'
   pull_request:
-    branches:
-      - 'main'
-      - 'release/*'
-      - 'adoption/*'
-    paths:
-      - '**/src/**'
-      - '**.gradle.kts'
-      - 'gradle.properties'
 
 jobs:
   check:
