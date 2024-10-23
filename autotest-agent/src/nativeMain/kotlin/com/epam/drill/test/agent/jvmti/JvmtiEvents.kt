@@ -15,10 +15,6 @@
  */
 package com.epam.drill.test.agent.jvmti
 
-import kotlinx.cinterop.ByteVar
-import kotlinx.cinterop.CPointer
-import kotlinx.cinterop.CPointerVar
-import kotlinx.cinterop.UByteVar
 import com.epam.drill.jvmapi.gen.JNIEnvVar
 import com.epam.drill.jvmapi.gen.jclass
 import com.epam.drill.jvmapi.gen.jint
@@ -27,14 +23,18 @@ import com.epam.drill.jvmapi.gen.jobject
 import com.epam.drill.jvmapi.gen.jthread
 import com.epam.drill.jvmapi.gen.jvmtiEnvVar
 import com.epam.drill.test.agent.Agent
+import kotlinx.cinterop.*
 
 @Suppress("unused_parameter")
+@OptIn(ExperimentalForeignApi::class)
 fun vmInitEvent(env: CPointer<jvmtiEnvVar>?, jniEnv: CPointer<JNIEnvVar>?, thread: jthread?) = Agent.agentOnVmInit()
 
 @Suppress("unused_parameter")
+@OptIn(ExperimentalForeignApi::class)
 fun vmDeathEvent(jvmtiEnv: CPointer<jvmtiEnvVar>?, jniEnv: CPointer<JNIEnvVar>?) = Agent.agentOnVmDeath()
 
 @Suppress("unused_parameter")
+@OptIn(ExperimentalForeignApi::class)
 fun classFileLoadHook(
     jvmtiEnv: CPointer<jvmtiEnvVar>?,
     jniEnv: CPointer<JNIEnvVar>?,
