@@ -20,7 +20,7 @@ import com.epam.drill.jvmapi.callObjectStringMethod
 import com.epam.drill.jvmapi.callObjectVoidMethod
 import com.epam.drill.jvmapi.callObjectVoidMethodWithInt
 import com.epam.drill.jvmapi.callObjectVoidMethodWithString
-import com.epam.drill.logging.LoggingConfiguration
+import com.epam.drill.autotest.logging.LoggingConfiguration
 import kotlinx.cinterop.ExperimentalForeignApi
 
 object AgentLoggingConfiguration {
@@ -54,7 +54,7 @@ object AgentLoggingConfiguration {
         val logLimit = Configuration.parameters[ParameterDefinitions.LOG_LIMIT]
 
         callObjectVoidMethodWithString(LoggingConfiguration::class, "setLoggingLevels", logLevel)
-        if (callObjectStringMethod(LoggingConfiguration::class,LoggingConfiguration::getLoggingFilename) != logFile) {
+        if (callObjectStringMethod(LoggingConfiguration::class, LoggingConfiguration::getLoggingFilename) != logFile) {
             callObjectVoidMethodWithString(
                 LoggingConfiguration::class,
                 LoggingConfiguration::setLoggingFilename,

@@ -30,6 +30,7 @@ val includeSharedLib: Settings.(String) -> Unit = {
     project(":$it").projectDir = file(sharedLibsLocalPath).resolve(it)
 }
 
+includeSharedLib("logging")
 includeSharedLib("common")
 includeSharedLib("jvmapi")
 includeSharedLib("agent-instrumentation")
@@ -40,6 +41,6 @@ includeSharedLib("knasm")
 includeSharedLib("kt2dts")
 includeSharedLib("kt2dts-api-sample")
 includeSharedLib("kt2dts-cli")
-includeSharedLib("logging")
 includeSharedLib("test2code-api")
+include("autotest-logging")
 include("autotest-agent")
