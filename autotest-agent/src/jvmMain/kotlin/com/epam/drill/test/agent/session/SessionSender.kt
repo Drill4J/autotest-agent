@@ -15,9 +15,9 @@
  */
 package com.epam.drill.test.agent.session
 
-import com.epam.drill.common.agent.transport.AgentMessage
-import com.epam.drill.common.agent.transport.AgentMessageDestination
-import com.epam.drill.common.agent.transport.AgentMessageSender
+import com.epam.drill.agent.common.transport.AgentMessage
+import com.epam.drill.agent.common.transport.AgentMessageDestination
+import com.epam.drill.agent.common.transport.AgentMessageSender
 
 interface SessionSender {
     fun sendSession(payload: SessionPayload)

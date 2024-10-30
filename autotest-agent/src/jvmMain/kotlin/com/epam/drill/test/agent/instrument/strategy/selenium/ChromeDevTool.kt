@@ -20,7 +20,7 @@ import com.epam.drill.test.agent.configuration.*
 import com.epam.drill.test.agent.serialization.*
 import com.epam.drill.test.agent.session.*
 import com.epam.drill.agent.transport.http.HttpResponseContent
-import com.epam.drill.common.agent.transport.AgentMessage
+import com.epam.drill.agent.common.transport.AgentMessage
 import com.epam.drill.test.agent.instrument.TestSessionHeadersProcessor
 import com.epam.drill.test.agent.devtools.DevToolsMessageSender
 import kotlinx.serialization.*

@@ -15,9 +15,9 @@
  */
 package com.epam.drill.test.agent.testinfo
 
-import com.epam.drill.common.agent.transport.AgentMessage
-import com.epam.drill.common.agent.transport.AgentMessageDestination
-import com.epam.drill.common.agent.transport.AgentMessageSender
+import com.epam.drill.agent.common.transport.AgentMessage
+import com.epam.drill.agent.common.transport.AgentMessageDestination
+import com.epam.drill.agent.common.transport.AgentMessageSender
 import com.epam.drill.plugins.test2code.api.AddTestsPayload
 import com.epam.drill.plugins.test2code.api.TestInfo
 import com.epam.drill.test.agent.session.SessionController

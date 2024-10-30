@@ -16,8 +16,8 @@
 package com.epam.drill.test.agent.testinfo
 
 import com.epam.drill.agent.request.DrillRequestHolder
-import com.epam.drill.common.agent.request.DrillRequest
-import com.epam.drill.common.agent.request.RequestHolder
+import com.epam.drill.agent.common.request.DrillRequest
+import com.epam.drill.agent.common.request.RequestHolder
 import com.epam.drill.plugins.test2code.api.TestDetails
 import com.epam.drill.plugins.test2code.api.TestInfo
 import com.epam.drill.plugins.test2code.api.TestResult

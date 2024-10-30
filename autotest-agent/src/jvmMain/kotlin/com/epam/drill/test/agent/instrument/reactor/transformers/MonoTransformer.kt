@@ -23,5 +23,5 @@ import com.epam.drill.test.agent.instrument.RuntimeClassPathProvider
 
 object MonoTransformer : TransformerObject,
     MonoTransformerObject(),
-    com.epam.drill.common.agent.request.RequestHolder by DrillRequestHolder,
+    com.epam.drill.agent.common.request.RequestHolder by DrillRequestHolder,
     ClassPathProvider by RuntimeClassPathProvider

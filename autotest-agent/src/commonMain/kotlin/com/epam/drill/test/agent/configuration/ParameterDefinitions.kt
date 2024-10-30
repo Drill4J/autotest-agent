@@ -15,7 +15,7 @@
  */
 package com.epam.drill.test.agent.configuration
 
-import com.epam.drill.common.agent.configuration.AgentParameterDefinition
+import com.epam.drill.agent.common.configuration.AgentParameterDefinition
 import com.epam.drill.plugins.test2code.api.Label
 
 object ParameterDefinitions {

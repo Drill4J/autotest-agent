@@ -17,7 +17,7 @@ package com.epam.drill.test.agent.instrument.strategy.selenium
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
-import com.epam.drill.common.agent.transport.AgentMessage
+import com.epam.drill.agent.common.transport.AgentMessage
 
 @Serializable
 data class TargetInfos(val targetInfos: List<Target>): AgentMessage()

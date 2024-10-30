@@ -15,8 +15,8 @@
  */
 package com.epam.drill.test.agent.devtools
 
-import com.epam.drill.common.agent.transport.AgentMessageDestination
-import com.epam.drill.common.agent.transport.ResponseStatus
+import com.epam.drill.agent.common.transport.AgentMessageDestination
+import com.epam.drill.agent.common.transport.ResponseStatus
 import com.epam.drill.plugins.test2code.api.AddSessionData
 import com.epam.drill.test.agent.instrument.strategy.selenium.*
 import com.epam.drill.test.agent.serialization.json

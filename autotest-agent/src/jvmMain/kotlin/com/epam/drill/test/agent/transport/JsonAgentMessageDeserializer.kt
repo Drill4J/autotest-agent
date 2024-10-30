@@ -20,7 +20,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import java.io.ByteArrayInputStream
-import com.epam.drill.common.agent.transport.AgentMessage
+import com.epam.drill.agent.common.transport.AgentMessage
 import mu.KotlinLogging
 
 class JsonAgentMessageDeserializer {
