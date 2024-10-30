@@ -92,7 +92,7 @@ kotlin {
             }
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
-                implementation(project(":logging"))
+                implementation(project(":autotest-logging"))
                 implementation(project(":common"))
                 implementation(project(":agent-config"))
                 implementation(project(":agent-instrumentation"))
