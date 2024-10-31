@@ -19,7 +19,7 @@ plugins {
     id("com.github.psxpaul.execfork").apply(false)
 }
 
-group = "com.epam.drill.autotest"
+group = "com.epam.drill.agent.test"
 
 val kotlinVersion: String by extra
 val kotlinxCollectionsVersion: String by extra

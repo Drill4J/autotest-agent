@@ -18,7 +18,7 @@ plugins {
     id("com.github.johnrengelman.shadow")
 }
 
-group = "com.epam.drill.autotest"
+group = "com.epam.drill.agent.test"
 version = rootProject.version
 
 val kotlinxCollectionsVersion: String by parent!!.extra

@@ -21,13 +21,13 @@ import com.epam.drill.agent.configuration.AgentConfigurationProvider
 import com.epam.drill.agent.configuration.DefaultParameterDefinitions
 import com.epam.drill.agent.common.configuration.AgentParameterDefinition
 import com.epam.drill.agent.test.configuration.ParameterDefinitions
-import com.epam.drill.konform.validation.Invalid
-import com.epam.drill.konform.validation.Validation
-import com.epam.drill.konform.validation.ValidationError
-import com.epam.drill.konform.validation.ValidationErrors
-import com.epam.drill.konform.validation.ValidationResult
-import com.epam.drill.konform.validation.jsonschema.minLength
-import com.epam.drill.konform.validation.jsonschema.minimum
+import com.epam.drill.agent.konform.validation.Invalid
+import com.epam.drill.agent.konform.validation.Validation
+import com.epam.drill.agent.konform.validation.ValidationError
+import com.epam.drill.agent.konform.validation.ValidationErrors
+import com.epam.drill.agent.konform.validation.ValidationResult
+import com.epam.drill.agent.konform.validation.jsonschema.minLength
+import com.epam.drill.agent.konform.validation.jsonschema.minimum
 
 class ValidatedParametersProvider(
     private val configurationProviders: Set<AgentConfigurationProvider>,

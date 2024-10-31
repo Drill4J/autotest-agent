@@ -15,8 +15,8 @@
  */
 package com.epam.drill.agent.test.configuration
 
-import com.epam.drill.konform.validation.Constraint
-import com.epam.drill.konform.validation.ValidationBuilder
+import com.epam.drill.agent.konform.validation.Constraint
+import com.epam.drill.agent.konform.validation.ValidationBuilder
 
 private val TRANSPORT_SCHEMES = setOf("http://", "https://")
 
