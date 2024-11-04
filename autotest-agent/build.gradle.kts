@@ -18,7 +18,7 @@ plugins {
     id("com.github.johnrengelman.shadow")
 }
 
-group = "com.epam.drill.autotest"
+group = "com.epam.drill.agent.test"
 version = rootProject.version
 
 val kotlinxCollectionsVersion: String by parent!!.extra
@@ -80,11 +80,11 @@ kotlin {
         }
         val commonMain by getting {
             kotlin.srcDir("src/commonGenerated/kotlin")
-            file("src/commonGenerated/kotlin/com/epam/drill/test/agent").apply {
+            file("src/commonGenerated/kotlin/com/epam/drill/agent/test").apply {
                 mkdirs()
                 resolve("Version.kt").writeText(
                     """
-                    package com.epam.drill.test.agent
+                    package com.epam.drill.agent.test
                     
                     internal val agentVersion = "${project.version}"
                     """.trimIndent()

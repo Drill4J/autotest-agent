@@ -8,7 +8,7 @@ plugins {
     id("com.github.hierynomus.license")
 }
 
-group = "com.epam.drill.autotest"
+group = "com.epam.drill.agent.test"
 version = rootProject.version
 
 val ktorVersion: String by parent!!.extra
