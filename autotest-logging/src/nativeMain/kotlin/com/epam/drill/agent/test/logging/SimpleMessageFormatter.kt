@@ -29,6 +29,7 @@ object SimpleMessageFormatter : Formatter {
     var messageLimit: Int
         get() = _messageLimit.value
         set(value) { _messageLimit.value = value }
+    private val apiKeyPattern = """\d+_[0-9a-fA-F]{64}""".toRegex()
 
     override fun formatMessage(includePrefix: Boolean, level: KotlinLoggingLevel, loggerName: String, msg: () -> Any?) =
         "${formatPrefix(level, loggerName)} ${msg.toStringSafe()}"
@@ -64,7 +65,7 @@ object SimpleMessageFormatter : Formatter {
 
     private inline fun (() -> Any?).toStringSafe(): String {
         return try {
-            invoke().toString().take(messageLimit)
+            invoke().toString().take(messageLimit).maskSecrets()
         } catch (e: Exception) {
             ErrorMessageProducer.getErrorLog(e)
         }
@@ -82,6 +83,10 @@ object SimpleMessageFormatter : Formatter {
             current = current.cause
         }
         return msg
+    }
+
+    private fun String.maskSecrets(): String {
+        return this.replace(apiKeyPattern, "********")
     }
 
 }
