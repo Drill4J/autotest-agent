@@ -15,23 +15,27 @@
  */
 package com.epam.drill.agent.test.logging
 
+import org.slf4j.LoggerFactory
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.LoggerContext
+import ch.qos.logback.classic.PatternLayout
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
+import ch.qos.logback.classic.pattern.ClassicConverter
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import ch.qos.logback.core.ConsoleAppender
 import ch.qos.logback.core.FileAppender
 import ch.qos.logback.core.OutputStreamAppender
-import org.slf4j.LoggerFactory
 
 actual object LoggingConfiguration {
 
     private var filename: String? = null
     private var messageLimit = 512
+    private val apiKeyPattern = """\d+_[0-9a-fA-F]{64}""".toRegex()
 
     actual fun readDefaultConfiguration() {
+        PatternLayout.DEFAULT_CONVERTER_MAP["maskedMsg"] = SensitiveDataConverter::class.java.name
         val root = (LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger)
         root.loggerContext.reset()
         root.level = Level.ERROR
@@ -74,7 +78,7 @@ actual object LoggingConfiguration {
         val loggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
         loggerContext.loggerList.flatMap(toAppenders).mapNotNull(toEncoder).forEach {
             it.stop()
-            it.pattern = "%date{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%logger] %.-${messageLimit}message%n%throwable"
+            it.pattern = "%date{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%logger] %.-${messageLimit}maskedMsg%n%throwable"
             it.start()
         }
         LoggingConfiguration.messageLimit = messageLimit
@@ -93,7 +97,7 @@ actual object LoggingConfiguration {
     private fun <T : OutputStreamAppender<ILoggingEvent>> configureOutputStreamAppender(appender: T) = appender.apply {
         val context = (LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger).loggerContext
         val encoder = PatternLayoutEncoder().also {
-            it.pattern = "%date{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%logger] %.-${messageLimit}message%n%throwable"
+            it.pattern = "%date{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%logger] %maskedMsg%n%throwable"
             it.context = context
             it.start()
         }
@@ -101,4 +105,9 @@ actual object LoggingConfiguration {
         this.encoder = encoder
     }
 
+    class SensitiveDataConverter : ClassicConverter() {
+        override fun convert(event: ILoggingEvent): String {
+            return event.formattedMessage.replace(apiKeyPattern, "********")
+        }
+    }
 }
