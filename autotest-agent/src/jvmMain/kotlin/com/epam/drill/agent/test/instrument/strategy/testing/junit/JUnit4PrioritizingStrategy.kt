@@ -44,11 +44,11 @@ object JUnit4PrioritizingStrategy : AbstractTestStrategy() {
         protectionDomain: ProtectionDomain?,
     ): ByteArray? {
         createRecommendedTestsFilterClass(pool, classLoader, protectionDomain)
-        instrumentRunMethod(ctClass)
+        instrumentConstructor(ctClass)
         return ctClass.toBytecode()
     }
 
-    private fun instrumentRunMethod(ctClass: CtClass) {
+    private fun instrumentConstructor(ctClass: CtClass) {
         ctClass.constructors.forEach { constructor ->
             constructor.insertAfter(
                 """
