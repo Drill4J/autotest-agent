@@ -15,6 +15,8 @@
  */
 package com.epam.drill.agent.test.prioritization
 
+import com.epam.drill.agent.test.configuration.Configuration
+import com.epam.drill.agent.test.configuration.ParameterDefinitions
 import com.epam.drill.agent.test.testinfo.CLASS_PARAMS_KEY
 import com.epam.drill.agent.test.testinfo.METHOD_PARAMS_KEY
 import com.epam.drill.agent.test2code.api.TestDetails
@@ -22,49 +24,17 @@ import mu.KotlinLogging
 
 object RecommendedTests {
     private val logger = KotlinLogging.logger {}
-    private val testsToSkip = mutableSetOf<TestDetails>()
+    private val recommendedTestsReceiver: RecommendedTestsReceiver = RecommendedTestsReceiverImpl()
+    private val recommendedTestsEnabled: Boolean
+        get() = Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_ENABLED]
+    private val testsToSkip: Set<TestDetails> by lazy { initTestsToSkip() }
 
-    init {
-        //TODO stub data
-        testsToSkip.apply {
-            add(
-                TestDetails(
-                    engine = "junit-jupiter",
-                    path = "com.epam.drill.compatibility.testframeworks.JUnit5Test",
-                    testName = "simpleTestMethodName",
-                )
-            )
-            add(
-                TestDetails(
-                    engine = "testng",
-                    path = "com.epam.drill.compatibility.testframeworks.TestNG7Test",
-                    testName = "simpleTestMethodName",
-                    params = mapOf(METHOD_PARAMS_KEY to "()"),
-                )
-            )
-            add(
-                TestDetails(
-                    engine = "testng",
-                    path = "com.epam.drill.compatibility.testframeworks.TestNG6Test",
-                    testName = "simpleTestMethodName",
-                    params = mapOf(METHOD_PARAMS_KEY to "()"),
-                )
-            )
-            add(
-                TestDetails(
-                    engine = "junit",
-                    path = "com.epam.drill.compatibility.testframeworks.JUnit4Test",
-                    testName = "simpleTestMethod",
-                )
-            )
-            add(
-                TestDetails(
-                    engine = "cucumber",
-                    path = "classpath:features/example.feature",
-                    testName = "Add two numbers",
-                )
-            )
-        }
+    private fun initTestsToSkip(): Set<TestDetails> {
+        if (!recommendedTestsEnabled) return emptySet()
+        val groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID]
+        val testTaskId = Configuration.parameters[ParameterDefinitions.TEST_TASK_ID]
+        val filterCoverageDays = Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_FILTER_COVERAGE_DAYS].toInt()
+        return recommendedTestsReceiver.getTestsToSkip(groupId, testTaskId, filterCoverageDays.takeIf { it > 0 }).toSet()
     }
 
     fun shouldSkip(
