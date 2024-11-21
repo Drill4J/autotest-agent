@@ -22,7 +22,7 @@ object TestNGv7PrioritizingStrategy: TestNGPrioritizingStrategy() {
     override val versionRegex: Regex = "testng-7\\.[0-9]+(\\.[0-9]+)*".toRegex()
 
     override val id: String
-        get() = "testNGv7Prioritizing"
+        get() = "testng"
 
     override fun getMethodParametersExpression(): String {
         return "getParameterTypes()"

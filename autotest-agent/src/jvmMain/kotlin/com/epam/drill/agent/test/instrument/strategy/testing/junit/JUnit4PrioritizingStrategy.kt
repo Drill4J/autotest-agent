@@ -15,6 +15,8 @@
  */
 package com.epam.drill.agent.test.instrument.strategy.testing.junit
 
+import com.epam.drill.agent.test.configuration.Configuration
+import com.epam.drill.agent.test.configuration.ParameterDefinitions
 import com.epam.drill.agent.test.instrument.strategy.AbstractTestStrategy
 import com.epam.drill.agent.test.prioritization.RecommendedTests
 import javassist.*
@@ -31,7 +33,9 @@ object JUnit4PrioritizingStrategy : AbstractTestStrategy() {
     private val DrillJUnit4Filter = "${this.javaClass.`package`.name}.gen.DrillJUnit4Filter"
 
     override val id: String
-        get() = "junit4Prioritizing"
+        get() = "junit"
+
+    override fun enabled(): Boolean = Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_ENABLED]
 
     override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
         return className == "org/junit/runners/JUnit4"

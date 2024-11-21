@@ -15,6 +15,8 @@
  */
 package com.epam.drill.agent.test.instrument.strategy.testing.junit
 
+import com.epam.drill.agent.test.configuration.Configuration
+import com.epam.drill.agent.test.configuration.ParameterDefinitions
 import com.epam.drill.agent.test.instrument.strategy.AbstractTestStrategy
 import com.epam.drill.agent.test.prioritization.RecommendedTests
 import com.epam.drill.agent.test2code.api.TestDetails
@@ -37,7 +39,9 @@ object JUnitPlatformPrioritizingStrategy : AbstractTestStrategy() {
     private val LauncherDiscoveryRequestAdapter = "${this.javaClass.`package`.name}.gen.LauncherDiscoveryRequestAdapter"
 
     override val id: String
-        get() = "junit5Prioritizing"
+        get() = "junit"
+
+    override fun enabled(): Boolean = Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_ENABLED]
 
     override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
         return className == "org/junit/platform/launcher/core/DefaultLauncher"

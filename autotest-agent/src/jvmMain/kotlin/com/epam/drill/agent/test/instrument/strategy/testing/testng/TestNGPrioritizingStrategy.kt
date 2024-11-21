@@ -15,6 +15,8 @@
  */
 package com.epam.drill.agent.test.instrument.strategy.testing.testng
 
+import com.epam.drill.agent.test.configuration.Configuration
+import com.epam.drill.agent.test.configuration.ParameterDefinitions
 import com.epam.drill.agent.test.instrument.strategy.AbstractTestStrategy
 import com.epam.drill.agent.test.prioritization.RecommendedTests
 import javassist.ClassPool
@@ -27,6 +29,8 @@ abstract class TestNGPrioritizingStrategy : AbstractTestStrategy() {
     abstract val logger: KLogger
     abstract val versionRegex: Regex
     abstract fun getMethodParametersExpression(): String
+
+    override fun enabled(): Boolean = Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_ENABLED]
 
     override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
         return interfaces.any { it == "org/testng/IMethodSelector" }
