@@ -25,16 +25,25 @@ import mu.KotlinLogging
 object RecommendedTests {
     private val logger = KotlinLogging.logger {}
     private val recommendedTestsReceiver: RecommendedTestsReceiver = RecommendedTestsReceiverImpl()
-    private val recommendedTestsEnabled: Boolean
-        get() = Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_ENABLED]
     private val testsToSkip: Set<TestDetails> by lazy { initTestsToSkip() }
 
     private fun initTestsToSkip(): Set<TestDetails> {
-        if (!recommendedTestsEnabled) return emptySet()
+        if (!Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_ENABLED])
+            return emptySet()
         val groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID]
         val testTaskId = Configuration.parameters[ParameterDefinitions.TEST_TASK_ID]
-        val filterCoverageDays = Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_FILTER_COVERAGE_DAYS].toInt()
-        return recommendedTestsReceiver.getTestsToSkip(groupId, testTaskId, filterCoverageDays.takeIf { it > 0 }).toSet()
+        val filterCoverageDays =
+            Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_COVERAGE_PERIOD_DAYS].toInt()
+        return runCatching {
+            recommendedTestsReceiver.getTestsToSkip(
+                groupId,
+                testTaskId,
+                filterCoverageDays.takeIf { it > 0 }
+            )
+        }.getOrElse {
+            logger.warn(it) { "Unable to retrieve information about recommended tests. All tests will be run." }
+            emptyList()
+        }.toSet()
     }
 
     fun shouldSkip(
@@ -57,12 +66,12 @@ object RecommendedTests {
     }
 
     fun shouldSkipByTestDetails(test: TestDetails): Boolean {
-        logger.trace { "Test path = ${test.path} name = ${test.testName} is being checked by Drill4J..." }
+        logger.trace { "Test `${test.testName}` is checked to be skipped by Drill4J..." }
         return testsToSkip.contains(test).also {
             if (it) {
-                logger.info { "Test path = ${test.path} name = ${test.testName} is skipped by Drill4J" }
+                logger.info { "Test `${test.testName}` will be skipped by Drill4J" }
             } else {
-                logger.debug { "Test path = ${test.path} name = ${test.testName} is recommended by Drill4J" }
+                logger.debug { "Test `${test.testName}` will not be skipped by Drill4J" }
             }
         }
     }

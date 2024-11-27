@@ -60,5 +60,5 @@ object ParameterDefinitions {
 
     val TEST_TASK_ID = AgentParameterDefinition.forString(name = "testTaskId")
     val RECOMMENDED_TESTS_ENABLED = AgentParameterDefinition.forBoolean(name = "recommendedTestsEnabled", defaultValue = false)
-    val RECOMMENDED_TESTS_FILTER_COVERAGE_DAYS = AgentParameterDefinition.forInt(name = "recommendedTestsFilterCoverageDays", defaultValue = 30)
+    val RECOMMENDED_TESTS_COVERAGE_PERIOD_DAYS = AgentParameterDefinition.forInt(name = "recommendedTestsCoveragePeriodDays", defaultValue = 0)
 }
