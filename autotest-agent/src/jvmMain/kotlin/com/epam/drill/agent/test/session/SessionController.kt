@@ -44,7 +44,6 @@ actual object SessionController {
     actual fun startSession() {
         val customSessionId = Configuration.parameters[ParameterDefinitions.SESSION_ID]
         sessionId = customSessionId.takeIf(String::isNotBlank) ?: uuid4().toString()
-        TestController.init()
         logger.info { "Test session started: $sessionId" }
         sessionSender.sendSession(
             SessionPayload(

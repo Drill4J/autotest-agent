@@ -17,26 +17,53 @@ package com.epam.drill.agent.test.prioritization
 
 import com.epam.drill.agent.common.transport.AgentMessageDestination
 import com.epam.drill.agent.common.transport.AgentMessageReceiver
+import com.epam.drill.agent.test.configuration.Configuration
+import com.epam.drill.agent.test.configuration.ParameterDefinitions
+import com.epam.drill.agent.test.testinfo.*
 import com.epam.drill.agent.test.transport.TestAgentMessageReceiver
 import com.epam.drill.agent.test2code.api.TestDetails
 import kotlinx.serialization.Serializable
+import mu.KotlinLogging
 
 interface RecommendedTestsReceiver {
-    fun getTestsToSkip(groupId: String, testTaskId: String, filterCoverageDays: Int?): List<TestDetails>
+    fun getTestsToSkip(filterCoverageDays: Int?): List<TestDetails>
+    fun sendSkippedTest(test: TestDetails)
 }
 
 class RecommendedTestsReceiverImpl(
-    private val agentMessageReceiver: AgentMessageReceiver = TestAgentMessageReceiver
-): RecommendedTestsReceiver {
-    override fun getTestsToSkip(groupId: String, testTaskId: String, filterCoverageDays: Int?): List<TestDetails> {
+    private val agentMessageReceiver: AgentMessageReceiver = TestAgentMessageReceiver,
+    private val testExecutionRecorder: TestExecutionRecorder = TestController
+) : RecommendedTestsReceiver {
+    private val logger = KotlinLogging.logger {}
+
+    override fun getTestsToSkip(filterCoverageDays: Int?): List<TestDetails> {
+        val groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID]
+        val testTaskId = Configuration.parameters[ParameterDefinitions.TEST_TASK_ID]
         val parameters = if (filterCoverageDays != null) "?filterCoverageDays=$filterCoverageDays" else ""
-        return agentMessageReceiver.receive(
-            AgentMessageDestination(
-                "GET",
-                "/tests-to-skip/$groupId/$testTaskId$parameters",
-            ),
-            RecommendedTestsResponse::class
-        ).data
+        return runCatching {
+            agentMessageReceiver.receive(
+                AgentMessageDestination(
+                    "GET",
+                    "/tests-to-skip/$groupId/$testTaskId$parameters",
+                ),
+                RecommendedTestsResponse::class
+            ).data
+        }.getOrElse {
+            logger.warn { "Unable to retrieve information about recommended tests. All tests will be run. Error message: $it" }
+            emptyList()
+        }
+    }
+
+    override fun sendSkippedTest(test: TestDetails) {
+        testExecutionRecorder.recordTestIgnoring(
+            TestMethodInfo(
+                engine = test.engine,
+                className = test.path,
+                method = test.testName,
+                methodParams = test.params[METHOD_PARAMS_KEY] ?: "()",
+                classParams = test.params[CLASS_PARAMS_KEY] ?: "",
+            ), isSmartSkip = true
+        )
     }
 }
 

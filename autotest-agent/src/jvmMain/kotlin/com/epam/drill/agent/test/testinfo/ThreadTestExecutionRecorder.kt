@@ -74,18 +74,20 @@ class ThreadTestExecutionRecorder(
     }
 
     override fun recordTestIgnoring(
-        testMethod: TestMethodInfo
+        testMethod: TestMethodInfo,
+        isSmartSkip: Boolean
     ) {
         val testLaunchId = getTestLaunchId() ?: generateTestLaunchId()
         val testLaunchInfo = mapToLaunchInfo(testMethod, testLaunchId)
+        val skipResult = if (isSmartSkip) TestResult.SMART_SKIPPED else TestResult.SKIPPED
         updateTestInfo(testLaunchInfo) {
             it.startedAt = 0L
             it.finishedAt = 0L
-            it.result = TestResult.SKIPPED
+            it.result = skipResult
         }
         clearDrillHeaders()
         listeners.forEach { it.onTestIgnored(testLaunchInfo) }
-        logger.debug { "Test: $testLaunchInfo FINISHED. Result: ${TestResult.SKIPPED.name}" }
+        logger.debug { "Test: $testLaunchInfo FINISHED. Result: $skipResult" }
     }
 
     override fun reset() {
@@ -120,7 +122,11 @@ class ThreadTestExecutionRecorder(
     ) {
         testExecutionData.compute(testLaunchInfo) { _, value ->
             val testExecutionInfo = value ?: TestExecutionInfo()
-            updateTestExecutionInfo(testExecutionInfo)
+            if (testExecutionInfo.result == TestResult.UNKNOWN) {
+                updateTestExecutionInfo(testExecutionInfo)
+            } else {
+                logger.warn { "Test ${testLaunchInfo.testName} already finished with result ${testExecutionInfo.result}" }
+            }
             testExecutionInfo
         }
     }

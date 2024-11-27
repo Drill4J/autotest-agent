@@ -30,20 +30,11 @@ object RecommendedTests {
     private fun initTestsToSkip(): Set<TestDetails> {
         if (!Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_ENABLED])
             return emptySet()
-        val groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID]
-        val testTaskId = Configuration.parameters[ParameterDefinitions.TEST_TASK_ID]
         val filterCoverageDays =
             Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_COVERAGE_PERIOD_DAYS].toInt()
-        return runCatching {
-            recommendedTestsReceiver.getTestsToSkip(
-                groupId,
-                testTaskId,
-                filterCoverageDays.takeIf { it > 0 }
-            )
-        }.getOrElse {
-            logger.warn { "Unable to retrieve information about recommended tests. All tests will be run. Error message: $it" }
-            emptyList()
-        }.toSet()
+        return recommendedTestsReceiver.getTestsToSkip(
+            filterCoverageDays = filterCoverageDays.takeIf { it > 0 }
+        ).toSet()
     }
 
     fun shouldSkip(
@@ -70,6 +61,7 @@ object RecommendedTests {
         return testsToSkip.contains(test).also {
             if (it) {
                 logger.info { "Test `${test.testName}` will be skipped by Drill4J" }
+                recommendedTestsReceiver.sendSkippedTest(test)
             } else {
                 logger.debug { "Test `${test.testName}` will not be skipped by Drill4J" }
             }
