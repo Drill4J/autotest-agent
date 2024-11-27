@@ -25,25 +25,27 @@ import com.epam.drill.agent.test.transport.TestAgentMessageSender
 import mu.KotlinLogging
 
 interface JsCoverageSender {
-    fun sendJsCoverage(testLaunchId: String): ResponseStatus?
+    fun sendJsCoverage(testLaunchId: String)
 }
 
 class JsCoverageSenderImpl : JsCoverageSender {
     private val logger = KotlinLogging.logger {}
 
-    override fun sendJsCoverage(testLaunchId: String) = DevToolStorage.get()?.run {
-        val coverage = takePreciseCoverage()
-        if (coverage.isBlank()) {
-            logger.trace { "coverage is blank" }
-            return null
+    override fun sendJsCoverage(testLaunchId: String) {
+        DevToolStorage.get()?.run {
+            val coverage = takePreciseCoverage()
+            if (coverage.isBlank()) {
+                logger.trace { "coverage is blank" }
+                return
+            }
+            val scripts = scriptParsed()
+            if (scripts.isBlank()) {
+                logger.trace { "script parsed is blank" }
+                return
+            }
+            logger.debug { "ThreadStorage.sendSessionData" }
+            sendSessionData(SessionData(coverage, scripts, testLaunchId))
         }
-        val scripts = scriptParsed()
-        if (scripts.isBlank()) {
-            logger.trace { "script parsed is blank" }
-            return null
-        }
-        logger.debug { "ThreadStorage.sendSessionData" }
-        sendSessionData(SessionData(coverage, scripts, testLaunchId))
     }
 
     private fun sendSessionData(data: SessionData) = runCatching {

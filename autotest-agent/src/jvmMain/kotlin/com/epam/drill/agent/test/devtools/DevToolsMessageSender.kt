@@ -15,17 +15,17 @@
  */
 package com.epam.drill.agent.test.devtools
 
-import kotlinx.serialization.DeserializationStrategy
 import mu.KotlinLogging
 import com.epam.drill.agent.transport.JsonAgentMessageSerializer
 import com.epam.drill.agent.transport.http.HttpAgentMessageTransport
-import com.epam.drill.agent.transport.http.HttpResponseContent
 import com.epam.drill.agent.common.transport.AgentMessage
 import com.epam.drill.agent.common.transport.AgentMessageDestination
+import com.epam.drill.agent.common.transport.ResponseStatus
 import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.configuration.ParameterDefinitions
 import com.epam.drill.agent.test.instrument.strategy.selenium.DevToolsMessage
-import com.epam.drill.agent.test.transport.JsonAgentMessageDeserializer
+import com.epam.drill.agent.transport.JsonAgentMessageDeserializer
+import kotlin.reflect.KClass
 
 object DevToolsMessageSender {
 
@@ -33,13 +33,11 @@ object DevToolsMessageSender {
         serverAddress = Configuration.parameters[ParameterDefinitions.DEVTOOLS_PROXY_ADDRESS],
         drillInternal = false,
         gzipCompression = false,
-        receiveContent = true
     )
     private val messageSerializer = JsonAgentMessageSerializer<DevToolsMessage>()
     private val messageDeserializer = JsonAgentMessageDeserializer()
     private val logger = KotlinLogging.logger {}
 
-    @Suppress("unchecked_cast")
     fun send(
         method: String,
         path: String,
@@ -49,51 +47,47 @@ object DevToolsMessageSender {
         messageSerializer.serialize(message),
         messageSerializer.contentType()
     )
-        .let { it as HttpResponseContent<ByteArray> }
-        .let { HttpResponseContent(it.statusObject, it.content.decodeToString()) }
+        .mapContent { it.decodeToString() }
         .also(DevToolsMessageSender::logResponseContent)
 
-    @Suppress("unchecked_cast")
     fun <T : AgentMessage> send(
         method: String,
         path: String,
         message: DevToolsMessage,
-        strategy: DeserializationStrategy<T>
+        clazz: KClass<T>
     ) = messageTransport.send(
         AgentMessageDestination(method, path),
         messageSerializer.serialize(message),
         messageSerializer.contentType()
     )
-        .let { it as HttpResponseContent<ByteArray> }
-        .let { HttpResponseContent(it.statusObject, messageDeserializer.deserialize(strategy, it.content)) }
+        .mapContent {
+            messageDeserializer.deserialize(it, clazz)
+        }
         .also(DevToolsMessageSender::logResponseContent)
 
-    @Suppress("unchecked_cast")
     fun send(
         serverAddress: String,
         method: String,
         path: String,
         message: String
-    ) = HttpAgentMessageTransport(
+    ): ResponseStatus<String> = HttpAgentMessageTransport(
         serverAddress = serverAddress,
         drillInternal = false,
         gzipCompression = false,
-        receiveContent = true
     ).send(
         AgentMessageDestination(method, path),
         message.encodeToByteArray(),
         messageSerializer.contentType()
     )
-        .let { it as HttpResponseContent<ByteArray> }
-        .let { HttpResponseContent(it.statusObject, it.content.decodeToString()) }
+        .mapContent { it.decodeToString() }
         .also(DevToolsMessageSender::logResponseContent)
 
-    private fun logResponseContent(responseContent: HttpResponseContent<*>) = logger.trace {
+    private fun logResponseContent(responseContent: ResponseStatus<*>) = logger.trace {
         val response = responseContent.content.toString()
             .takeIf(String::isNotEmpty)
             ?.let { "\n${it.prependIndent("\t")}" }
             ?: " <empty>"
-        "send: Response received, status=${responseContent.statusObject}:$response"
+        "send: Response received, success=${responseContent.success}: $response"
     }
 
 }

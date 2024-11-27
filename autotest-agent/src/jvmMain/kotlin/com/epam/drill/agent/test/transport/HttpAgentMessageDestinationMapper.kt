@@ -18,9 +18,7 @@ package com.epam.drill.agent.test.transport
 import com.epam.drill.agent.transport.AgentMessageDestinationMapper
 import com.epam.drill.agent.common.transport.AgentMessageDestination
 
-class HttpAutotestAgentMessageDestinationMapper : AgentMessageDestinationMapper {
-
-    private val apiPath = "data-ingest"
+class HttpAgentMessageDestinationMapper(private val apiPath: String) : AgentMessageDestinationMapper {
 
     override fun map(destination: AgentMessageDestination): AgentMessageDestination =
         destination.copy(
