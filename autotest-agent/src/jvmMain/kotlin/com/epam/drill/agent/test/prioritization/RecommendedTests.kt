@@ -41,7 +41,7 @@ object RecommendedTests {
                 filterCoverageDays.takeIf { it > 0 }
             )
         }.getOrElse {
-            logger.warn(it) { "Unable to retrieve information about recommended tests. All tests will be run." }
+            logger.warn { "Unable to retrieve information about recommended tests. All tests will be run. Error message: $it" }
             emptyList()
         }.toSet()
     }

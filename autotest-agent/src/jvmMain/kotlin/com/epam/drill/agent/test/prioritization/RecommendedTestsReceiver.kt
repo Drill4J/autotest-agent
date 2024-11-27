@@ -36,11 +36,11 @@ class RecommendedTestsReceiverImpl(
                 "/tests-to-skip/$groupId/$testTaskId$parameters",
             ),
             RecommendedTestsResponse::class
-        ).tests
+        ).data
     }
 }
 
 @Serializable
 class RecommendedTestsResponse(
-    val tests: List<TestDetails>
+    val data: List<TestDetails>
 )
