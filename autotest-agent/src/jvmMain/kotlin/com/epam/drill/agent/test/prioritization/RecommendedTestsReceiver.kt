@@ -40,6 +40,7 @@ class RecommendedTestsReceiverImpl(
         val groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID]
         val testTaskId = Configuration.parameters[ParameterDefinitions.TEST_TASK_ID]
         val parameters = if (filterCoverageDays != null) "?filterCoverageDays=$filterCoverageDays" else ""
+        logger.debug { "Retrieving information about recommended tests, testTaskId: $testTaskId" }
         return runCatching {
             agentMessageReceiver.receive(
                 AgentMessageDestination(

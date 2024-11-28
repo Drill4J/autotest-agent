@@ -57,7 +57,6 @@ object RecommendedTests {
     }
 
     fun shouldSkipByTestDetails(test: TestDetails): Boolean {
-        logger.trace { "Test `${test.testName}` is checked to be skipped by Drill4J..." }
         return testsToSkip.contains(test).also {
             if (it) {
                 logger.info { "Test `${test.testName}` will be skipped by Drill4J" }
