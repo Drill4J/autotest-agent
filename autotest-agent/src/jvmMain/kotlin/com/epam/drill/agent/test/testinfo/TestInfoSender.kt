@@ -61,6 +61,7 @@ class IntervalTestInfoSender(
 
     private fun sendTests(tests: List<TestInfo>) {
         if (tests.isEmpty()) return
+        logger.debug { "Sending ${tests.size} tests..." }
         messageSender.send(
             destination = AgentMessageDestination("POST", "tests-metadata"),
             message = AddTestsPayload(
