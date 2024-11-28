@@ -23,55 +23,47 @@ import com.epam.drill.agent.configuration.DefaultParameterDefinitions
 import com.epam.drill.agent.transport.*
 import com.epam.drill.agent.transport.http.HttpAgentMessageTransport
 import com.epam.drill.agent.common.transport.AgentMessage
-import com.epam.drill.agent.common.transport.AgentMessageDestination
 import com.epam.drill.agent.common.transport.AgentMessageSender
 import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.configuration.ParameterDefinitions
 
-object TestAgentMessageSender : AgentMessageSender<AgentMessage> {
+private val logger = KotlinLogging.logger {}
+private const val QUEUE_DEFAULT_SIZE: Long = 512L * 1024 * 1024
 
-    private const val QUEUE_DEFAULT_SIZE: Long = 512L * 1024 * 1024
+object TestAgentMessageSender : AgentMessageSender<AgentMessage> by messageSender()
 
-    private val logger = KotlinLogging.logger {}
-    private val messageSender = messageSender()
+fun agentTransport(): AgentMessageTransport = HttpAgentMessageTransport(
+    Configuration.parameters[ParameterDefinitions.API_URL],
+    Configuration.parameters[ParameterDefinitions.API_KEY],
+    Configuration.parameters[ParameterDefinitions.SSL_TRUSTSTORE].takeIf(String::isNotEmpty)?.let(
+        ::resolvePath
+    ) ?: "",
+    Configuration.parameters[ParameterDefinitions.SSL_TRUSTSTORE_PASSWORD],
+    gzipCompression = false
+)
 
-    override fun send(destination: AgentMessageDestination, message: AgentMessage) =
-        messageSender.send(destination, message)
+fun messageSender(): AgentMessageSender<AgentMessage> {
+    val transport = agentTransport()
+    val serializer = JsonAgentMessageSerializer<AgentMessage>()
+    val mapper = HttpAgentMessageDestinationMapper("data-ingest")
+    val queue = InMemoryAgentMessageQueue(
+        Configuration.parameters[ParameterDefinitions.MESSAGE_QUEUE_LIMIT].let(::parseBytes)
+    )
+    return QueuedAgentMessageSender(transport, serializer, mapper, queue)
+}
 
-    private fun messageSender(): QueuedAgentMessageSender<AgentMessage, ByteArray> {
-        val transport = HttpAgentMessageTransport(
-            Configuration.parameters[ParameterDefinitions.API_URL],
-            Configuration.parameters[ParameterDefinitions.API_KEY],
-            Configuration.parameters[ParameterDefinitions.SSL_TRUSTSTORE].takeIf(String::isNotEmpty)?.let(
-                TestAgentMessageSender::resolvePath
-            ) ?: "",
-            Configuration.parameters[ParameterDefinitions.SSL_TRUSTSTORE_PASSWORD],
-            gzipCompression = false
-        )
-        val serializer = JsonAgentMessageSerializer<AgentMessage>()
-        val mapper = HttpAutotestAgentMessageDestinationMapper()
-        val queue = InMemoryAgentMessageQueue(
-            serializer,
-            Configuration.parameters[ParameterDefinitions.MESSAGE_QUEUE_LIMIT].let(TestAgentMessageSender::parseBytes)
-        )
-        val notifier = RetryingTransportStateNotifier(transport, serializer, queue)
-        return QueuedAgentMessageSender(transport, serializer, mapper, notifier, notifier, queue)
-    }
+private fun resolvePath(path: String) = File(path).run {
+    val installationDir = File(Configuration.parameters[DefaultParameterDefinitions.INSTALLATION_DIR])
+    val resolved = this.takeIf(File::exists)
+        ?: this.takeUnless(File::isAbsolute)?.let(installationDir::resolve)
+    logger.trace { "resolvePath: Resolved $path to ${resolved?.absolutePath}" }
+    resolved?.absolutePath ?: path
+}
 
-    private fun resolvePath(path: String) = File(path).run {
-        val installationDir = File(Configuration.parameters[DefaultParameterDefinitions.INSTALLATION_DIR])
-        val resolved = this.takeIf(File::exists)
-            ?: this.takeUnless(File::isAbsolute)?.let(installationDir::resolve)
-        logger.trace { "resolvePath: Resolved $path to ${resolved?.absolutePath}" }
-        resolved?.absolutePath ?: path
-    }
-
-    private fun parseBytes(value: String): Long = value.run {
-        val logError: (Throwable) -> Unit = { logger.warn(it) { "parseBytes: Exception while parsing value: $this" } }
-        this.runCatching(DataSize::parse)
-            .onFailure(logError)
-            .getOrDefault(DataSize.of(QUEUE_DEFAULT_SIZE, ByteUnit.BYTE))
-            .toUnit(ByteUnit.BYTE).value.toLong()
-    }
-
+private fun parseBytes(value: String): Long = value.run {
+    val logError: (Throwable) -> Unit = { logger.warn(it) { "parseBytes: Exception while parsing value: $this" } }
+    this.runCatching(DataSize::parse)
+        .onFailure(logError)
+        .getOrDefault(DataSize.of(QUEUE_DEFAULT_SIZE, ByteUnit.BYTE))
+        .toUnit(ByteUnit.BYTE).value.toLong()
 }

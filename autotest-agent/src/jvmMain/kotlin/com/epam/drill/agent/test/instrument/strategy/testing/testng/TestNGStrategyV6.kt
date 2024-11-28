@@ -21,6 +21,7 @@ import java.security.*
 @Suppress("unused")
 object TestNGStrategyV6 : TestNGStrategy() {
     override val versionRegex: Regex = "testng-6\\.[0-9]+(\\.[0-9]+)*".toRegex()
+    override val id: String = "testng6"
 
     override fun instrument(
         ctClass: CtClass,

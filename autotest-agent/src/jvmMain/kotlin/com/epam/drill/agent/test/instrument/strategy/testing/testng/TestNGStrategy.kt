@@ -35,8 +35,6 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
     protected val logger = KotlinLogging.logger {}
 
     abstract val versionRegex: Regex
-    override val id: String
-        get() = "testng"
 
     override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
         return className == "org/testng/TestRunner"

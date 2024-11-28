@@ -15,7 +15,6 @@
  */
 package com.epam.drill.agent.test.instrument
 
-import com.epam.drill.agent.test.instrument.StrategyManager
 import mu.KotlinLogging
 
 actual object AgentClassTransformer {
@@ -34,7 +33,7 @@ actual object AgentClassTransformer {
         else -> runCatching {
             StrategyManager.process(className, classBytes, loader, protectionDomain)
         }.onFailure {
-            com.epam.drill.agent.test.instrument.AgentClassTransformer.logger.warn(it) { "Can't instrument '${className}' class." }
+            logger.warn(it) { "Can't instrument '${className}' class." }
         }.getOrNull()
     }
 

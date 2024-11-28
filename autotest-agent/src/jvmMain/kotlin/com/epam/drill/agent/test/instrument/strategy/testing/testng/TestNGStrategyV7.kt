@@ -22,6 +22,7 @@ import java.security.*
 object TestNGStrategyV7 : TestNGStrategy() {
 
     override val versionRegex: Regex = "testng-7\\.[0-9]+(\\.[0-9]+)*".toRegex()
+    override val id: String = "testng7"
 
     override fun instrument(
         ctClass: CtClass,
