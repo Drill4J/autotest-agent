@@ -105,7 +105,7 @@ object JUnitPlatformPrioritizingStrategy : AbstractTestStrategy() {
                             ${TestDetails::class.java.name} testDetails = ${this::class.java.name}.INSTANCE.${this::convertToTestDetails.name}(testMetadata, descriptor.getDisplayName());
                             boolean shouldSkip = testDetails != null && ${RecommendedTests::class.java.name}.INSTANCE.${RecommendedTests::shouldSkipByTestDetails.name}(testDetails);
                             if (shouldSkip) {                                
-                                return $FilterResult.excluded("not recommended by Drill4J");
+                                return $FilterResult.excluded("skipped by Drill4J");
                             } else {
                                 return $FilterResult.included("recommended by Drill4J");
                             }                                                    		                    

@@ -89,7 +89,7 @@ object JUnit4PrioritizingStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                    public java.lang.String describe() {
-                        return "skip tests that are not recommended by Drill4J";                                                    		                    
+                        return "skip tests by Drill4J";                                                    		                    
                    }
             """.trimIndent(),
                 cc

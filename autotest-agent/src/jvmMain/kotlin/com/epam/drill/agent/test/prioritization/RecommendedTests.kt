@@ -27,15 +27,12 @@ object RecommendedTests {
     private val recommendedTestsReceiver: RecommendedTestsReceiver = RecommendedTestsReceiverImpl()
     private val testsToSkip: Set<TestDetails> by lazy { initTestsToSkip() }
 
-    private fun initTestsToSkip(): Set<TestDetails> {
-        if (!Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_ENABLED])
-            return emptySet()
-        val filterCoverageDays =
-            Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_COVERAGE_PERIOD_DAYS].toInt()
-        return recommendedTestsReceiver.getTestsToSkip(
-            filterCoverageDays = filterCoverageDays.takeIf { it > 0 }
-        ).toSet()
-    }
+    private fun initTestsToSkip() = recommendedTestsReceiver.getTestsToSkip()
+        .toSet()
+        .also {
+            logger.info { "${it.size} tests will be skipped by Drill4J" }
+        }
+
 
     fun shouldSkip(
         engine: String,
@@ -59,10 +56,16 @@ object RecommendedTests {
     fun shouldSkipByTestDetails(test: TestDetails): Boolean {
         return testsToSkip.contains(test).also {
             if (it) {
-                logger.info { "Test `${test.testName}` will be skipped by Drill4J" }
+                logger.debug { "Test `${test.testName}` will be skipped by Drill4J" }
                 recommendedTestsReceiver.sendSkippedTest(test)
             } else {
                 logger.debug { "Test `${test.testName}` will not be skipped by Drill4J" }
+                if ("testFormatByMask" in test.testName) {
+                    logger.debug { "!!! Test to skip `${test}`" }
+                    testsToSkip.filter { it.testName == test.testName }.forEach {
+                        logger.debug { "!!! Test candidate `${it}` " }
+                    }
+                }
             }
         }
     }

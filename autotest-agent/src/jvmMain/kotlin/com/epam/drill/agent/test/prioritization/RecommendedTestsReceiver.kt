@@ -26,7 +26,7 @@ import kotlinx.serialization.Serializable
 import mu.KotlinLogging
 
 interface RecommendedTestsReceiver {
-    fun getTestsToSkip(filterCoverageDays: Int?): List<TestDetails>
+    fun getTestsToSkip(): List<TestDetails>
     fun sendSkippedTest(test: TestDetails)
 }
 
@@ -36,21 +36,47 @@ class RecommendedTestsReceiverImpl(
 ) : RecommendedTestsReceiver {
     private val logger = KotlinLogging.logger {}
 
-    override fun getTestsToSkip(filterCoverageDays: Int?): List<TestDetails> {
+    override fun getTestsToSkip(): List<TestDetails> {
+        if (!Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_ENABLED])
+            return emptyList()
         val groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID]
         val testTaskId = Configuration.parameters[ParameterDefinitions.TEST_TASK_ID]
-        val parameters = if (filterCoverageDays != null) "?filterCoverageDays=$filterCoverageDays" else ""
+        val targetAppId = Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_TARGET_APP_ID]
+        val targetBuildVersion = Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_TARGET_BUILD_VERSION]
+            .takeIf { it.isNotEmpty() }
+        val targetCommitSha = Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_TARGET_COMMIT_SHA]
+            .takeIf { it.isNotEmpty() }
+        val baselineCommitSha = Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_BASELINE_COMMIT_SHA]
+            .takeIf { it.isNotEmpty() }
+        val baselineBuildVersion =
+            Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_BASELINE_BUILD_VERSION]
+                .takeIf { it.isNotEmpty() }
+        val coveragePeriodDays =
+            Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_COVERAGE_PERIOD_DAYS].toInt()
+                .takeIf { it > 0 }
+
+        val parameters: String = buildString {
+            append("?groupId=$groupId")
+            append("&testTaskId=$testTaskId")
+            append("&targetAppId=$targetAppId")
+            targetBuildVersion?.let { append("&targetBuildVersion=$it") }
+            targetCommitSha?.let { append("&targetCommitSha=$it") }
+            baselineCommitSha?.let { append("&baselineCommitSha=$it") }
+            baselineBuildVersion?.let { append("&baselineBuildVersion=$it") }
+            coveragePeriodDays?.let { append("&coveragePeriodDays=$it") }
+        }
         logger.debug { "Retrieving information about recommended tests, testTaskId: $testTaskId" }
         return runCatching {
             agentMessageReceiver.receive(
                 AgentMessageDestination(
                     "GET",
-                    "/tests-to-skip/$groupId/$testTaskId$parameters",
+                    "/tests-to-skip$parameters",
                 ),
                 RecommendedTestsResponse::class
             ).data
+        }.onFailure {
+            logger.warn { "Unable to retrieve information about recommended tests. Error message: $it" }
         }.getOrElse {
-            logger.warn { "Unable to retrieve information about recommended tests. All tests will be run. Error message: $it" }
             emptyList()
         }
     }
