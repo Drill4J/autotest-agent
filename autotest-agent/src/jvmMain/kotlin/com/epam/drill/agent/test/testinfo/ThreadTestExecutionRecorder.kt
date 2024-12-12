@@ -30,9 +30,6 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.zip.CRC32
 
-const val METHOD_PARAMS_KEY = "methodParams"
-const val CLASS_PARAMS_KEY = "classParams"
-
 class ThreadTestExecutionRecorder(
     private val requestHolder: RequestHolder,
     private val listeners: List<TestExecutionListener> = emptyList()
@@ -101,7 +98,7 @@ class ThreadTestExecutionRecorder(
                 engine = launchInfo.engine,
                 path = launchInfo.path,
                 testName = launchInfo.testName,
-                params = launchInfo.params
+                testParams = launchInfo.testParams.removeSurrounding("(", ")").split(","),
             )
             TestInfo(
                 groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID],
@@ -134,7 +131,7 @@ class ThreadTestExecutionRecorder(
     private fun generateTestLaunchId() = UUID.randomUUID().toString()
 
     private fun TestDetails.hash(): String = CRC32().let {
-        it.update(this.toString().toByteArray())
+        it.update(this.signature.toByteArray())
         java.lang.Long.toHexString(it.value)
     }
 
@@ -165,10 +162,7 @@ class ThreadTestExecutionRecorder(
         engine = testMethod.engine,
         path = testMethod.className,
         testName = testMethod.method,
-        params = mapOf(
-            CLASS_PARAMS_KEY to testMethod.classParams,
-            METHOD_PARAMS_KEY to testMethod.methodParams,
-        ),
+        testParams = testMethod.methodParams,
         testLaunchId = testLaunchId
     )
 }
@@ -183,6 +177,6 @@ data class TestLaunchInfo(
     val engine: String = "",
     val path: String = "",
     val testName: String = "",
-    val params: Map<String, String> = emptyMap(),
+    val testParams: String = "",
     val testLaunchId: String,
 )

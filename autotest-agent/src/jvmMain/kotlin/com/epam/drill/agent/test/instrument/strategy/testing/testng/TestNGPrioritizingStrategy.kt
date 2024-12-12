@@ -69,7 +69,7 @@ abstract class TestNGPrioritizingStrategy : AbstractTestStrategy() {
                 java.lang.String className = $2.getTestClass().getName();
                 java.lang.String methodName = $2.getMethodName();
                 java.lang.String methodParameters = ${this::class.java.name}.INSTANCE.${this::paramTypes.name}($2.${getMethodParametersExpression()});                
-                boolean shouldSkip = ${RecommendedTests::class.java.name}.INSTANCE.${RecommendedTests::shouldSkip.name}("$engineSegment", className, methodName, methodParameters, null);
+                boolean shouldSkip = ${RecommendedTests::class.java.name}.INSTANCE.${RecommendedTests::shouldSkip.name}("$engineSegment", className, methodName, methodParameters);
                 if (shouldSkip) {
                     return false;
                 }

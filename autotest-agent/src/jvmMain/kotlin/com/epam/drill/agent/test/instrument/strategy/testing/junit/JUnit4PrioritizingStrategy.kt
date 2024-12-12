@@ -78,7 +78,7 @@ object JUnit4PrioritizingStrategy : AbstractTestStrategy() {
                         if (className == null) return true;
                         java.lang.String methodName = description.getMethodName();
                         if (methodName == null) return true;
-                        boolean shouldSkip = ${RecommendedTests::class.java.name}.INSTANCE.${RecommendedTests::shouldSkip.name}("$engineSegment", className, methodName, null, null);                            
+                        boolean shouldSkip = ${RecommendedTests::class.java.name}.INSTANCE.${RecommendedTests::shouldSkip.name}("$engineSegment", className, methodName, null);                            
                         return !shouldSkip;                                                    		                    
                    }
             """.trimIndent(),

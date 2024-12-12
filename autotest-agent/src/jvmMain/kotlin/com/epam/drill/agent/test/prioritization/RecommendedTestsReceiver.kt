@@ -87,8 +87,8 @@ class RecommendedTestsReceiverImpl(
                 engine = test.engine,
                 className = test.path,
                 method = test.testName,
-                methodParams = test.params[METHOD_PARAMS_KEY] ?: "()",
-                classParams = test.params[CLASS_PARAMS_KEY] ?: "",
+                methodParams = test.testParams.joinToString(separator = ", ", prefix = "(", postfix = ")"),
+                classParams = "",
             ), isSmartSkip = true
         )
     }

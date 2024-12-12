@@ -15,10 +15,6 @@
  */
 package com.epam.drill.agent.test.prioritization
 
-import com.epam.drill.agent.test.configuration.Configuration
-import com.epam.drill.agent.test.configuration.ParameterDefinitions
-import com.epam.drill.agent.test.testinfo.CLASS_PARAMS_KEY
-import com.epam.drill.agent.test.testinfo.METHOD_PARAMS_KEY
 import com.epam.drill.agent.test2code.api.TestDetails
 import mu.KotlinLogging
 
@@ -38,17 +34,13 @@ object RecommendedTests {
         engine: String,
         testClass: String,
         testMethod: String,
-        methodParameters: String? = null,
-        classParameters: String? = null
+        methodParameters: String? = null
     ): Boolean {
-        val params = mutableMapOf<String, String>()
-        methodParameters?.let { params[METHOD_PARAMS_KEY] = it }
-        classParameters?.let { params[CLASS_PARAMS_KEY] = it }
         val test = TestDetails(
             engine = engine,
             path = testClass,
             testName = testMethod,
-            params = params,
+            testParams = methodParameters?.split(",")?.toList() ?: emptyList(),
         )
         return shouldSkipByTestDetails(test)
     }
