@@ -28,7 +28,8 @@ interface TestExecutionRecorder {
     )
 
     fun recordTestIgnoring(
-        testMethod: TestMethodInfo
+        testMethod: TestMethodInfo,
+        isSmartSkip: Boolean = false
     )
 
     fun getFinishedTests(): List<TestInfo>

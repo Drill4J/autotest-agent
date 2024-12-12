@@ -55,6 +55,7 @@ actual object StrategyManager {
             strategies.addAll(allStrategies.values.flatten())
         }
         strategies.addAll(systemStrategies)
+        strategies.removeIf { !it.enabled() }
         logger.debug { "Added strategies: ${strategies.map { it::class.simpleName }.joinToString()}" }
     }
 

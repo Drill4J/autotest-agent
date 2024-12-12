@@ -19,8 +19,8 @@ import com.epam.drill.agent.test.*
 import com.epam.drill.agent.test.configuration.*
 import com.epam.drill.agent.test.serialization.*
 import com.epam.drill.agent.test.session.*
-import com.epam.drill.agent.transport.http.HttpResponseContent
 import com.epam.drill.agent.common.transport.AgentMessage
+import com.epam.drill.agent.common.transport.ResponseStatus
 import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.configuration.ParameterDefinitions
 import com.epam.drill.agent.test.instrument.TestSessionHeadersProcessor
@@ -33,6 +33,7 @@ import kotlin.time.measureTimedValue
 import java.net.*
 import java.util.*
 import mu.KotlinLogging
+import kotlin.reflect.KClass
 
 private const val DEBUGGER_ADDRESS = "debuggerAddress"
 private const val DEV_TOOL_DEBUGGER_URL = "webSocketDebuggerUrl"
@@ -77,7 +78,7 @@ class ChromeDevTool(
         @Suppress("UNCHECKED_CAST")
         val casted = headers as Map<String, String>
         try {
-            logger.debug { "try to add headers: $headers" }
+            logger.trace { "try to add headers: $headers" }
             val success = setHeaders(casted)
             logger.debug { "Chrome Tool activated: ${sessionId.sessionId.isNotBlank()}. Headers: $headers" }
             if (!success) throw RuntimeException("Can't add headers: $headers")
@@ -129,13 +130,13 @@ class ChromeDevTool(
     fun takePreciseCoverage(): String = executeCommand(
         "Profiler.takePreciseCoverage",
         DevToolsRequest(targetUrl, sessionId.sessionId)
-    ).takeIf(HttpResponseContent<String>::success)?.content ?: ""
+    ).takeIf(ResponseStatus<String>::success)?.content ?: ""
 
     fun scriptParsed(): String = DevToolsMessageSender.send(
         "POST",
         "/event/Debugger.scriptParsed/get-data",
         DevToolsRequest(targetUrl, sessionId.sessionId)
-    ).takeIf(HttpResponseContent<String>::success)?.content ?: ""
+    ).takeIf(ResponseStatus<String>::success)?.content ?: ""
 
     fun close() {
         if (!isClosed) {
@@ -196,17 +197,21 @@ class ChromeDevTool(
             val debuggerURL = get(DEBUGGER_ADDRESS)?.toString()
 
             if (debuggerURL.isNullOrBlank()) {
-                throw RuntimeException("Can't get debugger address by field name $DEBUGGER_ADDRESS from capabilities: $capabilities}")
+                error("Can't get debugger address by field name $DEBUGGER_ADDRESS from capabilities: $capabilities}")
             }
 
-            val response = DevToolsMessageSender.send("http://$debuggerURL", "GET", "/json/version", "")
-            if (!response.success) {
-                throw RuntimeException("Can't get debugger address from http://$debuggerURL/json/version: code=${response.statusObject}, body:${response.content}")
-            }
-            logger.debug { "/json/version: ${response.content}" }
-            val chromeInfo = Json.parseToJsonElement(response.content) as JsonObject
-            return chromeInfo[DEV_TOOL_DEBUGGER_URL]?.jsonPrimitive?.contentOrNull
-                ?: throw RuntimeException("Can't get debugger address from '$DEV_TOOL_DEBUGGER_URL' field from $chromeInfo")
+            return DevToolsMessageSender.send("http://$debuggerURL", "GET", "/json/version", "")
+                .onError { error ->
+                    error("Can't get debugger address from http://$debuggerURL/json/version: $error")
+                }
+                .onSuccess { content ->
+                    logger.trace { "/json/version: $content" }
+
+                }.content?.let { content ->
+                    val chromeInfo = Json.parseToJsonElement(content) as JsonObject
+                    chromeInfo[DEV_TOOL_DEBUGGER_URL]?.jsonPrimitive?.contentOrNull
+                }
+                ?: error("Can't get debugger address from '$DEV_TOOL_DEBUGGER_URL' field")
         }
     }
 
@@ -288,10 +293,10 @@ class ChromeDevTool(
         val response = executeCommand(
             "Target.attachToTarget",
             DevToolsRequest(target = targetUrl, params = params),
-            SessionId.serializer()
+            SessionId::class
         )
-        return response.takeIf(HttpResponseContent<SessionId?>::success)
-            ?.let(HttpResponseContent<SessionId?>::content)
+        return response.takeIf(ResponseStatus<SessionId>::success)
+            ?.let(ResponseStatus<SessionId>::content)
     }
 
     private fun retrieveTargetId(currentUrl: String): String? = targets()
@@ -303,9 +308,9 @@ class ChromeDevTool(
     private fun targets(): List<Target> = executeCommand(
         "Target.getTargets",
         DevToolsRequest(target = targetUrl),
-        TargetInfos.serializer()
-    ).takeIf(HttpResponseContent<TargetInfos?>::success)
-        ?.let(HttpResponseContent<TargetInfos?>::content)
+        TargetInfos::class
+    ).takeIf(ResponseStatus<TargetInfos>::success)
+        ?.let(ResponseStatus<TargetInfos>::content)
         ?.let(TargetInfos::targetInfos)
         ?: emptyList()
 
@@ -313,14 +318,14 @@ class ChromeDevTool(
         commandName: String,
         request: DevToolsMessage,
         httpMethod: String = "POST"
-    ) = DevToolsMessageSender.send(httpMethod, "/command/$commandName", request)
+    ): ResponseStatus<String> = DevToolsMessageSender.send(httpMethod, "/command/$commandName", request)
 
     private fun <T : AgentMessage> executeCommand(
         commandName: String,
         request: DevToolsMessage,
-        strategy: DeserializationStrategy<T>,
+        clazz: KClass<T>,
         httpMethod: String = "POST"
-    ) = DevToolsMessageSender.send(httpMethod, "/command/$commandName", request, strategy)
+    ): ResponseStatus<T> = DevToolsMessageSender.send(httpMethod, "/command/$commandName", request, clazz)
 
     private fun Map<String, Any>.toOutput(): Map<String, JsonElement> = mapValues { (_, value) ->
         val serializer = value::class.serializer().cast()
