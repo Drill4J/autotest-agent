@@ -15,16 +15,17 @@
  */
 package com.epam.drill.agent.test.transport
 
-import com.epam.drill.agent.transport.AgentMessageDestinationMapper
-import com.epam.drill.agent.common.transport.AgentMessageDestination
+import com.epam.drill.agent.common.transport.AgentMessageReceiver
+import com.epam.drill.agent.transport.JsonAgentMessageDeserializer
+import com.epam.drill.agent.transport.SimpleAgentMessageReceiver
 
-class HttpAutotestAgentMessageDestinationMapper : AgentMessageDestinationMapper {
+object TestAgentMessageReceiver : AgentMessageReceiver by messageReceiver()
 
-    private val apiPath = "data-ingest"
-
-    override fun map(destination: AgentMessageDestination): AgentMessageDestination =
-        destination.copy(
-            target =
-            if (destination.target.isEmpty()) apiPath else "${apiPath}/${destination.target}"
-        )
+fun messageReceiver(): AgentMessageReceiver {
+    return SimpleAgentMessageReceiver(
+        agentTransport(),
+        JsonAgentMessageDeserializer(),
+        HttpAgentMessageDestinationMapper("metrics")
+    )
 }
+

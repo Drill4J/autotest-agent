@@ -19,29 +19,10 @@ import com.epam.drill.agent.request.DrillRequestHolder
 import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.configuration.ParameterDefinitions
 import com.epam.drill.agent.test.TEST_ID_HEADER
-import com.epam.drill.agent.test.configuration.*
 import com.epam.drill.agent.test.devtools.ChromeDevToolTestExecutionListener
 import com.epam.drill.agent.test.devtools.JsCoverageSenderImpl
-import mu.KotlinLogging
 
-object TestController {
-    private val logger = KotlinLogging.logger {}
-    private lateinit var testExecutionRecorder: TestExecutionRecorder
-
-    fun init() {
-        val listeners = arrayListOf<TestExecutionListener>()
-        if (Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE]) {
-            listeners.add(
-                ChromeDevToolTestExecutionListener(
-                    jsCoverageSender = JsCoverageSenderImpl()
-                )
-            )
-        }
-        testExecutionRecorder = ThreadTestExecutionRecorder(
-            requestHolder = DrillRequestHolder,
-            listeners = listeners
-        )
-    }
+object TestController : TestExecutionRecorder by testExecutionRecorder(testExecutionListeners()) {
 
     //TODO EPMDJ-10251 add browser name for ui tests
     @JvmOverloads
@@ -55,7 +36,7 @@ object TestController {
         if (className == null || method == null)
             return
 
-        testExecutionRecorder.recordTestStarting(
+        recordTestStarting(
             TestMethodInfo(
                 engine,
                 className,
@@ -78,7 +59,7 @@ object TestController {
         if (className == null || method == null)
             return
 
-        testExecutionRecorder.recordTestFinishing(
+        recordTestFinishing(
             TestMethodInfo(
                 engine,
                 className,
@@ -101,7 +82,7 @@ object TestController {
         if (className == null || method == null)
             return
 
-        testExecutionRecorder.recordTestIgnoring(
+        recordTestIgnoring(
             TestMethodInfo(
                 engine,
                 className,
@@ -112,9 +93,23 @@ object TestController {
         )
     }
 
-    fun getFinishedTests() = testExecutionRecorder.getFinishedTests()
-
-
     @Deprecated("Use explicit retrieve() instead", ReplaceWith("retrieve()"))
     fun getTestLaunchId(): String? = DrillRequestHolder.retrieve()?.headers?.get(TEST_ID_HEADER)
 }
+
+fun testExecutionListeners(): List<TestExecutionListener> {
+    val listeners = arrayListOf<TestExecutionListener>()
+    if (Configuration.parameters[ParameterDefinitions.WITH_JS_COVERAGE]) {
+        listeners.add(
+            ChromeDevToolTestExecutionListener(
+                jsCoverageSender = JsCoverageSenderImpl()
+            )
+        )
+    }
+    return listeners
+}
+
+fun testExecutionRecorder(listeners: List<TestExecutionListener>) = ThreadTestExecutionRecorder(
+    requestHolder = DrillRequestHolder,
+    listeners = listeners
+)

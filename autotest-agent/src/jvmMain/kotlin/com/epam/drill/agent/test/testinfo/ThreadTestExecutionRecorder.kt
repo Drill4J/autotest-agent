@@ -30,9 +30,6 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.zip.CRC32
 
-const val METHOD_PARAMS_KEY = "methodParams"
-const val CLASS_PARAMS_KEY = "classParams"
-
 class ThreadTestExecutionRecorder(
     private val requestHolder: RequestHolder,
     private val listeners: List<TestExecutionListener> = emptyList()
@@ -74,18 +71,20 @@ class ThreadTestExecutionRecorder(
     }
 
     override fun recordTestIgnoring(
-        testMethod: TestMethodInfo
+        testMethod: TestMethodInfo,
+        isSmartSkip: Boolean
     ) {
         val testLaunchId = getTestLaunchId() ?: generateTestLaunchId()
         val testLaunchInfo = mapToLaunchInfo(testMethod, testLaunchId)
+        val skipResult = if (isSmartSkip) TestResult.SMART_SKIPPED else TestResult.SKIPPED
         updateTestInfo(testLaunchInfo) {
             it.startedAt = 0L
             it.finishedAt = 0L
-            it.result = TestResult.SKIPPED
+            it.result = skipResult
         }
         clearDrillHeaders()
         listeners.forEach { it.onTestIgnored(testLaunchInfo) }
-        logger.debug { "Test: $testLaunchInfo FINISHED. Result: ${TestResult.SKIPPED.name}" }
+        logger.debug { "Test: $testLaunchInfo FINISHED. Result: $skipResult" }
     }
 
     override fun reset() {
@@ -99,7 +98,7 @@ class ThreadTestExecutionRecorder(
                 engine = launchInfo.engine,
                 path = launchInfo.path,
                 testName = launchInfo.testName,
-                params = launchInfo.params
+                testParams = launchInfo.testParams.removeSurrounding("(", ")").split(","),
             )
             TestInfo(
                 groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID],
@@ -120,7 +119,11 @@ class ThreadTestExecutionRecorder(
     ) {
         testExecutionData.compute(testLaunchInfo) { _, value ->
             val testExecutionInfo = value ?: TestExecutionInfo()
-            updateTestExecutionInfo(testExecutionInfo)
+            if (testExecutionInfo.result == TestResult.UNKNOWN) {
+                updateTestExecutionInfo(testExecutionInfo)
+            } else {
+                logger.warn { "Test ${testLaunchInfo.testName} already finished with result ${testExecutionInfo.result}" }
+            }
             testExecutionInfo
         }
     }
@@ -128,7 +131,7 @@ class ThreadTestExecutionRecorder(
     private fun generateTestLaunchId() = UUID.randomUUID().toString()
 
     private fun TestDetails.hash(): String = CRC32().let {
-        it.update(this.toString().toByteArray())
+        it.update(this.signature.toByteArray())
         java.lang.Long.toHexString(it.value)
     }
 
@@ -159,10 +162,7 @@ class ThreadTestExecutionRecorder(
         engine = testMethod.engine,
         path = testMethod.className,
         testName = testMethod.method,
-        params = mapOf(
-            CLASS_PARAMS_KEY to testMethod.classParams,
-            METHOD_PARAMS_KEY to testMethod.methodParams,
-        ),
+        testParams = testMethod.methodParams,
         testLaunchId = testLaunchId
     )
 }
@@ -177,6 +177,6 @@ data class TestLaunchInfo(
     val engine: String = "",
     val path: String = "",
     val testName: String = "",
-    val params: Map<String, String> = emptyMap(),
+    val testParams: String = "",
     val testLaunchId: String,
 )

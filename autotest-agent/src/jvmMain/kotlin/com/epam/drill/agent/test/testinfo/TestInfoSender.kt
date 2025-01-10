@@ -50,16 +50,18 @@ class IntervalTestInfoSender(
 
     override fun stopSendingTests() {
         scheduledThreadPool.shutdown()
-        if (!scheduledThreadPool.awaitTermination(5, TimeUnit.SECONDS)) {
+        if (!scheduledThreadPool.awaitTermination(1, TimeUnit.SECONDS)) {
             logger.error("Failed to send some tests prior to shutdown")
             scheduledThreadPool.shutdownNow();
         }
         sendTests(collectTests())
+        messageSender.shutdown()
         logger.info { "Test sending job is stopped." }
     }
 
     private fun sendTests(tests: List<TestInfo>) {
         if (tests.isEmpty()) return
+        logger.debug { "Sending ${tests.size} tests..." }
         messageSender.send(
             destination = AgentMessageDestination("POST", "tests-metadata"),
             message = AddTestsPayload(
