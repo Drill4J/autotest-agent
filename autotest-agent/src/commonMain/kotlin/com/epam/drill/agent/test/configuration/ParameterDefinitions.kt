@@ -16,7 +16,6 @@
 package com.epam.drill.agent.test.configuration
 
 import com.epam.drill.agent.common.configuration.AgentParameterDefinition
-import com.epam.drill.agent.test2code.api.Label
 
 object ParameterDefinitions {
     val GROUP_ID = AgentParameterDefinition.forString(name = "groupId")
@@ -37,16 +36,6 @@ object ParameterDefinitions {
     val DEVTOOLS_REPLACE_LOCALHOST = AgentParameterDefinition.forString(name = "devtoolsAddressReplaceLocalhost")
     val SESSION_ID = AgentParameterDefinition.forString(name = "sessionId")
     val LAUNCH_TYPE = AgentParameterDefinition.forString(name = "launchType")
-    val LABELS = AgentParameterDefinition.forType(
-        name = "labels",
-        defaultValue = emptySet(),
-        parser = {
-            it.takeIf(String::isNotBlank)?.split(";")
-                ?.map { Label(it.substringBefore(":"), it.substringAfter(":", "")) }
-                ?.toSet()
-                ?: emptySet()
-        }
-    )
     val FRAMEWORK_PLUGINS = AgentParameterDefinition.forType(
         name = "rawFrameworkPlugins",
         defaultValue = emptyList(),
