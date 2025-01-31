@@ -19,7 +19,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class TestDetails @JvmOverloads constructor(
-    val engine: String = "",
+    val runner: String = "",
     val path: String = "",
     val testName: String = "",
     val testParams: List<String> = emptyList(),
@@ -27,7 +27,7 @@ data class TestDetails @JvmOverloads constructor(
 ) : Comparable<TestDetails> {
 
     val signature: String
-        get() = "$engine:$path.$testName(${testParams.joinToString()})"
+        get() = "$runner:$path.$testName(${testParams.joinToString()})"
 
     override fun compareTo(other: TestDetails): Int {
         return signature.compareTo(other.signature)

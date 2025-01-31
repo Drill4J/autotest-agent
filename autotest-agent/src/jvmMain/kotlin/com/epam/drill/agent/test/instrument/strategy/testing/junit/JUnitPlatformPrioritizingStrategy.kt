@@ -203,7 +203,7 @@ object JUnitPlatformPrioritizingStrategy : AbstractTestStrategy() {
             return null
         }
         return TestDetails(
-            engine = testMetadata["engine"] ?: "junit",
+            runner = testMetadata["engine"] ?: "junit",
             path = testPath,
             testName = testName,
             metadata = testMetadata,

@@ -37,7 +37,7 @@ object RecommendedTests {
         methodParameters: String? = null
     ): Boolean {
         val test = TestDetails(
-            engine = engine,
+            runner = engine,
             path = testClass,
             testName = testMethod,
             testParams = methodParameters?.split(",")?.toList() ?: emptyList(),

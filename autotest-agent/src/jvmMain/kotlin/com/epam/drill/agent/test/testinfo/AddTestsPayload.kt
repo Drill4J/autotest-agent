@@ -20,6 +20,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AddTestsPayload(
+    val groupId: String,
     val sessionId: String,
-    val tests: List<TestInfo> = emptyList(),
+    val tests: List<TestLaunchPayload> = emptyList(),
 ): AgentMessage()

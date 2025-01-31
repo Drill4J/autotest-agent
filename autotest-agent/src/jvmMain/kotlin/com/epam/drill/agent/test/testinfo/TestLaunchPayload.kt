@@ -18,9 +18,8 @@ package com.epam.drill.agent.test.testinfo
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TestInfo(
-    val groupId: String,
-    val id: String,
+data class TestLaunchPayload(
+    val testLaunchId: String,
     val testDefinitionId: String,
     val result: TestResult,
     val startedAt: Long,

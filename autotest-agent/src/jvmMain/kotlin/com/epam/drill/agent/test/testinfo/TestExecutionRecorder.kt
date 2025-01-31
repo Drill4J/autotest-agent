@@ -30,7 +30,7 @@ interface TestExecutionRecorder {
         isSmartSkip: Boolean = false
     )
 
-    fun getFinishedTests(): List<TestInfo>
+    fun getFinishedTests(): List<TestLaunchPayload>
 
     fun reset()
 }

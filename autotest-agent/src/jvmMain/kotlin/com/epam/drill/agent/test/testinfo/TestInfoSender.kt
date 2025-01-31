@@ -18,6 +18,8 @@ package com.epam.drill.agent.test.testinfo
 import com.epam.drill.agent.common.transport.AgentMessage
 import com.epam.drill.agent.common.transport.AgentMessageDestination
 import com.epam.drill.agent.common.transport.AgentMessageSender
+import com.epam.drill.agent.test.configuration.Configuration
+import com.epam.drill.agent.test.configuration.ParameterDefinitions
 import com.epam.drill.agent.test.session.SessionController
 import mu.KotlinLogging
 import java.util.concurrent.Executors
@@ -31,7 +33,7 @@ interface TestInfoSender {
 class IntervalTestInfoSender(
     private val messageSender: AgentMessageSender<AgentMessage>,
     private val intervalMs: Long = 1000,
-    private val collectTests: () -> List<TestInfo> = { emptyList() }
+    private val collectTests: () -> List<TestLaunchPayload> = { emptyList() }
 ) : TestInfoSender {
     private val logger = KotlinLogging.logger {}
     private val scheduledThreadPool = Executors.newSingleThreadScheduledExecutor()
@@ -57,12 +59,13 @@ class IntervalTestInfoSender(
         logger.info { "Test sending job is stopped." }
     }
 
-    private fun sendTests(tests: List<TestInfo>) {
+    private fun sendTests(tests: List<TestLaunchPayload>) {
         if (tests.isEmpty()) return
         logger.debug { "Sending ${tests.size} tests..." }
         messageSender.send(
             destination = AgentMessageDestination("POST", "tests-metadata"),
             message = AddTestsPayload(
+                groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID],
                 sessionId = SessionController.getSessionId(),
                 tests = tests
             )

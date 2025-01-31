@@ -19,8 +19,6 @@ import com.epam.drill.agent.request.DrillRequestHolder
 import com.epam.drill.agent.common.request.DrillRequest
 import com.epam.drill.agent.common.request.RequestHolder
 import com.epam.drill.agent.test.TEST_ID_HEADER
-import com.epam.drill.agent.test.configuration.Configuration
-import com.epam.drill.agent.test.configuration.ParameterDefinitions
 import com.epam.drill.agent.test.session.SessionController
 import mu.KotlinLogging
 import java.util.*
@@ -88,18 +86,17 @@ class ThreadTestExecutionRecorder(
         testExecutionData.clear()
     }
 
-    override fun getFinishedTests(): List<TestInfo> = testExecutionData
+    override fun getFinishedTests(): List<TestLaunchPayload> = testExecutionData
         .filterValues { test -> test.result != TestResult.UNKNOWN }
         .mapValues { (launchInfo, executionInfo) ->
             val testDetails = TestDetails(
-                engine = launchInfo.engine,
+                runner = launchInfo.engine,
                 path = launchInfo.path,
                 testName = launchInfo.testName,
                 testParams = launchInfo.testParams.removeSurrounding("(", ")").split(","),
             )
-            TestInfo(
-                groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID],
-                id = launchInfo.testLaunchId,
+            TestLaunchPayload(
+                testLaunchId = launchInfo.testLaunchId,
                 testDefinitionId = testDetails.hash(),
                 result = executionInfo.result,
                 startedAt = executionInfo.startedAt ?: 0L,

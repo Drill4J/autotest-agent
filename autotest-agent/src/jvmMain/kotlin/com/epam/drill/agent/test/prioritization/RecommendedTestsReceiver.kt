@@ -84,7 +84,7 @@ class RecommendedTestsReceiverImpl(
     override fun sendSkippedTest(test: TestDetails) {
         testExecutionRecorder.recordTestIgnoring(
             TestMethodInfo(
-                engine = test.engine,
+                engine = test.runner,
                 className = test.path,
                 method = test.testName,
                 methodParams = test.testParams.joinToString(separator = ", ", prefix = "(", postfix = ")"),
@@ -117,7 +117,7 @@ class TestDefinitionResponse(
 )
 
 private fun TestDefinitionResponse.toTestDetails() = TestDetails(
-    engine = testRunner,
+    runner = testRunner,
     path = testPath,
     testName = testName,
     testParams = emptyList(),
