@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.agent.test.testinfo
+package com.epam.drill.agent.test.execution
 
 import com.epam.drill.agent.request.DrillRequestHolder
 import com.epam.drill.agent.test.configuration.Configuration
@@ -42,7 +42,6 @@ object TestController : TestExecutionRecorder by testExecutionRecorder(testExecu
                 className,
                 method,
                 methodParams,
-                classParams
             )
         )
     }
@@ -65,7 +64,6 @@ object TestController : TestExecutionRecorder by testExecutionRecorder(testExecu
                 className,
                 method,
                 methodParams,
-                classParams
             ),
             status
         )
@@ -88,7 +86,6 @@ object TestController : TestExecutionRecorder by testExecutionRecorder(testExecu
                 className,
                 method,
                 methodParams,
-                classParams
             )
         )
     }

@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.agent.test.testinfo
+package com.epam.drill.agent.test.sending
 
-import com.epam.drill.agent.common.transport.AgentMessage
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AddTestsPayload(
-    val groupId: String,
-    val sessionId: String,
-    val tests: List<TestLaunchPayload> = emptyList(),
-): AgentMessage()
+class TestDefinitionPayload(
+    val runner: String = "",
+    val path: String = "",
+    val testName: String = "",
+    val testParams: List<String> = emptyList(),
+    val metadata: Map<String, String> = emptyMap(),
+    val tags: List<String> = emptyList(),
+)

@@ -16,7 +16,7 @@
 package com.epam.drill.agent.test.instrument.strategy.testing.testng
 
 import com.epam.drill.agent.test.instrument.strategy.*
-import com.epam.drill.agent.test.testinfo.TestController
+import com.epam.drill.agent.test.execution.TestController
 import javassist.*
 import java.lang.reflect.*
 import java.security.*

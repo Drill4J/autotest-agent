@@ -15,13 +15,13 @@
  */
 package com.epam.drill.agent.test.prioritization
 
-import com.epam.drill.agent.test.testinfo.TestDetails
+import com.epam.drill.agent.test.execution.TestMethodInfo
 import mu.KotlinLogging
 
 object RecommendedTests {
     private val logger = KotlinLogging.logger {}
     private val recommendedTestsReceiver: RecommendedTestsReceiver = RecommendedTestsReceiverImpl()
-    private val testsToSkip: Set<TestDetails> by lazy { initTestsToSkip() }
+    private val testsToSkip: Set<TestMethodInfo> by lazy { initTestsToSkip() }
 
     private fun initTestsToSkip() = recommendedTestsReceiver.getTestsToSkip()
         .toSet()
@@ -34,30 +34,24 @@ object RecommendedTests {
         engine: String,
         testClass: String,
         testMethod: String,
-        methodParameters: String? = null
+        methodParameters: String = "()"
     ): Boolean {
-        val test = TestDetails(
-            runner = engine,
-            path = testClass,
-            testName = testMethod,
-            testParams = methodParameters?.split(",")?.toList() ?: emptyList(),
+        val test = TestMethodInfo(
+            engine = engine,
+            className = testClass,
+            method = testMethod,
+            methodParams = methodParameters,
         )
-        return shouldSkipByTestDetails(test)
+        return shouldSkipByTestMethod(test)
     }
 
-    fun shouldSkipByTestDetails(test: TestDetails): Boolean {
+    fun shouldSkipByTestMethod(test: TestMethodInfo): Boolean {
         return testsToSkip.contains(test).also {
             if (it) {
-                logger.debug { "Test `${test.testName}` will be skipped by Drill4J" }
+                logger.debug { "Test `${test.method}` will be skipped by Drill4J" }
                 recommendedTestsReceiver.sendSkippedTest(test)
             } else {
-                logger.debug { "Test `${test.testName}` will not be skipped by Drill4J" }
-                if ("testFormatByMask" in test.testName) {
-                    logger.debug { "!!! Test to skip `${test}`" }
-                    testsToSkip.filter { it.testName == test.testName }.forEach {
-                        logger.debug { "!!! Test candidate `${it}` " }
-                    }
-                }
+                logger.debug { "Test `${test.method}` will not be skipped by Drill4J" }
             }
         }
     }

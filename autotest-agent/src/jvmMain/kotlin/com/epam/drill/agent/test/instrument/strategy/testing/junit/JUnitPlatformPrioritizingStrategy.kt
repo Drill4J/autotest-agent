@@ -17,9 +17,9 @@ package com.epam.drill.agent.test.instrument.strategy.testing.junit
 
 import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.configuration.ParameterDefinitions
+import com.epam.drill.agent.test.execution.TestMethodInfo
 import com.epam.drill.agent.test.instrument.strategy.AbstractTestStrategy
 import com.epam.drill.agent.test.prioritization.RecommendedTests
-import com.epam.drill.agent.test.testinfo.TestDetails
 import javassist.*
 import mu.KotlinLogging
 import java.security.ProtectionDomain
@@ -30,6 +30,7 @@ private const val TestDescriptor = "org.junit.platform.engine.TestDescriptor"
 private const val Segment = "org.junit.platform.engine.UniqueId.Segment"
 private const val LauncherDiscoveryRequest = "org.junit.platform.launcher.LauncherDiscoveryRequest"
 private const val ConfigurationParameters = "org.junit.platform.engine.ConfigurationParameters"
+private const val TestTag = "org.junit.platform.engine.TestTag"
 
 @Suppress("unused")
 object JUnitPlatformPrioritizingStrategy : AbstractTestStrategy() {
@@ -96,14 +97,16 @@ object JUnitPlatformPrioritizingStrategy : AbstractTestStrategy() {
                             $TestDescriptor descriptor = ($TestDescriptor)object;
                             if (!descriptor.isTest())
                                return $FilterResult.included("");
+                               
                             java.util.Map testMetadata = new java.util.HashMap();
                             for (int i = 0; i < descriptor.getUniqueId().getSegments().size(); i++) {
                                 java.lang.String key = (($Segment)descriptor.getUniqueId().getSegments().get(i)).getType();
                                 java.lang.String value = (($Segment)descriptor.getUniqueId().getSegments().get(i)).getValue();
                                 testMetadata.put(key, value);                                
-                            }                                         
-                            ${TestDetails::class.java.name} testDetails = ${this::class.java.name}.INSTANCE.${this::convertToTestDetails.name}(testMetadata, descriptor.getDisplayName());
-                            boolean shouldSkip = testDetails != null && ${RecommendedTests::class.java.name}.INSTANCE.${RecommendedTests::shouldSkipByTestDetails.name}(testDetails);
+                            }          
+                                                                                                               
+                            ${TestMethodInfo::class.java.name} methodInfo = ${this::class.java.name}.INSTANCE.${this::convertToMethodInfo.name}(testMetadata, descriptor.getDisplayName());
+                            boolean shouldSkip = methodInfo != null && ${RecommendedTests::class.java.name}.INSTANCE.${RecommendedTests::shouldSkipByTestMethod.name}(methodInfo);
                             if (shouldSkip) {                                
                                 return $FilterResult.excluded("skipped by Drill4J");
                             } else {
@@ -195,18 +198,19 @@ object JUnitPlatformPrioritizingStrategy : AbstractTestStrategy() {
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
-    fun convertToTestDetails(testMetadata: Map<String, String>, displayName: String?): TestDetails? {
+    fun convertToMethodInfo(testMetadata: Map<String, String>,
+                            displayName: String?): TestMethodInfo? {
         val testPath = testMetadata["class"] ?: testMetadata["feature"] ?: testMetadata["suite"]
         val testName = testMetadata["method"]?.substringBefore("(") ?: displayName
         if (testPath == null || testName == null) {
             logger.error { "Failed to convert test metadata to TestDetails: $testMetadata" }
             return null
         }
-        return TestDetails(
-            runner = testMetadata["engine"] ?: "junit",
-            path = testPath,
-            testName = testName,
-            metadata = testMetadata,
+        return TestMethodInfo(
+            engine = testMetadata["engine"] ?: "junit",
+            className = testPath,
+            method = testName,
+            metadata = testMetadata
         )
     }
 }

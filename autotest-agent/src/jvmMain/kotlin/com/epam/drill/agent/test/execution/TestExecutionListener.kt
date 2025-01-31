@@ -13,16 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.agent.test.testinfo
+package com.epam.drill.agent.test.execution
 
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class TestLaunchPayload(
-    val testLaunchId: String,
-    val testDefinitionId: String,
-    val result: TestResult,
-    val startedAt: Long,
-    val finishedAt: Long,
-    val details: TestDetails,
-)
+interface TestExecutionListener {
+    fun onTestStarted(testLaunchId: String, test: TestMethodInfo) {}
+    fun onTestFinished(testLaunchId: String, test: TestMethodInfo, result: TestResult) {}
+    fun onTestIgnored(testLaunchId: String, test: TestMethodInfo) {}
+}

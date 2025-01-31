@@ -18,13 +18,17 @@ package com.epam.drill.agent.test.session
 import com.benasher44.uuid.*
 import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.configuration.ParameterDefinitions
-import com.epam.drill.agent.test.testinfo.IntervalTestInfoSender
-import com.epam.drill.agent.test.testinfo.TestInfoSender
-import com.epam.drill.agent.test.testinfo.TestController
+import com.epam.drill.agent.test.sending.IntervalTestInfoSender
+import com.epam.drill.agent.test.sending.TestInfoSender
+import com.epam.drill.agent.test.execution.TestController
+import com.epam.drill.agent.test.execution.TestExecutionInfo
+import com.epam.drill.agent.test.sending.TestDefinitionPayload
+import com.epam.drill.agent.test.sending.TestLaunchPayload
 import com.epam.drill.agent.test.transport.TestAgentMessageSender
 import mu.KotlinLogging
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.zip.CRC32
 
 actual object SessionController {
     private val logger = KotlinLogging.logger {}
@@ -33,7 +37,7 @@ actual object SessionController {
     )
     private val testInfoSender: TestInfoSender = IntervalTestInfoSender(
         messageSender = TestAgentMessageSender,
-        collectTests = { TestController.getFinishedTests() }
+        collectTests = { TestController.getFinishedTests().toTestLaunchPayloads() }
     )
     private lateinit var sessionId: String
 
@@ -57,4 +61,26 @@ actual object SessionController {
     }
 
     fun getSessionId(): String = sessionId
+}
+
+private fun List<TestExecutionInfo>.toTestLaunchPayloads(): List<TestLaunchPayload> = map {
+    val testDefinitionPayload = TestDefinitionPayload(
+        runner = it.testMethod.engine,
+        path = it.testMethod.className,
+        testName = it.testMethod.method,
+        testParams = it.testMethod.methodParams.removeSurrounding("(", ")").split(","),
+    )
+    TestLaunchPayload(
+        testLaunchId = it.testLaunchId,
+        testDefinitionId = hash(it.testMethod.signature),
+        result = it.result,
+        startedAt = it.startedAt ?: 0L,
+        finishedAt = it.finishedAt ?: 0L,
+        details = testDefinitionPayload
+    )
+}
+
+private fun hash(signature: String): String = CRC32().let {
+    it.update(signature.toByteArray())
+    java.lang.Long.toHexString(it.value)
 }

@@ -13,10 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.agent.test.testinfo
+package com.epam.drill.agent.test.sending
 
-interface TestExecutionListener {
-    fun onTestStarted(test: TestLaunchInfo) {}
-    fun onTestFinished(test: TestLaunchInfo, result: TestResult) {}
-    fun onTestIgnored(test: TestLaunchInfo) {}
-}
+import com.epam.drill.agent.common.transport.AgentMessage
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class AddTestsPayload(
+    val groupId: String,
+    val sessionId: String,
+    val tests: List<TestLaunchPayload> = emptyList(),
+): AgentMessage()

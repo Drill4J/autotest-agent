@@ -19,14 +19,17 @@ import com.epam.drill.agent.common.transport.AgentMessageDestination
 import com.epam.drill.agent.common.transport.AgentMessageReceiver
 import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.configuration.ParameterDefinitions
-import com.epam.drill.agent.test.testinfo.*
+import com.epam.drill.agent.test.execution.TestController
+import com.epam.drill.agent.test.execution.TestExecutionRecorder
+import com.epam.drill.agent.test.execution.TestMethodInfo
+import com.epam.drill.agent.test.sending.*
 import com.epam.drill.agent.test.transport.TestAgentMessageReceiver
 import kotlinx.serialization.Serializable
 import mu.KotlinLogging
 
 interface RecommendedTestsReceiver {
-    fun getTestsToSkip(): List<TestDetails>
-    fun sendSkippedTest(test: TestDetails)
+    fun getTestsToSkip(): List<TestMethodInfo>
+    fun sendSkippedTest(test: TestMethodInfo)
 }
 
 class RecommendedTestsReceiverImpl(
@@ -35,7 +38,7 @@ class RecommendedTestsReceiverImpl(
 ) : RecommendedTestsReceiver {
     private val logger = KotlinLogging.logger {}
 
-    override fun getTestsToSkip(): List<TestDetails> {
+    override fun getTestsToSkip(): List<TestMethodInfo> {
         if (!Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_ENABLED])
             return emptyList()
         val groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID]
@@ -73,7 +76,7 @@ class RecommendedTestsReceiverImpl(
                     "/recommended-tests$parameters",
                 ),
                 RecommendedTestsApiResponse::class
-            ).data.recommendedTests.map { it.toTestDetails() }
+            ).data.recommendedTests.map { it.toTestMethodInfo() }
         }.onFailure {
             logger.warn { "Unable to retrieve information about recommended tests. Error message: $it" }
         }.getOrElse {
@@ -81,16 +84,8 @@ class RecommendedTestsReceiverImpl(
         }
     }
 
-    override fun sendSkippedTest(test: TestDetails) {
-        testExecutionRecorder.recordTestIgnoring(
-            TestMethodInfo(
-                engine = test.runner,
-                className = test.path,
-                method = test.testName,
-                methodParams = test.testParams.joinToString(separator = ", ", prefix = "(", postfix = ")"),
-                classParams = "",
-            ), isSmartSkip = true
-        )
+    override fun sendSkippedTest(test: TestMethodInfo) {
+        testExecutionRecorder.recordTestIgnoring(test, isSmartSkip = true)
     }
 }
 
@@ -115,10 +110,10 @@ class TestDefinitionResponse(
     val metadata: Map<String, String>,
 )
 
-private fun TestDefinitionResponse.toTestDetails() = TestDetails(
-    runner = testRunner,
-    path = testPath,
-    testName = testName,
-    testParams = emptyList(),
-    metadata = metadata
+private fun TestDefinitionResponse.toTestMethodInfo() = TestMethodInfo(
+    engine = testRunner,
+    className = testPath,
+    method = testName,
+    metadata = metadata,
+    tags = tags,
 )

@@ -13,28 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.agent.test.testinfo
+package com.epam.drill.agent.test.execution
 
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class TestDetails @JvmOverloads constructor(
-    val runner: String = "",
-    val path: String = "",
-    val testName: String = "",
-    val testParams: List<String> = emptyList(),
+data class TestMethodInfo @JvmOverloads constructor(
+    val engine: String,
+    val className: String,
+    val method: String,
+    val methodParams: String = "()",
     val metadata: Map<String, String> = emptyMap(),
-) : Comparable<TestDetails> {
+    val tags: List<String> = emptyList(),
+) : Comparable<TestMethodInfo> {
 
     val signature: String
-        get() = "$runner:$path.$testName(${testParams.joinToString()})"
+        get() = "$engine:$className.$method${methodParams}"
 
-    override fun compareTo(other: TestDetails): Int {
+    override fun compareTo(other: TestMethodInfo): Int {
         return signature.compareTo(other.signature)
     }
 
     override fun equals(other: Any?): Boolean {
-        return if (other is TestDetails) compareTo(other) == 0 else false
+        return if (other is TestMethodInfo) compareTo(other) == 0 else false
     }
 
     override fun hashCode(): Int {

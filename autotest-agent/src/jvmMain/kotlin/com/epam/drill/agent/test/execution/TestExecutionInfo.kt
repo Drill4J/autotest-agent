@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.agent.test.testinfo
+package com.epam.drill.agent.test.execution
 
-enum class TestResult {
-    PASSED,
-    FAILED,
-    ERROR,
-    SKIPPED,
-    SMART_SKIPPED,
-    UNKNOWN
-}
+class TestExecutionInfo(
+    val testLaunchId: String,
+    val testMethod: TestMethodInfo,
+    var result: TestResult = TestResult.UNKNOWN,
+    var startedAt: Long? = null,
+    var finishedAt: Long? = null,
+)

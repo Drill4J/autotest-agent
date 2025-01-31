@@ -17,7 +17,7 @@ package com.epam.drill.agent.test
 
 import com.epam.drill.agent.test.instrument.strategy.selenium.*
 import com.epam.drill.agent.test.session.SessionController
-import com.epam.drill.agent.test.testinfo.TestController
+import com.epam.drill.agent.test.execution.TestController
 
 const val TEST_ID_HEADER = "drill-test-id"
 const val SESSION_ID_HEADER = "drill-session-id"

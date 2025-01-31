@@ -17,25 +17,25 @@ package com.epam.drill.agent.test.devtools
 
 import com.epam.drill.agent.test.instrument.strategy.selenium.DevToolStorage
 import com.epam.drill.agent.test.instrument.strategy.selenium.WebDriverThreadStorage
-import com.epam.drill.agent.test.testinfo.TestExecutionListener
-import com.epam.drill.agent.test.testinfo.TestLaunchInfo
-import com.epam.drill.agent.test.testinfo.TestResult
+import com.epam.drill.agent.test.execution.TestExecutionListener
+import com.epam.drill.agent.test.execution.TestMethodInfo
+import com.epam.drill.agent.test.execution.TestResult
 
 class ChromeDevToolTestExecutionListener(
     private val jsCoverageSender: JsCoverageSender
 ): TestExecutionListener {
 
-    override fun onTestStarted(test: TestLaunchInfo) {
+    override fun onTestStarted(testLaunchId: String, test: TestMethodInfo) {
         DevToolStorage.get()?.startIntercept()
         WebDriverThreadStorage.addCookies()
     }
 
-    override fun onTestFinished(test: TestLaunchInfo, result: TestResult) {
+    override fun onTestFinished(testLaunchId: String, test: TestMethodInfo, result: TestResult) {
         DevToolStorage.get()?.stopIntercept()
-        jsCoverageSender.sendJsCoverage(test.testLaunchId)
+        jsCoverageSender.sendJsCoverage(testLaunchId)
     }
 
-    override fun onTestIgnored(test: TestLaunchInfo) {
+    override fun onTestIgnored(testLaunchId: String, test: TestMethodInfo) {
         DevToolStorage.get()?.stopIntercept()
     }
 }
