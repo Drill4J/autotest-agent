@@ -19,7 +19,7 @@ import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.configuration.ParameterDefinitions
 import com.epam.drill.agent.test.instrument.strategy.AbstractTestStrategy
 import com.epam.drill.agent.test.prioritization.RecommendedTests
-import com.epam.drill.agent.test2code.api.TestDetails
+import com.epam.drill.agent.test.testinfo.TestDetails
 import javassist.*
 import mu.KotlinLogging
 import java.security.ProtectionDomain

@@ -15,8 +15,6 @@
  */
 package com.epam.drill.agent.test.testinfo
 
-import com.epam.drill.agent.test2code.api.TestResult
-
 interface TestExecutionListener {
     fun onTestStarted(test: TestLaunchInfo) {}
     fun onTestFinished(test: TestLaunchInfo, result: TestResult) {}

@@ -15,11 +15,11 @@
  */
 package com.epam.drill.agent.test.devtools
 
-import com.epam.drill.agent.test2code.api.TestResult
 import com.epam.drill.agent.test.instrument.strategy.selenium.DevToolStorage
 import com.epam.drill.agent.test.instrument.strategy.selenium.WebDriverThreadStorage
 import com.epam.drill.agent.test.testinfo.TestExecutionListener
 import com.epam.drill.agent.test.testinfo.TestLaunchInfo
+import com.epam.drill.agent.test.testinfo.TestResult
 
 class ChromeDevToolTestExecutionListener(
     private val jsCoverageSender: JsCoverageSender

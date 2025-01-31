@@ -18,8 +18,6 @@ package com.epam.drill.agent.test.testinfo
 import com.epam.drill.agent.common.transport.AgentMessage
 import com.epam.drill.agent.common.transport.AgentMessageDestination
 import com.epam.drill.agent.common.transport.AgentMessageSender
-import com.epam.drill.agent.test2code.api.AddTestsPayload
-import com.epam.drill.agent.test2code.api.TestInfo
 import com.epam.drill.agent.test.session.SessionController
 import mu.KotlinLogging
 import java.util.concurrent.Executors

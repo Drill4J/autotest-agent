@@ -15,30 +15,11 @@
  */
 package com.epam.drill.agent.test.testinfo
 
-interface TestExecutionRecorder {
-    fun recordTestStarting(
-        testMethod: TestMethodInfo
-    )
-
-    fun recordTestFinishing(
-        testMethod: TestMethodInfo,
-        status: String
-    )
-
-    fun recordTestIgnoring(
-        testMethod: TestMethodInfo,
-        isSmartSkip: Boolean = false
-    )
-
-    fun getFinishedTests(): List<TestInfo>
-
-    fun reset()
+enum class TestResult {
+    PASSED,
+    FAILED,
+    ERROR,
+    SKIPPED,
+    SMART_SKIPPED,
+    UNKNOWN
 }
-
-class TestMethodInfo(
-    val engine: String,
-    val className: String,
-    val method: String,
-    val methodParams: String,
-    val classParams: String
-)

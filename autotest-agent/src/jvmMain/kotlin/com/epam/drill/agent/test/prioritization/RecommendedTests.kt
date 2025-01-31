@@ -15,7 +15,7 @@
  */
 package com.epam.drill.agent.test.prioritization
 
-import com.epam.drill.agent.test2code.api.TestDetails
+import com.epam.drill.agent.test.testinfo.TestDetails
 import mu.KotlinLogging
 
 object RecommendedTests {

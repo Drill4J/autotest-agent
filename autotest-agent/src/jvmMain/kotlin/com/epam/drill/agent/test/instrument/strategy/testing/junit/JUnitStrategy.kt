@@ -17,7 +17,7 @@ package com.epam.drill.agent.test.instrument.strategy.testing.junit
 
 import com.epam.drill.agent.test.instrument.strategy.*
 import com.epam.drill.agent.test.testinfo.TestController
-import com.epam.drill.agent.test2code.api.TestResult
+import com.epam.drill.agent.test.testinfo.TestResult
 import javassist.*
 import java.security.*
 

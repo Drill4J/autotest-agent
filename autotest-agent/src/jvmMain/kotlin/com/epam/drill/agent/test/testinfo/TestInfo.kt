@@ -15,30 +15,15 @@
  */
 package com.epam.drill.agent.test.testinfo
 
-interface TestExecutionRecorder {
-    fun recordTestStarting(
-        testMethod: TestMethodInfo
-    )
+import kotlinx.serialization.Serializable
 
-    fun recordTestFinishing(
-        testMethod: TestMethodInfo,
-        status: String
-    )
-
-    fun recordTestIgnoring(
-        testMethod: TestMethodInfo,
-        isSmartSkip: Boolean = false
-    )
-
-    fun getFinishedTests(): List<TestInfo>
-
-    fun reset()
-}
-
-class TestMethodInfo(
-    val engine: String,
-    val className: String,
-    val method: String,
-    val methodParams: String,
-    val classParams: String
+@Serializable
+data class TestInfo(
+    val groupId: String,
+    val id: String,
+    val testDefinitionId: String,
+    val result: TestResult,
+    val startedAt: Long,
+    val finishedAt: Long,
+    val details: TestDetails,
 )

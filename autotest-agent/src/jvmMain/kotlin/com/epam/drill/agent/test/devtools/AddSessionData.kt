@@ -13,32 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.agent.test.testinfo
+package com.epam.drill.agent.test.devtools
 
-interface TestExecutionRecorder {
-    fun recordTestStarting(
-        testMethod: TestMethodInfo
-    )
+import com.epam.drill.agent.common.transport.AgentMessage
+import kotlinx.serialization.Serializable
 
-    fun recordTestFinishing(
-        testMethod: TestMethodInfo,
-        status: String
-    )
-
-    fun recordTestIgnoring(
-        testMethod: TestMethodInfo,
-        isSmartSkip: Boolean = false
-    )
-
-    fun getFinishedTests(): List<TestInfo>
-
-    fun reset()
-}
-
-class TestMethodInfo(
-    val engine: String,
-    val className: String,
-    val method: String,
-    val methodParams: String,
-    val classParams: String
-)
+@Serializable
+data class AddSessionData(val sessionId: String, val data: String): AgentMessage()

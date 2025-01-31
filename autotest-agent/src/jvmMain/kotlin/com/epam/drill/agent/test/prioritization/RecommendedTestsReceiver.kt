@@ -21,7 +21,6 @@ import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.configuration.ParameterDefinitions
 import com.epam.drill.agent.test.testinfo.*
 import com.epam.drill.agent.test.transport.TestAgentMessageReceiver
-import com.epam.drill.agent.test2code.api.TestDetails
 import kotlinx.serialization.Serializable
 import mu.KotlinLogging
 
