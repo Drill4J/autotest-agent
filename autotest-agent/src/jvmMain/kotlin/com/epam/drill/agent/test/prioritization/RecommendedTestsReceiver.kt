@@ -57,8 +57,9 @@ class RecommendedTestsReceiverImpl(
 
         val parameters: String = buildString {
             append("?groupId=$groupId")
+            append("&appId=$targetAppId")
             append("&testTaskId=$testTaskId")
-            append("&targetAppId=$targetAppId")
+            append("&testsToSkip=true")
             targetBuildVersion?.let { append("&targetBuildVersion=$it") }
             targetCommitSha?.let { append("&targetCommitSha=$it") }
             baselineCommitSha?.let { append("&baselineCommitSha=$it") }
@@ -70,10 +71,10 @@ class RecommendedTestsReceiverImpl(
             agentMessageReceiver.receive(
                 AgentMessageDestination(
                     "GET",
-                    "/tests-to-skip$parameters",
+                    "/recommended-tests$parameters",
                 ),
-                RecommendedTestsResponse::class
-            ).data
+                RecommendedTestsApiResponse::class
+            ).data.recommendedTests.map { it.toTestDetails() }
         }.onFailure {
             logger.warn { "Unable to retrieve information about recommended tests. Error message: $it" }
         }.getOrElse {
@@ -95,6 +96,31 @@ class RecommendedTestsReceiverImpl(
 }
 
 @Serializable
+class RecommendedTestsApiResponse(
+    val data: RecommendedTestsResponse
+)
+
+@Serializable
 class RecommendedTestsResponse(
-    val data: List<TestDetails>
+    val recommendedTests: List<TestDefinitionResponse>
+)
+
+@Serializable
+class TestDefinitionResponse(
+    val testDefinitionId: String,
+    val testRunner: String,
+    val testPath: String,
+    val testName: String,
+    val testType: String,
+    val tags: List<String>,
+    val metadata: Map<String, String>,
+    val createdAt: String,
+)
+
+private fun TestDefinitionResponse.toTestDetails() = TestDetails(
+    engine = testRunner,
+    path = testPath,
+    testName = testName,
+    testParams = emptyList(),
+    metadata = metadata
 )
