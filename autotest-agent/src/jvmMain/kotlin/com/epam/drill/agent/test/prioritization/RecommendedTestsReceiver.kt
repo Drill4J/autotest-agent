@@ -113,7 +113,6 @@ class TestDefinitionResponse(
     val testType: String,
     val tags: List<String>,
     val metadata: Map<String, String>,
-    val createdAt: String,
 )
 
 private fun TestDefinitionResponse.toTestDetails() = TestDetails(
