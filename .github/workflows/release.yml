@@ -40,7 +40,7 @@ jobs:
           #Have to wait until tests modules will be migrated to compatibility-matrix tests
           arguments: assemble
       - if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-reports-${{ matrix.config.preset }}
           path: ${{ github.workspace }}/*/build/reports/*
