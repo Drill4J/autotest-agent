@@ -69,6 +69,8 @@ private fun List<TestExecutionInfo>.toTestLaunchPayloads(): List<TestLaunchPaylo
         path = it.testMethod.className,
         testName = it.testMethod.method,
         testParams = it.testMethod.methodParams.removeSurrounding("(", ")").split(","),
+        metadata = it.testMethod.metadata,
+        tags = it.testMethod.tags
     )
     TestLaunchPayload(
         testLaunchId = it.testLaunchId,

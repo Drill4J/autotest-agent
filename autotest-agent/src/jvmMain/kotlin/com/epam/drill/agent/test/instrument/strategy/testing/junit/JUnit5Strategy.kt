@@ -17,6 +17,7 @@ package com.epam.drill.agent.test.instrument.strategy.testing.junit
 
 import com.epam.drill.agent.test.instrument.strategy.*
 import com.epam.drill.agent.test.execution.TestController
+import com.epam.drill.agent.test.execution.TestMethodInfo
 import javassist.*
 import java.security.*
 
@@ -28,24 +29,6 @@ object JUnit5Strategy : AbstractTestStrategy() {
     override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
         return className == "org/junit/platform/engine/support/hierarchical/NodeTestTaskContext"
     }
-
-    /*
-        Magic constants from junit-platform-engine and junit-jupiter-engine libraries
-     */
-    // org.junit.platform.engine.UniqueId
-    private const val engine = """"engine""""
-
-    // org.junit.jupiter.engine.descriptor.ClassTestDescriptor
-    private const val `class` = """"class""""
-
-    // org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor
-    private const val method = """"method""""
-
-    // org.junit.jupiter.engine.descriptor.TestTemplateTestDescriptor
-    private const val testTemplate = """"test-template""""
-
-    // org.junit.jupiter.engine.descriptor.TestTemplateInvocationTestDescriptor
-    private const val testTemplateInvocation = """"test-template-invocation""""
 
     override fun instrument(
         ctClass: CtClass,
@@ -79,10 +62,14 @@ object JUnit5Strategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                     public void executionSkipped(org.junit.platform.engine.TestDescriptor testDescriptor, String reason) {
-                        mainRunner.executionSkipped(testDescriptor, reason);
+                        mainRunner.executionSkipped(testDescriptor, reason);                        
                         if (!testDescriptor.isContainer()) {
-                            ${getSpitedTestName()}
-                            ${TestController::class.java.name}.INSTANCE.${TestController::testIgnored.name}(engine, classPath, method, params);
+                            ${getMetadata("testDescriptor")}
+                            ${getTags("testDescriptor")}
+                            ${TestMethodInfo::class.java.name} methodInfo = ${this::class.java.name}.INSTANCE.${this::convertToMethodInfo.name}(testMetadata, testTags);
+                            if (methodInfo != null) {
+                                ${TestController::class.java.name}.INSTANCE.${TestController::recordTestIgnoring.name}(methodInfo, false);
+                            }                            
                         }
                     }
                         """.trimIndent(),
@@ -95,8 +82,12 @@ object JUnit5Strategy : AbstractTestStrategy() {
                     public void executionStarted(org.junit.platform.engine.TestDescriptor testDescriptor) {
                         mainRunner.executionStarted(testDescriptor);
                         if (!testDescriptor.isContainer()) {
-                            ${getSpitedTestName()}
-                            ${TestController::class.java.name}.INSTANCE.${TestController::testStarted.name}(engine, classPath, method, params);
+                            ${getMetadata("testDescriptor")}
+                            ${getTags("testDescriptor")}
+                            ${TestMethodInfo::class.java.name} methodInfo = ${this::class.java.name}.INSTANCE.${this::convertToMethodInfo.name}(testMetadata, testTags);
+                            if (methodInfo != null) {
+                                ${TestController::class.java.name}.INSTANCE.${TestController::recordTestStarting.name}(methodInfo);
+                            } 
                         }
                     }
                         """.trimIndent(),
@@ -109,8 +100,12 @@ object JUnit5Strategy : AbstractTestStrategy() {
                     public void executionFinished(org.junit.platform.engine.TestDescriptor testDescriptor, org.junit.platform.engine.TestExecutionResult testExecutionResult) {
                         mainRunner.executionFinished(testDescriptor, testExecutionResult);
                         if (!testDescriptor.isContainer()) {
-                            ${getSpitedTestName()}
-                            ${TestController::class.java.name}.INSTANCE.${TestController::testFinished.name}(engine, classPath, method, testExecutionResult.getStatus().name(), params);
+                            ${getMetadata("testDescriptor")}
+                            ${getTags("testDescriptor")}
+                            ${TestMethodInfo::class.java.name} methodInfo = ${this::class.java.name}.INSTANCE.${this::convertToMethodInfo.name}(testMetadata, testTags);
+                            if (methodInfo != null) {
+                                ${TestController::class.java.name}.INSTANCE.${TestController::recordTestFinishing.name}(methodInfo, testExecutionResult.getStatus().name());
+                            }
                         }
                     }
                         """.trimIndent(),
@@ -137,37 +132,23 @@ object JUnit5Strategy : AbstractTestStrategy() {
         return ctClass.toBytecode()
     }
 
-    private fun getSpitedTestName() = """
-        java.util.List segments = testDescriptor.getUniqueId().getSegments();
-        if (segments.size() < 3) { return; }
-        String engine = null; String classPath = null; String method = null;
-        String params = "()"; 
-        java.util.Iterator iterator = segments.iterator();
-        while (iterator.hasNext()) {
-            org.junit.platform.engine.UniqueId.Segment segment = (org.junit.platform.engine.UniqueId.Segment) iterator.next();
-            switch (segment.getType()) {
-                case $engine:
-                    engine = segment.getValue();
-                break;
-                case $`class`:
-                    classPath = segment.getValue();
-                break;
-                case $method:
-                    method = segment.getValue().replace("()", "");
-                break;
-                case $testTemplate:
-                    String fullMethodName = segment.getValue();
-                    int bracketIndex = fullMethodName.indexOf("(");
-                    params = fullMethodName.substring(bracketIndex);
-                    method = fullMethodName.substring(0, bracketIndex);
-                break;
-                case $testTemplateInvocation:
-                    params += segment.getValue();
-                break;
-                default:
-                    /* Unsupported Type */
-                break;
-            }
-        }
-    """.trimIndent()
+    @Suppress("MemberVisibilityCanBePrivate")
+    fun convertToMethodInfo(
+        testMetadata: Map<String, String>,
+        testTags: List<String>
+    ): TestMethodInfo? {
+        return TestMethodInfo(
+            engine = testMetadata["engine"] ?: "junit",
+            className = testMetadata["class"] ?: return null,
+            method = testMetadata["method"]?.substringBefore("(") ?: return null,
+            methodParams = testMetadata["method"]?.getMethodParams() ?: "()",
+            metadata = testMetadata,
+            tags = testTags
+        )
+    }
+
+    private fun String.getMethodParams(): String {
+        val params = this.substringAfter("(").substringBefore(")")
+        return if (params.isEmpty()) "()" else "($params)"
+    }
 }

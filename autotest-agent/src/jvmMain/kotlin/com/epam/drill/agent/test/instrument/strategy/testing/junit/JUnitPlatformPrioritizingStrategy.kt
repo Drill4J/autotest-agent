@@ -24,14 +24,6 @@ import javassist.*
 import mu.KotlinLogging
 import java.security.ProtectionDomain
 
-private const val PostDiscoveryFilter = "org.junit.platform.launcher.PostDiscoveryFilter"
-private const val FilterResult = "org.junit.platform.engine.FilterResult"
-private const val TestDescriptor = "org.junit.platform.engine.TestDescriptor"
-private const val Segment = "org.junit.platform.engine.UniqueId.Segment"
-private const val LauncherDiscoveryRequest = "org.junit.platform.launcher.LauncherDiscoveryRequest"
-private const val ConfigurationParameters = "org.junit.platform.engine.ConfigurationParameters"
-private const val TestTag = "org.junit.platform.engine.TestTag"
-
 @Suppress("unused")
 object JUnitPlatformPrioritizingStrategy : AbstractTestStrategy() {
 
@@ -95,17 +87,13 @@ object JUnitPlatformPrioritizingStrategy : AbstractTestStrategy() {
                 """
                        public $FilterResult apply(java.lang.Object object) {                            
                             $TestDescriptor descriptor = ($TestDescriptor)object;
-                            if (!descriptor.isTest())
+                            if (descriptor.isContainer())
                                return $FilterResult.included("");
                                
-                            java.util.Map testMetadata = new java.util.HashMap();
-                            for (int i = 0; i < descriptor.getUniqueId().getSegments().size(); i++) {
-                                java.lang.String key = (($Segment)descriptor.getUniqueId().getSegments().get(i)).getType();
-                                java.lang.String value = (($Segment)descriptor.getUniqueId().getSegments().get(i)).getValue();
-                                testMetadata.put(key, value);                                
-                            }          
+                            ${getMetadata("descriptor")}   
+                            ${getTags("descriptor")}          
                                                                                                                
-                            ${TestMethodInfo::class.java.name} methodInfo = ${this::class.java.name}.INSTANCE.${this::convertToMethodInfo.name}(testMetadata, descriptor.getDisplayName());
+                            ${TestMethodInfo::class.java.name} methodInfo = ${this::class.java.name}.INSTANCE.${this::convertToMethodInfo.name}(testMetadata, testTags, descriptor.getDisplayName());
                             boolean shouldSkip = methodInfo != null && ${RecommendedTests::class.java.name}.INSTANCE.${RecommendedTests::shouldSkipByTestMethod.name}(methodInfo);
                             if (shouldSkip) {                                
                                 return $FilterResult.excluded("skipped by Drill4J");
@@ -199,6 +187,7 @@ object JUnitPlatformPrioritizingStrategy : AbstractTestStrategy() {
 
     @Suppress("MemberVisibilityCanBePrivate")
     fun convertToMethodInfo(testMetadata: Map<String, String>,
+                            testTags: List<String>,
                             displayName: String?): TestMethodInfo? {
         val testPath = testMetadata["class"] ?: testMetadata["feature"] ?: testMetadata["suite"]
         val testName = testMetadata["method"]?.substringBefore("(") ?: displayName
@@ -210,6 +199,7 @@ object JUnitPlatformPrioritizingStrategy : AbstractTestStrategy() {
             engine = testMetadata["engine"] ?: "junit",
             className = testPath,
             method = testName,
+            tags = testTags,
             metadata = testMetadata
         )
     }
