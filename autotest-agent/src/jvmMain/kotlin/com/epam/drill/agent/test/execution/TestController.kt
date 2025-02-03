@@ -31,17 +31,18 @@ object TestController : TestExecutionRecorder by testExecutionRecorder(testExecu
         className: String?,
         method: String?,
         methodParams: String = "()",
-        classParams: String = "",
+        testTags: List<String> = emptyList(),
     ) {
         if (className == null || method == null)
             return
 
         recordTestStarting(
             TestMethodInfo(
-                engine,
-                className,
-                method,
-                methodParams,
+                engine = engine,
+                className = className,
+                method = method,
+                methodParams = methodParams,
+                tags = testTags
             )
         )
     }
@@ -53,17 +54,18 @@ object TestController : TestExecutionRecorder by testExecutionRecorder(testExecu
         method: String?,
         status: String,
         methodParams: String = "()",
-        classParams: String = "",
+        testTags: List<String> = emptyList(),
     ) {
         if (className == null || method == null)
             return
 
         recordTestFinishing(
             TestMethodInfo(
-                engine,
-                className,
-                method,
-                methodParams,
+                engine = engine,
+                className = className,
+                method = method,
+                methodParams = methodParams,
+                tags = testTags
             ),
             status
         )
@@ -75,17 +77,18 @@ object TestController : TestExecutionRecorder by testExecutionRecorder(testExecu
         className: String?,
         method: String?,
         methodParams: String = "()",
-        classParams: String = "",
+        testTags: List<String> = emptyList(),
     ) {
         if (className == null || method == null)
             return
 
         recordTestIgnoring(
             TestMethodInfo(
-                engine,
-                className,
-                method,
-                methodParams,
+                engine = engine,
+                className = className,
+                method = method,
+                methodParams = methodParams,
+                tags = testTags
             )
         )
     }

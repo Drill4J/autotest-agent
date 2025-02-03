@@ -63,21 +63,21 @@ actual object SessionController {
     fun getSessionId(): String = sessionId
 }
 
-private fun List<TestExecutionInfo>.toTestLaunchPayloads(): List<TestLaunchPayload> = map {
+private fun List<TestExecutionInfo>.toTestLaunchPayloads(): List<TestLaunchPayload> = map { info ->
     val testDefinitionPayload = TestDefinitionPayload(
-        runner = it.testMethod.engine,
-        path = it.testMethod.className,
-        testName = it.testMethod.method,
-        testParams = it.testMethod.methodParams.removeSurrounding("(", ")").split(","),
-        metadata = it.testMethod.metadata,
-        tags = it.testMethod.tags
+        runner = info.testMethod.engine,
+        path = info.testMethod.className,
+        testName = info.testMethod.method,
+        testParams = info.testMethod.methodParams.removeSurrounding("(", ")").split(",").filter { it.isNotEmpty() },
+        metadata = info.testMethod.metadata,
+        tags = info.testMethod.tags
     )
     TestLaunchPayload(
-        testLaunchId = it.testLaunchId,
-        testDefinitionId = hash(it.testMethod.signature),
-        result = it.result,
-        startedAt = it.startedAt ?: 0L,
-        finishedAt = it.finishedAt ?: 0L,
+        testLaunchId = info.testLaunchId,
+        testDefinitionId = hash(info.testMethod.signature),
+        result = info.result,
+        startedAt = info.startedAt ?: 0L,
+        finishedAt = info.finishedAt ?: 0L,
         details = testDefinitionPayload
     )
 }
