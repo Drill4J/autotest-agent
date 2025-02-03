@@ -36,24 +36,4 @@ object TestNGStrategyV7 : TestNGStrategy() {
             null
         }
     }
-
-    override fun getFactoryParams(): String = """
-        private String getFactoryParams($ITestResult result){
-            org.testng.internal.IParameterInfo[] instances = result.getMethod().getTestClass().getInstances(false);
-            String params = "";
-            if (instances.length > 1){
-                org.testng.internal.IParameterInfo parameterInfo = result.getMethod().getFactoryMethodParamsInfo();
-                Object[] fields = parameterInfo.getParameters();
-                Object instance = parameterInfo.getInstance();
-                params += ${this::class.java.name}.INSTANCE.${this::paramTypes.name}(fields);
-                int i = 0;
-                while (i < instances.length) {
-                    if (instances[i].getInstance() == instance) break;
-                    i++;
-                }
-                params += ("[" + i + "]");
-            }
-            return params;
-        }
-    """.trimIndent()
 }

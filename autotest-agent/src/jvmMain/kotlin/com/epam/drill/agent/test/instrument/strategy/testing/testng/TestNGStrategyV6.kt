@@ -36,19 +36,6 @@ object TestNGStrategyV6 : TestNGStrategy() {
         }
     }
 
-    override fun getFactoryParams(): String = """
-        private String getFactoryParams($ITestResult result){
-            Object[] instances = result.getTestClass().getInstances(false);
-            String params = "";
-            if (instances.length > 1){
-                Object instance = result.getInstance();
-                java.lang.reflect.Field[] fields = instance.getClass().getDeclaredFields();
-                params += ${this::class.java.name}.INSTANCE.${this::paramTypes.name}(fields);
-                params += ${this::class.java.name}.INSTANCE.${this::paramNumber.name}(instance, instances);
-            }
-            return params;
-        }
-    """.trimIndent()
 
     override fun getTestClassNameMethod(): String = """
         private String getTestClassName($ITestResult result) {            

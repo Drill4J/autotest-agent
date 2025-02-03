@@ -63,20 +63,20 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(getParamsMethod(), testListener)
         )
         testListener.addMethod(
-            CtMethod.make(getFactoryParams(), testListener)
-        )
-        testListener.addMethod(
             CtMethod.make(getTestClassNameMethod(), testListener)
         )
         testListener.addMethod(
             CtMethod.make(getTestNameMethod(), testListener)
         )
         testListener.addMethod(
+            CtMethod.make(getTestGroups(), testListener)
+        )
+        testListener.addMethod(
             CtMethod.make(
                 """
                         public void onTestStart($ITestResult result) {
                             if (result.getThrowable() == null) {
-                                ${TestController::class.java.name}.INSTANCE.${TestController::testStarted.name}("$engineSegment", getTestClassName(result), getTestName(result), getParamsString(result), getFactoryParams(result));
+                                ${TestController::class.java.name}.INSTANCE.${TestController::testStarted.name}("$engineSegment", getTestClassName(result), getTestName(result), getParamsString(result), getTestGroups(result));
                             } else {
                                 ${this::class.java.name}.INSTANCE.${this::debug.name}("The start of the test " + result.getName() + " is ignored by the drill");
                             }
@@ -89,7 +89,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                        public void onTestSuccess($ITestResult result) {
-                            ${TestController::class.java.name}.INSTANCE.${TestController::testFinished.name}("$engineSegment", getTestClassName(result), getTestName(result), "PASSED", getParamsString(result), getFactoryParams(result));
+                            ${TestController::class.java.name}.INSTANCE.${TestController::testFinished.name}("$engineSegment", getTestClassName(result), getTestName(result), "PASSED", getParamsString(result), getTestGroups(result));
                        }
                     """.trimIndent(),
                 testListener
@@ -99,7 +99,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                         public void onTestFailure($ITestResult result) {
-                            ${TestController::class.java.name}.INSTANCE.${TestController::testFinished.name}("$engineSegment", getTestClassName(result), getTestName(result), "FAILED", getParamsString(result));      
+                            ${TestController::class.java.name}.INSTANCE.${TestController::testFinished.name}("$engineSegment", getTestClassName(result), getTestName(result), "FAILED", getParamsString(result), getTestGroups(result));      
                         }
                     """.trimIndent(),
                 testListener
@@ -109,7 +109,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
             CtMethod.make(
                 """
                         public void onTestSkipped($ITestResult result) {
-                            ${TestController::class.java.name}.INSTANCE.${TestController::testIgnored.name}("$engineSegment", getTestClassName(result), getTestName(result), getParamsString(result), getFactoryParams(result));     
+                            ${TestController::class.java.name}.INSTANCE.${TestController::testIgnored.name}("$engineSegment", getTestClassName(result), getTestName(result), getParamsString(result), getTestGroups(result));     
                         }
                     """.trimIndent(),
                 testListener
@@ -151,10 +151,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
     protected open fun getParamsMethod(): String = """
         private String getParamsString($ITestResult result) {
             Object[] parameters = result.getParameters();
-            String paramString = ${this::class.java.name}.INSTANCE.${this::paramTypes.name}(parameters);
-            if (result.getParameters().length != 0){
-                paramString += "[" + result.getMethod().getParameterInvocationCount() + "]";
-            }
+            String paramString = ${this::class.java.name}.INSTANCE.${this::paramTypes.name}(parameters);            
             return paramString;
         }
     """.trimIndent()
@@ -171,7 +168,13 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
         }
     """.trimIndent()
 
-    abstract fun getFactoryParams(): String
+    protected open fun getTestGroups(): String = """
+        private java.util.List getTestGroups($ITestResult result) {            
+            String[] groups = result.getMethod().getGroups();
+            return java.util.Arrays.asList(groups);
+        }
+    """.trimIndent()
+
 
     private fun CtClass.supportIgnoredTestsTracking() = getDeclaredMethod("run").insertBefore(
         """
