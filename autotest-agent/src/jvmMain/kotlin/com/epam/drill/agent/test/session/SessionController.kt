@@ -26,6 +26,8 @@ import com.epam.drill.agent.test.sending.TestDefinitionPayload
 import com.epam.drill.agent.test.sending.TestLaunchPayload
 import com.epam.drill.agent.test.transport.TestAgentMessageSender
 import mu.KotlinLogging
+import java.time.Instant
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.zip.CRC32
@@ -54,7 +56,7 @@ actual object SessionController {
                 id = sessionId,
                 groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID],
                 testTaskId = Configuration.parameters[ParameterDefinitions.TEST_TASK_ID],
-                startedAt = ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                startedAt = System.currentTimeMillis().toIsoTimeFormat()
             )
         )
         testInfoSender.startSendingTests()
@@ -76,8 +78,8 @@ private fun List<TestExecutionInfo>.toTestLaunchPayloads(): List<TestLaunchPaylo
         testLaunchId = info.testLaunchId,
         testDefinitionId = hash(info.testMethod.signature),
         result = info.result,
-        startedAt = info.startedAt,
-        finishedAt = info.finishedAt,
+        startedAt = info.startedAt?.toIsoTimeFormat(),
+        finishedAt = info.finishedAt?.toIsoTimeFormat(),
         details = testDefinitionPayload
     )
 }
@@ -86,3 +88,7 @@ private fun hash(signature: String): String = CRC32().let {
     it.update(signature.toByteArray())
     java.lang.Long.toHexString(it.value)
 }
+
+private fun Long.toIsoTimeFormat(): String = Instant.ofEpochMilli(this)
+    .let { ZonedDateTime.ofInstant(it, ZoneId.systemDefault()) }
+    .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
