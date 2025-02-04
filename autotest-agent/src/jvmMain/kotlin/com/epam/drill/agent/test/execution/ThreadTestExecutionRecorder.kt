@@ -69,8 +69,8 @@ class ThreadTestExecutionRecorder(
         val testLaunchId = getTestLaunchId() ?: generateTestLaunchId()
         val skipResult = if (isSmartSkip) TestResult.SMART_SKIPPED else TestResult.SKIPPED
         updateTestInfo(testLaunchId, testMethod) {
-            it.startedAt = 0L
-            it.finishedAt = 0L
+            it.startedAt = null
+            it.finishedAt = null
             it.result = skipResult
         }
         clearDrillHeaders()
