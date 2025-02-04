@@ -19,15 +19,17 @@ import com.epam.drill.agent.common.transport.AgentMessageDestination
 import com.epam.drill.agent.common.transport.AgentMessageReceiver
 import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.configuration.ParameterDefinitions
-import com.epam.drill.agent.test.testinfo.*
+import com.epam.drill.agent.test.execution.TestController
+import com.epam.drill.agent.test.execution.TestExecutionRecorder
+import com.epam.drill.agent.test.execution.TestMethodInfo
+import com.epam.drill.agent.test.sending.*
 import com.epam.drill.agent.test.transport.TestAgentMessageReceiver
-import com.epam.drill.agent.test2code.api.TestDetails
 import kotlinx.serialization.Serializable
 import mu.KotlinLogging
 
 interface RecommendedTestsReceiver {
-    fun getTestsToSkip(): List<TestDetails>
-    fun sendSkippedTest(test: TestDetails)
+    fun getTestsToSkip(): List<TestMethodInfo>
+    fun sendSkippedTest(test: TestMethodInfo)
 }
 
 class RecommendedTestsReceiverImpl(
@@ -36,7 +38,7 @@ class RecommendedTestsReceiverImpl(
 ) : RecommendedTestsReceiver {
     private val logger = KotlinLogging.logger {}
 
-    override fun getTestsToSkip(): List<TestDetails> {
+    override fun getTestsToSkip(): List<TestMethodInfo> {
         if (!Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_ENABLED])
             return emptyList()
         val groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID]
@@ -57,8 +59,9 @@ class RecommendedTestsReceiverImpl(
 
         val parameters: String = buildString {
             append("?groupId=$groupId")
+            append("&appId=$targetAppId")
             append("&testTaskId=$testTaskId")
-            append("&targetAppId=$targetAppId")
+            append("&testsToSkip=true")
             targetBuildVersion?.let { append("&targetBuildVersion=$it") }
             targetCommitSha?.let { append("&targetCommitSha=$it") }
             baselineCommitSha?.let { append("&baselineCommitSha=$it") }
@@ -70,10 +73,10 @@ class RecommendedTestsReceiverImpl(
             agentMessageReceiver.receive(
                 AgentMessageDestination(
                     "GET",
-                    "/tests-to-skip$parameters",
+                    "/recommended-tests$parameters",
                 ),
-                RecommendedTestsResponse::class
-            ).data
+                RecommendedTestsApiResponse::class
+            ).data.recommendedTests.map { it.toTestMethodInfo() }
         }.onFailure {
             logger.warn { "Unable to retrieve information about recommended tests. Error message: $it" }
         }.getOrElse {
@@ -81,20 +84,36 @@ class RecommendedTestsReceiverImpl(
         }
     }
 
-    override fun sendSkippedTest(test: TestDetails) {
-        testExecutionRecorder.recordTestIgnoring(
-            TestMethodInfo(
-                engine = test.engine,
-                className = test.path,
-                method = test.testName,
-                methodParams = test.testParams.joinToString(separator = ", ", prefix = "(", postfix = ")"),
-                classParams = "",
-            ), isSmartSkip = true
-        )
+    override fun sendSkippedTest(test: TestMethodInfo) {
+        testExecutionRecorder.recordTestIgnoring(test, isSmartSkip = true)
     }
 }
 
 @Serializable
+class RecommendedTestsApiResponse(
+    val data: RecommendedTestsResponse
+)
+
+@Serializable
 class RecommendedTestsResponse(
-    val data: List<TestDetails>
+    val recommendedTests: List<TestDefinitionResponse>
+)
+
+@Serializable
+class TestDefinitionResponse(
+    val testDefinitionId: String,
+    val testRunner: String,
+    val testPath: String,
+    val testName: String,
+    val testType: String,
+    val tags: List<String>,
+    val metadata: Map<String, String>,
+)
+
+private fun TestDefinitionResponse.toTestMethodInfo() = TestMethodInfo(
+    engine = testRunner,
+    className = testPath,
+    method = testName,
+    metadata = metadata,
+    tags = tags,
 )

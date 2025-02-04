@@ -28,8 +28,6 @@ jobs:
         run: chmod +x ${{ github.workspace }}/gradlew
       - if: matrix.config.preset == 'linuxX64' || matrix.config.preset == 'macosX64' || matrix.config.preset == 'macosArm64'
         run: chmod +x ${{ github.workspace }}/setup-shared-libs.sh
-      - if: matrix.config.preset == 'linuxX64'
-        run: sudo apt-get install -y libtinfo5
       - if: matrix.config.preset == 'linuxX64' || matrix.config.preset == 'macosX64' || matrix.config.preset == 'macosArm64'
         run: ${{ github.workspace }}/setup-shared-libs.sh
       - if: matrix.config.preset == 'mingwX64'
@@ -40,7 +38,7 @@ jobs:
           #Have to wait until tests modules will be migrated to compatibility-matrix tests
           arguments: assemble
       - if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-reports-${{ matrix.config.preset }}
           path: ${{ github.workspace }}/*/build/reports/*
@@ -98,8 +96,6 @@ jobs:
         run: chmod +x ${{ github.workspace }}/gradlew
       - if: matrix.config.preset == 'linuxX64' || matrix.config.preset == 'macosX64' || matrix.config.preset == 'macosArm64'
         run: chmod +x ${{ github.workspace }}/setup-shared-libs.sh
-      - if: matrix.config.preset == 'linuxX64'
-        run: sudo apt-get install -y libtinfo5
       - if: matrix.config.preset == 'linuxX64' || matrix.config.preset == 'macosX64' || matrix.config.preset == 'macosArm64'
         run: ${{ github.workspace }}/setup-shared-libs.sh
       - if: matrix.config.preset == 'mingwX64'
@@ -127,7 +123,6 @@ jobs:
         with:
           java-version: 8.0
           distribution: corretto
-      - uses: gradle/wrapper-validation-action@v1
       - run: chmod +x ${{ github.workspace }}/gradlew
       - run: chmod +x ${{ github.workspace }}/setup-shared-libs.sh
       - run: ${{ github.workspace }}/setup-shared-libs.sh

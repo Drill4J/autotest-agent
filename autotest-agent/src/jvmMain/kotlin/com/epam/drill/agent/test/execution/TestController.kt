@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.agent.test.testinfo
+package com.epam.drill.agent.test.execution
 
 import com.epam.drill.agent.request.DrillRequestHolder
 import com.epam.drill.agent.test.configuration.Configuration
@@ -31,18 +31,18 @@ object TestController : TestExecutionRecorder by testExecutionRecorder(testExecu
         className: String?,
         method: String?,
         methodParams: String = "()",
-        classParams: String = "",
+        testTags: List<String> = emptyList(),
     ) {
         if (className == null || method == null)
             return
 
         recordTestStarting(
             TestMethodInfo(
-                engine,
-                className,
-                method,
-                methodParams,
-                classParams
+                engine = engine,
+                className = className,
+                method = method,
+                methodParams = methodParams,
+                tags = testTags
             )
         )
     }
@@ -54,18 +54,18 @@ object TestController : TestExecutionRecorder by testExecutionRecorder(testExecu
         method: String?,
         status: String,
         methodParams: String = "()",
-        classParams: String = "",
+        testTags: List<String> = emptyList(),
     ) {
         if (className == null || method == null)
             return
 
         recordTestFinishing(
             TestMethodInfo(
-                engine,
-                className,
-                method,
-                methodParams,
-                classParams
+                engine = engine,
+                className = className,
+                method = method,
+                methodParams = methodParams,
+                tags = testTags
             ),
             status
         )
@@ -77,18 +77,18 @@ object TestController : TestExecutionRecorder by testExecutionRecorder(testExecu
         className: String?,
         method: String?,
         methodParams: String = "()",
-        classParams: String = "",
+        testTags: List<String> = emptyList(),
     ) {
         if (className == null || method == null)
             return
 
         recordTestIgnoring(
             TestMethodInfo(
-                engine,
-                className,
-                method,
-                methodParams,
-                classParams
+                engine = engine,
+                className = className,
+                method = method,
+                methodParams = methodParams,
+                tags = testTags
             )
         )
     }

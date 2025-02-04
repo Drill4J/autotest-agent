@@ -13,41 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.agent.test.testinfo
+package com.epam.drill.agent.test.execution
 
 import com.epam.drill.agent.request.DrillRequestHolder
 import com.epam.drill.agent.common.request.DrillRequest
 import com.epam.drill.agent.common.request.RequestHolder
-import com.epam.drill.agent.test2code.api.TestDetails
-import com.epam.drill.agent.test2code.api.TestInfo
-import com.epam.drill.agent.test2code.api.TestResult
 import com.epam.drill.agent.test.TEST_ID_HEADER
-import com.epam.drill.agent.test.configuration.Configuration
-import com.epam.drill.agent.test.configuration.ParameterDefinitions
 import com.epam.drill.agent.test.session.SessionController
 import mu.KotlinLogging
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.zip.CRC32
 
 class ThreadTestExecutionRecorder(
     private val requestHolder: RequestHolder,
     private val listeners: List<TestExecutionListener> = emptyList()
 ) : TestExecutionRecorder {
     private val logger = KotlinLogging.logger {}
-    private val testExecutionData: ConcurrentHashMap<TestLaunchInfo, TestExecutionInfo> = ConcurrentHashMap()
+    private val testExecutionData: ConcurrentHashMap<String, TestExecutionInfo> = ConcurrentHashMap()
 
     override fun recordTestStarting(
         testMethod: TestMethodInfo
     ) {
         val testLaunchId = generateTestLaunchId()
-        val testLaunchInfo = mapToLaunchInfo(testMethod, testLaunchId)
-        updateTestInfo(testLaunchInfo) {
+        updateTestInfo(testLaunchId, testMethod) {
             it.startedAt = System.currentTimeMillis()
         }
         addDrillHeaders(testLaunchId)
-        listeners.forEach { it.onTestStarted(testLaunchInfo) }
-        logger.debug { "Test: $testLaunchInfo STARTED" }
+        listeners.forEach { it.onTestStarted(testLaunchId, testMethod) }
+        logger.debug { "Test: $testMethod STARTED" }
     }
 
     override fun recordTestFinishing(
@@ -59,15 +52,14 @@ class ThreadTestExecutionRecorder(
             logger.warn { "Test ${testMethod.className}::${testMethod.method} finished with result $status but no test launch id was found." }
             return
         }
-        val testLaunchInfo = mapToLaunchInfo(testMethod, testLaunchId)
         val testResult = mapToTestResult(status)
-        updateTestInfo(testLaunchInfo) {
+        updateTestInfo(testLaunchId, testMethod) {
             it.finishedAt = System.currentTimeMillis()
             it.result = testResult
         }
         clearDrillHeaders()
-        listeners.forEach { it.onTestFinished(testLaunchInfo, testResult) }
-        logger.debug { "Test: $testLaunchInfo FINISHED. Result: $status" }
+        listeners.forEach { it.onTestFinished(testLaunchId, testMethod, testResult) }
+        logger.debug { "Test: $testMethod FINISHED. Result: $status" }
     }
 
     override fun recordTestIgnoring(
@@ -75,65 +67,44 @@ class ThreadTestExecutionRecorder(
         isSmartSkip: Boolean
     ) {
         val testLaunchId = getTestLaunchId() ?: generateTestLaunchId()
-        val testLaunchInfo = mapToLaunchInfo(testMethod, testLaunchId)
         val skipResult = if (isSmartSkip) TestResult.SMART_SKIPPED else TestResult.SKIPPED
-        updateTestInfo(testLaunchInfo) {
+        updateTestInfo(testLaunchId, testMethod) {
             it.startedAt = 0L
             it.finishedAt = 0L
             it.result = skipResult
         }
         clearDrillHeaders()
-        listeners.forEach { it.onTestIgnored(testLaunchInfo) }
-        logger.debug { "Test: $testLaunchInfo FINISHED. Result: $skipResult" }
+        listeners.forEach { it.onTestIgnored(testLaunchId, testMethod) }
+        logger.debug { "Test: $testMethod FINISHED. Result: $skipResult" }
     }
 
     override fun reset() {
         testExecutionData.clear()
     }
 
-    override fun getFinishedTests(): List<TestInfo> = testExecutionData
+    override fun getFinishedTests(): List<TestExecutionInfo> = testExecutionData
         .filterValues { test -> test.result != TestResult.UNKNOWN }
-        .mapValues { (launchInfo, executionInfo) ->
-            val testDetails = TestDetails(
-                engine = launchInfo.engine,
-                path = launchInfo.path,
-                testName = launchInfo.testName,
-                testParams = launchInfo.testParams.removeSurrounding("(", ")").split(","),
-            )
-            TestInfo(
-                groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID],
-                id = launchInfo.testLaunchId,
-                testDefinitionId = testDetails.hash(),
-                result = executionInfo.result,
-                startedAt = executionInfo.startedAt ?: 0L,
-                finishedAt = executionInfo.finishedAt ?: 0L,
-                details = testDetails
-            )
-        }.onEach {
+        .onEach {
             testExecutionData.remove(it.key)
         }.values.toList()
 
     private fun updateTestInfo(
-        testLaunchInfo: TestLaunchInfo,
+        testLaunchId: String,
+        testMethodInfo: TestMethodInfo,
         updateTestExecutionInfo: (TestExecutionInfo) -> Unit,
     ) {
-        testExecutionData.compute(testLaunchInfo) { _, value ->
-            val testExecutionInfo = value ?: TestExecutionInfo()
+        testExecutionData.compute(testLaunchId) { _, value ->
+            val testExecutionInfo = value ?: TestExecutionInfo(testLaunchId, testMethodInfo)
             if (testExecutionInfo.result == TestResult.UNKNOWN) {
                 updateTestExecutionInfo(testExecutionInfo)
             } else {
-                logger.warn { "Test ${testLaunchInfo.testName} already finished with result ${testExecutionInfo.result}" }
+                logger.warn { "Test ${testMethodInfo.method} already finished with result ${testExecutionInfo.result}" }
             }
             testExecutionInfo
         }
     }
 
     private fun generateTestLaunchId() = UUID.randomUUID().toString()
-
-    private fun TestDetails.hash(): String = CRC32().let {
-        it.update(this.signature.toByteArray())
-        java.lang.Long.toHexString(it.value)
-    }
 
     private fun addDrillHeaders(testLaunchId: String) {
         DrillRequestHolder.store(
@@ -155,28 +126,4 @@ class ThreadTestExecutionRecorder(
 
     private fun getTestLaunchId(): String? = requestHolder.retrieve()?.headers?.get(TEST_ID_HEADER)
 
-    private fun mapToLaunchInfo(
-        testMethod: TestMethodInfo,
-        testLaunchId: String
-    ) = TestLaunchInfo(
-        engine = testMethod.engine,
-        path = testMethod.className,
-        testName = testMethod.method,
-        testParams = testMethod.methodParams,
-        testLaunchId = testLaunchId
-    )
 }
-
-class TestExecutionInfo(
-    var result: TestResult = TestResult.UNKNOWN,
-    var startedAt: Long? = null,
-    var finishedAt: Long? = null,
-)
-
-data class TestLaunchInfo(
-    val engine: String = "",
-    val path: String = "",
-    val testName: String = "",
-    val testParams: String = "",
-    val testLaunchId: String,
-)

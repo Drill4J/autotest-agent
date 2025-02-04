@@ -96,7 +96,6 @@ kotlin {
                 implementation(project(":common"))
                 implementation(project(":agent-config"))
                 implementation(project(":agent-instrumentation"))
-                implementation(project(":test2code-api"))
             }
         }
         val jvmMain by getting {

@@ -15,13 +15,12 @@ jobs:
       - uses: gradle/wrapper-validation-action@v1
       - run: chmod +x ${{ github.workspace }}/gradlew
       - run: chmod +x ${{ github.workspace }}/setup-shared-libs.sh
-      - run: sudo apt-get install -y libtinfo5
       - run: ${{ github.workspace }}/setup-shared-libs.sh
       - uses: gradle/gradle-build-action@v2
         with:
           arguments: check
       - if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-reports-${{ matrix.config.preset }}
           path: ${{ github.workspace }}/*/build/reports/*
@@ -36,10 +35,8 @@ jobs:
         with:
           java-version: 8.0
           distribution: zulu
-      - uses: gradle/wrapper-validation-action@v1
       - run: chmod +x ${{ github.workspace }}/gradlew
       - run: chmod +x ${{ github.workspace }}/setup-shared-libs.sh
-      - run: sudo apt-get install -y libtinfo5
       - run: ${{ github.workspace }}/setup-shared-libs.sh
       - uses: gradle/gradle-build-action@v2
         with:

@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.agent.test.testinfo
+package com.epam.drill.agent.test.sending
 
-import com.epam.drill.agent.test2code.api.TestResult
+import kotlinx.serialization.Serializable
 
-interface TestExecutionListener {
-    fun onTestStarted(test: TestLaunchInfo) {}
-    fun onTestFinished(test: TestLaunchInfo, result: TestResult) {}
-    fun onTestIgnored(test: TestLaunchInfo) {}
-}
+@Serializable
+class TestDefinitionPayload(
+    val runner: String = "",
+    val path: String = "",
+    val testName: String = "",
+    val testParams: List<String> = emptyList(),
+    val metadata: Map<String, String> = emptyMap(),
+    val tags: List<String> = emptyList(),
+)

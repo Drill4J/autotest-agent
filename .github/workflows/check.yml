@@ -22,13 +22,10 @@ jobs:
         with:
           java-version: 8
           distribution: zulu
-      - uses: gradle/wrapper-validation-action@v1
       - if: matrix.config.preset == 'linuxX64' || matrix.config.preset == 'macosX64' || matrix.config.preset == 'macosArm64'
         run: chmod +x ${{ github.workspace }}/gradlew
       - if: matrix.config.preset == 'linuxX64' || matrix.config.preset == 'macosX64' || matrix.config.preset == 'macosArm64'
         run: chmod +x ${{ github.workspace }}/setup-shared-libs.sh
-      - if: matrix.config.preset == 'linuxX64'
-        run: sudo apt-get install -y libtinfo5
       - if: matrix.config.preset == 'linuxX64' || matrix.config.preset == 'macosX64' || matrix.config.preset == 'macosArm64'
         run: ${{ github.workspace }}/setup-shared-libs.sh
       - if: matrix.config.preset == 'mingwX64'
@@ -39,7 +36,7 @@ jobs:
           # We'll need to wait until the test modules are migrated to compatibility-matrix tests.
           arguments: assemble
       - if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-reports-${{ matrix.config.preset }}
           path: ${{ github.workspace }}/*/build/reports/*

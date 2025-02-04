@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.agent.test.testinfo
-
-import com.epam.drill.agent.test2code.api.TestInfo
+package com.epam.drill.agent.test.execution
 
 interface TestExecutionRecorder {
     fun recordTestStarting(
@@ -32,15 +30,7 @@ interface TestExecutionRecorder {
         isSmartSkip: Boolean = false
     )
 
-    fun getFinishedTests(): List<TestInfo>
+    fun getFinishedTests(): List<TestExecutionInfo>
 
     fun reset()
 }
-
-class TestMethodInfo(
-    val engine: String,
-    val className: String,
-    val method: String,
-    val methodParams: String,
-    val classParams: String
-)
