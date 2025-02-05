@@ -23,7 +23,6 @@ data class TestLaunchPayload(
     val testLaunchId: String,
     val testDefinitionId: String,
     val result: TestResult,
-    val startedAt: Long,
-    val finishedAt: Long,
+    val duration: Int?,
     val details: TestDefinitionPayload,
 )
