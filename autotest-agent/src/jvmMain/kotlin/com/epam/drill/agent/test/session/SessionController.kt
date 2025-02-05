@@ -78,8 +78,7 @@ private fun List<TestExecutionInfo>.toTestLaunchPayloads(): List<TestLaunchPaylo
         testLaunchId = info.testLaunchId,
         testDefinitionId = hash(info.testMethod.signature),
         result = info.result,
-        startedAt = info.startedAt?.toIsoTimeFormat(),
-        finishedAt = info.finishedAt?.toIsoTimeFormat(),
+        duration = info.finishedAt?.minus(info.startedAt ?: 0),
         details = testDefinitionPayload
     )
 }
