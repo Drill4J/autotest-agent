@@ -18,7 +18,6 @@ pluginManagement {
         id("io.github.gradle-nexus.publish-plugin") version nexusPublishPluginVersion
     }
     repositories {
-        mavenLocal()
         mavenCentral()
         gradlePluginPortal()
     }
