@@ -47,9 +47,11 @@ fun messageSender(): AgentMessageSender<AgentMessage> {
     val serializer = JsonAgentMessageSerializer<AgentMessage>()
     val mapper = HttpAgentMessageDestinationMapper("data-ingest")
     val queue = InMemoryAgentMessageQueue(
-        Configuration.parameters[ParameterDefinitions.MESSAGE_QUEUE_LIMIT].let(::parseBytes)
+        capacity = Configuration.parameters[ParameterDefinitions.MESSAGE_QUEUE_LIMIT].let(::parseBytes)
     )
-    return QueuedAgentMessageSender(transport, serializer, mapper, queue)
+    return QueuedAgentMessageSender(transport, serializer, mapper, queue,
+        maxRetries =  Configuration.parameters[ParameterDefinitions.MESSAGE_MAX_RETRIES]
+    )
 }
 
 private fun resolvePath(path: String) = File(path).run {
