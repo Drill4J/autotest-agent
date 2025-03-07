@@ -22,6 +22,7 @@ import ch.qos.logback.classic.PatternLayout
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
 import ch.qos.logback.classic.pattern.ClassicConverter
 import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.classic.util.ContextInitializer
 import ch.qos.logback.core.Appender
 import ch.qos.logback.core.ConsoleAppender
 import ch.qos.logback.core.FileAppender
@@ -36,7 +37,9 @@ actual object LoggingConfiguration {
 
     actual fun readDefaultConfiguration() {
         PatternLayout.DEFAULT_CONVERTER_MAP["maskedMsg"] = SensitiveDataConverter::class.java.name
-        val root = (LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger)
+        val root = withSystemProperty(ContextInitializer.CONFIG_FILE_PROPERTY, "test-drill-logback.xml") {
+            (LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger)
+        }
         root.loggerContext.reset()
         root.level = Level.ERROR
         root.addAppender(createConsoleAppender())
@@ -108,6 +111,17 @@ actual object LoggingConfiguration {
     class SensitiveDataConverter : ClassicConverter() {
         override fun convert(event: ILoggingEvent): String {
             return event.formattedMessage.replace(apiKeyPattern, "********")
+        }
+    }
+
+
+    private fun <T> withSystemProperty(property: String, value: String, block: () -> T): T {
+        val oldValue = System.getProperty(property)
+        System.setProperty(property, value)
+        try {
+            return block()
+        } finally {
+            oldValue?.let { System.setProperty(property, it) } ?: System.clearProperty(property)
         }
     }
 }
