@@ -19,9 +19,18 @@ import com.epam.drill.agent.common.transport.AgentMessage
 import kotlinx.serialization.Serializable
 
 @Serializable
+class SingleSessionBuildPayload(
+    val appId: String,
+    val instanceId: String? = null,
+    val buildVersion: String? = null,
+    val commitSha: String? = null
+)
+
+@Serializable
 class SessionPayload(
     val id: String,
     val groupId: String,
     val testTaskId: String,
-    val startedAt: String
+    val startedAt: String,
+    val builds: List<SingleSessionBuildPayload> = emptyList()
 ): AgentMessage()
