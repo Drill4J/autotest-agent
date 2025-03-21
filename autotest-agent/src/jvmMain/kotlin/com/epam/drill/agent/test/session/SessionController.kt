@@ -50,13 +50,22 @@ actual object SessionController {
     actual fun startSession() {
         val customSessionId = Configuration.parameters[ParameterDefinitions.SESSION_ID]
         sessionId = customSessionId.takeIf(String::isNotBlank) ?: uuid4().toString()
+        val builds =
+            takeIf { Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_TARGET_APP_ID].isNotEmpty() }?.let {
+                SingleSessionBuildPayload(
+                    appId = Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_TARGET_APP_ID],
+                    buildVersion = Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_TARGET_BUILD_VERSION],
+                    commitSha = Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_TARGET_COMMIT_SHA]
+                )
+            }?.let { listOf(it) } ?: emptyList()
         logger.info { "Test session started: $sessionId" }
         sessionSender.sendSession(
             SessionPayload(
                 id = sessionId,
                 groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID],
                 testTaskId = Configuration.parameters[ParameterDefinitions.TEST_TASK_ID],
-                startedAt = System.currentTimeMillis().toIsoTimeFormat()
+                startedAt = System.currentTimeMillis().toIsoTimeFormat(),
+                builds = builds
             )
         )
         testInfoSender.startSendingTests()
