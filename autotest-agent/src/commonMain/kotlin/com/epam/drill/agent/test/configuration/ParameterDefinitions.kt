@@ -56,4 +56,5 @@ object ParameterDefinitions {
     val RECOMMENDED_TESTS_TARGET_BUILD_VERSION = AgentParameterDefinition.forString(name = "recommendedTestsTargetBuildVersion")
     val RECOMMENDED_TESTS_BASELINE_COMMIT_SHA = AgentParameterDefinition.forString(name = "recommendedTestsBaselineCommitSha")
     val RECOMMENDED_TESTS_BASELINE_BUILD_VERSION = AgentParameterDefinition.forString(name = "recommendedTestsBaselineBuildVersion")
+    val RECOMMENDED_TESTS_USE_MATERIALIZED_VIEWS = AgentParameterDefinition.forString(name = "recommendedTestsUseMaterializedViews")
 }
