@@ -50,7 +50,7 @@ actual object SessionController {
 
     actual fun startSession() {
         val customSessionId = Configuration.parameters[ParameterDefinitions.SESSION_ID]
-        sessionId = customSessionId.takeIf(String::isNotBlank) ?: uuid4().toString()
+        sessionId = customSessionId ?: uuid4().toString()
         val builds =
             takeIf { Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_TARGET_APP_ID].isNotEmpty() }?.let {
                 SingleSessionBuildPayload(

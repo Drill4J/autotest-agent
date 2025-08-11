@@ -16,48 +16,66 @@
 package com.epam.drill.agent.test.configuration
 
 import com.epam.drill.agent.common.configuration.AgentParameterDefinition
+import com.epam.drill.agent.common.configuration.AgentParameterDefinitionCollection
+import com.epam.drill.agent.common.configuration.NullableAgentParameterDefinition
+import com.epam.drill.agent.configuration.identifier
+import com.epam.drill.agent.configuration.validTransportUrl
+import com.epam.drill.agent.konform.validation.jsonschema.minLength
 
-object ParameterDefinitions {
-    val GROUP_ID = AgentParameterDefinition.forString(name = "groupId")
-    val API_URL = AgentParameterDefinition.forString(name = "apiUrl", parser = { if (!it.endsWith("/") ) "$it/" else it })
-    val API_KEY = AgentParameterDefinition.forString(name = "apiKey")
-    val MESSAGE_QUEUE_LIMIT = AgentParameterDefinition.forString(name = "messageQueueLimit", defaultValue = "512Mb")
-    val MESSAGE_MAX_RETRIES = AgentParameterDefinition.forInt(name = "messageMaxRetries", defaultValue = Int.MAX_VALUE)
-    val SSL_TRUSTSTORE = AgentParameterDefinition.forString(name = "sslTruststore")
-    val SSL_TRUSTSTORE_PASSWORD = AgentParameterDefinition.forString(name = "sslTruststorePassword")
-    val LOG_LEVEL = AgentParameterDefinition.forString(name = "logLevel", defaultValue = "INFO")
-    val LOG_FILE = AgentParameterDefinition.forString(name = "logFile")
-    val LOG_LIMIT = AgentParameterDefinition.forInt(name = "logLimit", defaultValue = 512)
-    val WITH_JS_COVERAGE = AgentParameterDefinition.forBoolean(name = "withJsCoverage")
-    val PROXY_ADDRESS = AgentParameterDefinition.forString(name = "browserProxyAddress")
+object ParameterDefinitions: AgentParameterDefinitionCollection() {
+    val GROUP_ID = AgentParameterDefinition.forString(
+        name = "groupId",
+        description = "Unique arbitrary string identifying your application group. Example: my-cool-app",
+        validator = {
+            identifier()
+            minLength(3)
+        }).register()
+    val API_URL = AgentParameterDefinition.forString(
+        name = "apiUrl",
+        description = "URL to Drill4J Backend /api endpoint. Example: http://localhost:8090/api",
+        parser = { if (!it.endsWith("/")) "$it/" else it  },
+        validator = { validTransportUrl() }).register()
+    val API_KEY = NullableAgentParameterDefinition.forString(
+        name = "apiKey",
+        description = "Drill4J API key. It is recommended to set it with DRILL_API_KEY env variable, rather than using command line argument"
+    ).register()
+    val MESSAGE_QUEUE_LIMIT = AgentParameterDefinition.forString(name = "messageQueueLimit", defaultValue = "512Mb").register()
+    val MESSAGE_MAX_RETRIES = AgentParameterDefinition.forInt(name = "messageMaxRetries", defaultValue = Int.MAX_VALUE).register()
+    val SSL_TRUSTSTORE = NullableAgentParameterDefinition.forString(name = "sslTruststore").register()
+    val SSL_TRUSTSTORE_PASSWORD = NullableAgentParameterDefinition.forString(name = "sslTruststorePassword").register()
+    val LOG_LEVEL = AgentParameterDefinition.forString(name = "logLevel", defaultValue = "INFO").register()
+    val LOG_FILE = NullableAgentParameterDefinition.forString(name = "logFile").register()
+    val LOG_LIMIT = AgentParameterDefinition.forInt(name = "logLimit", defaultValue = 512).register()
+    val WITH_JS_COVERAGE = AgentParameterDefinition.forBoolean(name = "withJsCoverage", defaultValue = false).register()
+    val PROXY_ADDRESS = AgentParameterDefinition.forString(name = "browserProxyAddress", defaultValue = "").register()
     val DEVTOOLS_PROXY_ADDRESS = AgentParameterDefinition.forString(
         name = "devToolsProxyAddress",
         parser = { it.trim().takeIf(String::isBlank) ?: it.takeIf(URL_SCHEME_REGEX::matches) ?: "http://$it"}
-    )
-    val DEVTOOLS_REPLACE_LOCALHOST = AgentParameterDefinition.forString(name = "devtoolsAddressReplaceLocalhost")
-    val SESSION_ID = AgentParameterDefinition.forString(name = "sessionId")
-    val LAUNCH_TYPE = AgentParameterDefinition.forString(name = "launchType")
+    ).register()
+    val DEVTOOLS_REPLACE_LOCALHOST = AgentParameterDefinition.forString(name = "devtoolsAddressReplaceLocalhost", defaultValue = "").register()
+    val SESSION_ID = NullableAgentParameterDefinition.forString(name = "sessionId").register()
+    val LAUNCH_TYPE = AgentParameterDefinition.forString(name = "launchType", defaultValue = "").register()
     val FRAMEWORK_PLUGINS = AgentParameterDefinition.forType(
         name = "rawFrameworkPlugins",
         defaultValue = emptyList(),
         parser = { it.split(";") }
-    )
+    ).register()
 
     private val URL_SCHEME_REGEX = Regex("\\w+://.+")
 
-    val JS_AGENT_BUILD_VERSION = AgentParameterDefinition.forString(name = "jsAgentBuildVersion")
-    val JS_AGENT_ID = AgentParameterDefinition.forString(name = "jsAgentId")
+    val JS_AGENT_BUILD_VERSION = NullableAgentParameterDefinition.forString(name = "jsAgentBuildVersion").register()
+    val JS_AGENT_ID = NullableAgentParameterDefinition.forString(name = "jsAgentId").register()
 
-    val TEST_TASK_ID = AgentParameterDefinition.forString(name = "testTaskId")
-    val RECOMMENDED_TESTS_ENABLED = AgentParameterDefinition.forBoolean(name = "recommendedTestsEnabled", defaultValue = false)
-    val RECOMMENDED_TESTS_COVERAGE_PERIOD_DAYS = AgentParameterDefinition.forInt(name = "recommendedTestsCoveragePeriodDays", defaultValue = 0)
-    val RECOMMENDED_TESTS_TARGET_APP_ID = AgentParameterDefinition.forString(name = "recommendedTestsTargetAppId")
-    val RECOMMENDED_TESTS_TARGET_COMMIT_SHA = AgentParameterDefinition.forString(name = "recommendedTestsTargetCommitSha")
-    val RECOMMENDED_TESTS_TARGET_BUILD_VERSION = AgentParameterDefinition.forString(name = "recommendedTestsTargetBuildVersion")
-    val RECOMMENDED_TESTS_BASELINE_COMMIT_SHA = AgentParameterDefinition.forString(name = "recommendedTestsBaselineCommitSha")
-    val RECOMMENDED_TESTS_BASELINE_BUILD_VERSION = AgentParameterDefinition.forString(name = "recommendedTestsBaselineBuildVersion")
-    val RECOMMENDED_TESTS_USE_MATERIALIZED_VIEWS = AgentParameterDefinition.forString(name = "recommendedTestsUseMaterializedViews")
+    val TEST_TASK_ID = AgentParameterDefinition.forString(name = "testTaskId", defaultValue = "").register()
+    val RECOMMENDED_TESTS_ENABLED = AgentParameterDefinition.forBoolean(name = "recommendedTestsEnabled", defaultValue = false).register()
+    val RECOMMENDED_TESTS_COVERAGE_PERIOD_DAYS = AgentParameterDefinition.forInt(name = "recommendedTestsCoveragePeriodDays", defaultValue = 0).register()
+    val RECOMMENDED_TESTS_TARGET_APP_ID = AgentParameterDefinition.forString(name = "recommendedTestsTargetAppId", defaultValue = "").register()
+    val RECOMMENDED_TESTS_TARGET_COMMIT_SHA = AgentParameterDefinition.forString(name = "recommendedTestsTargetCommitSha", defaultValue = "").register()
+    val RECOMMENDED_TESTS_TARGET_BUILD_VERSION = AgentParameterDefinition.forString(name = "recommendedTestsTargetBuildVersion", defaultValue = "").register()
+    val RECOMMENDED_TESTS_BASELINE_COMMIT_SHA = AgentParameterDefinition.forString(name = "recommendedTestsBaselineCommitSha", defaultValue = "").register()
+    val RECOMMENDED_TESTS_BASELINE_BUILD_VERSION = AgentParameterDefinition.forString(name = "recommendedTestsBaselineBuildVersion", defaultValue = "").register()
+    val RECOMMENDED_TESTS_USE_MATERIALIZED_VIEWS = AgentParameterDefinition.forString(name = "recommendedTestsUseMaterializedViews", defaultValue = "").register()
 
-    val TEST_TRACING_ENABLED = AgentParameterDefinition.forBoolean(name = "testTracingEnabled", defaultValue = true)
-    val TEST_LAUNCH_METADATA_SENDING_ENABLED = AgentParameterDefinition.forBoolean(name = "testLaunchMetadataSendingEnabled", defaultValue = true)
+    val TEST_TRACING_ENABLED = AgentParameterDefinition.forBoolean(name = "testTracingEnabled", defaultValue = true).register()
+    val TEST_LAUNCH_METADATA_SENDING_ENABLED = AgentParameterDefinition.forBoolean(name = "testLaunchMetadataSendingEnabled", defaultValue = true).register()
 }

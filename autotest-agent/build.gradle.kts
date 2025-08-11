@@ -96,6 +96,7 @@ kotlin {
                 implementation(project(":common"))
                 implementation(project(":agent-config"))
                 implementation(project(":agent-instrumentation"))
+                implementation(project(":konform"))
             }
         }
         val jvmMain by getting {
