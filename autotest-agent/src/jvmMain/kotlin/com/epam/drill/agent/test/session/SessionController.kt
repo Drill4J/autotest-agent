@@ -44,7 +44,8 @@ actual object SessionController {
     private lateinit var sessionId: String
 
     init {
-        Runtime.getRuntime().addShutdownHook(Thread { testInfoSender.stopSendingTests() })
+        if (isTestLaunchMetadataSendingEnabled())
+            Runtime.getRuntime().addShutdownHook(Thread { testInfoSender.stopSendingTests() })
     }
 
     actual fun startSession() {
@@ -68,10 +69,13 @@ actual object SessionController {
                 builds = builds
             )
         )
-        testInfoSender.startSendingTests()
+        if (isTestLaunchMetadataSendingEnabled())
+            testInfoSender.startSendingTests()
     }
 
     fun getSessionId(): String = sessionId
+
+    private fun isTestLaunchMetadataSendingEnabled(): Boolean = Configuration.parameters[ParameterDefinitions.TEST_LAUNCH_METADATA_SENDING_ENABLED]
 }
 
 private fun List<TestExecutionInfo>.toTestLaunchPayloads(): List<TestLaunchPayload> = map { info ->

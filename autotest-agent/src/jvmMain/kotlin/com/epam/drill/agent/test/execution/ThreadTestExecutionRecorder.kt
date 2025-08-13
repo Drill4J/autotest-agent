@@ -15,10 +15,11 @@
  */
 package com.epam.drill.agent.test.execution
 
-import com.epam.drill.agent.request.DrillRequestHolder
 import com.epam.drill.agent.common.request.DrillRequest
 import com.epam.drill.agent.common.request.RequestHolder
 import com.epam.drill.agent.test.TEST_ID_HEADER
+import com.epam.drill.agent.test.configuration.Configuration
+import com.epam.drill.agent.test.configuration.ParameterDefinitions
 import com.epam.drill.agent.test.session.SessionController
 import mu.KotlinLogging
 import java.util.*
@@ -30,11 +31,13 @@ class ThreadTestExecutionRecorder(
 ) : TestExecutionRecorder {
     private val logger = KotlinLogging.logger {}
     private val testExecutionData: ConcurrentHashMap<String, TestExecutionInfo> = ConcurrentHashMap()
+    private val testLaunchHolder: ThreadLocal<String> = ThreadLocal.withInitial { null }
 
     override fun recordTestStarting(
         testMethod: TestMethodInfo
     ) {
         val testLaunchId = generateTestLaunchId()
+        testLaunchHolder.set(testLaunchId)
         updateTestInfo(testLaunchId, testMethod) {
             it.startedAt = System.currentTimeMillis()
         }
@@ -47,11 +50,12 @@ class ThreadTestExecutionRecorder(
         testMethod: TestMethodInfo,
         status: String
     ) {
-        val testLaunchId = getTestLaunchId()
+        val testLaunchId = testLaunchHolder.get()
         if (testLaunchId == null) {
             logger.warn { "Test ${testMethod.className}::${testMethod.method} finished with result $status but no test launch id was found." }
             return
         }
+        testLaunchHolder.remove()
         val testResult = mapToTestResult(status)
         updateTestInfo(testLaunchId, testMethod) {
             it.finishedAt = System.currentTimeMillis()
@@ -66,7 +70,8 @@ class ThreadTestExecutionRecorder(
         testMethod: TestMethodInfo,
         isSmartSkip: Boolean
     ) {
-        val testLaunchId = getTestLaunchId() ?: generateTestLaunchId()
+        val testLaunchId = testLaunchHolder.get() ?: generateTestLaunchId()
+        testLaunchHolder.remove()
         val skipResult = if (isSmartSkip) TestResult.SMART_SKIPPED else TestResult.SKIPPED
         updateTestInfo(testLaunchId, testMethod) {
             it.startedAt = null
@@ -107,23 +112,23 @@ class ThreadTestExecutionRecorder(
     private fun generateTestLaunchId() = UUID.randomUUID().toString()
 
     private fun addDrillHeaders(testLaunchId: String) {
-        DrillRequestHolder.store(
+        val drillRequest = if (Configuration.parameters[ParameterDefinitions.TEST_TRACING_ENABLED]) {
             DrillRequest(
                 drillSessionId = SessionController.getSessionId(),
                 headers = mapOf(TEST_ID_HEADER to (testLaunchId))
             )
-        )
+        } else {
+            DrillRequest(drillSessionId = SessionController.getSessionId())
+        }
+        requestHolder.store(drillRequest)
     }
 
     private fun clearDrillHeaders() {
-        DrillRequestHolder.remove()
+        requestHolder.remove()
     }
 
     private fun mapToTestResult(value: String): TestResult {
         if (value == "SUCCESSFUL") return TestResult.PASSED
         return TestResult.valueOf(value)
     }
-
-    private fun getTestLaunchId(): String? = requestHolder.retrieve()?.headers?.get(TEST_ID_HEADER)
-
 }
