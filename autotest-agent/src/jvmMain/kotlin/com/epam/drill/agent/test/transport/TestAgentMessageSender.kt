@@ -34,11 +34,10 @@ object TestAgentMessageSender : AgentMessageSender<AgentMessage> by messageSende
 
 fun agentTransport(): AgentMessageTransport = HttpAgentMessageTransport(
     Configuration.parameters[ParameterDefinitions.API_URL],
-    Configuration.parameters[ParameterDefinitions.API_KEY],
-    Configuration.parameters[ParameterDefinitions.SSL_TRUSTSTORE].takeIf(String::isNotEmpty)?.let(
-        ::resolvePath
-    ) ?: "",
-    Configuration.parameters[ParameterDefinitions.SSL_TRUSTSTORE_PASSWORD],
+    Configuration.parameters[ParameterDefinitions.API_KEY] ?: "",
+    Configuration.parameters[ParameterDefinitions.SSL_TRUSTSTORE]
+        ?.let { resolvePath(it) } ?: "",
+    Configuration.parameters[ParameterDefinitions.SSL_TRUSTSTORE_PASSWORD] ?: "",
     gzipCompression = false
 )
 
@@ -55,7 +54,7 @@ fun messageSender(): AgentMessageSender<AgentMessage> {
 }
 
 private fun resolvePath(path: String) = File(path).run {
-    val installationDir = File(Configuration.parameters[DefaultParameterDefinitions.INSTALLATION_DIR])
+    val installationDir = File(Configuration.parameters[DefaultParameterDefinitions.INSTALLATION_DIR] ?: "")
     val resolved = this.takeIf(File::exists)
         ?: this.takeUnless(File::isAbsolute)?.let(installationDir::resolve)
     logger.trace { "resolvePath: Resolved $path to ${resolved?.absolutePath}" }
