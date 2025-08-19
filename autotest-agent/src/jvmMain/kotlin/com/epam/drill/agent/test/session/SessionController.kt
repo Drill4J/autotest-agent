@@ -19,6 +19,7 @@ import com.benasher44.uuid.*
 import com.epam.drill.agent.common.request.DrillInitialContext
 import com.epam.drill.agent.common.request.DrillRequest
 import com.epam.drill.agent.request.DrillRequestHolder
+import com.epam.drill.agent.test.SESSION_ID_HEADER
 import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.configuration.ParameterDefinitions
 import com.epam.drill.agent.test.sending.IntervalTestInfoSender
@@ -54,7 +55,7 @@ actual object SessionController {
     actual fun startSession() {
         val customSessionId = Configuration.parameters[ParameterDefinitions.SESSION_ID]
         sessionId = customSessionId ?: uuid4().toString()
-        DrillInitialContext.add("drill-session-id", sessionId)
+        DrillInitialContext.add(SESSION_ID_HEADER, sessionId)
         DrillRequestHolder.store(DrillRequest(sessionId))
         logger.info { "Test session started: $sessionId" }
         val builds =
