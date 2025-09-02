@@ -39,10 +39,10 @@ actual object StrategyManager {
 
     init {
         systemStrategies.add(ReactorTransformer)
-        systemStrategies.add(OkHttpClientStub)
         systemStrategies.add(SpringWebClientTransformer)
         systemStrategies.add(ApacheHttpClientTransformer)
         systemStrategies.add(JavaHttpClientTransformer)
+        systemStrategies.add(OkHttp3ClientTransformer)
         systemStrategies.add(Selenium)
         systemStrategies.add(Kafka)
     }
@@ -55,8 +55,12 @@ actual object StrategyManager {
             strategies.addAll(allStrategies.values.flatten())
         }
         strategies.addAll(systemStrategies)
-        strategies.removeIf { !it.enabled() }
-        logger.debug { "Added strategies: ${strategies.map { it::class.simpleName }.joinToString()}" }
+        strategies.removeIf {
+            !it.enabled().also { enabled ->
+                logger.debug { "${it::class.simpleName} is ${if (enabled) "enabled" else "disabled"}" }
+            }
+        }
+        logger.info { "Enabled ${strategies.size} transformers" }
     }
 
     // TODO EPMDJ-10496 path encode with url encoding
@@ -93,18 +97,4 @@ actual object StrategyManager {
         }
         return transformedClassBytes.firstOrNull { it != null && !it.contentEquals(classBytes) }
     }
-}
-
-//TODO EPMDJ-8916 Replace with [com.epam.drill.agent.instrument.http.ok.OkHttpClient]
-private object OkHttpClientStub : Transformer {
-    override fun permit(className: String, superName: String?, interfaces: Array<String?>): Boolean {
-        //todo EPMDJ-10494 no need drill suffix after removing dependency
-        return interfaces.any { "drill/$it" == "okhttp3/internal/http/HttpCodec" }
-    }
-    override fun transform(
-        className: String,
-        classFileBuffer: ByteArray,
-        loader: Any?,
-        protectionDomain: Any?
-    ) = OkHttp3ClientTransformer.transform(className, classFileBuffer, loader, protectionDomain)
 }
