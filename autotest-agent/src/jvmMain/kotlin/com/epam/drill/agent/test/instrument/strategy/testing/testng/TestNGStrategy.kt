@@ -36,7 +36,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
 
     abstract val versionRegex: Regex
 
-    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
+    override fun permit(className: String, superName: String?, interfaces: Array<String?>): Boolean {
         return className == "org/testng/TestRunner"
     }
 

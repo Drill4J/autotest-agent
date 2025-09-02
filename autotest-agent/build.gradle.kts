@@ -109,6 +109,7 @@ kotlin {
                 implementation("com.benasher44:uuid:$uuidVersion")
                 implementation(project(":agent-transport"))
                 implementation(project(":knasm"))
+                implementation(project(":agent-instrumentation"))
             }
         }
         val configureNativeDependencies: KotlinSourceSet.() -> Unit = {
@@ -116,6 +117,7 @@ kotlin {
                 implementation(project(":jvmapi"))
                 implementation(project(":konform"))
                 implementation("io.ktor:ktor-utils:$ktorVersion")
+                implementation(project(":agent-instrumentation"))
             }
         }
         val linuxX64Main by getting(configuration = configureNativeDependencies)

@@ -28,7 +28,7 @@ import java.security.*
 import mu.KotlinLogging
 
 @Suppress("PrivatePropertyName")
-object Selenium : AbstractTransformerObject(), ClassPathProvider by RuntimeClassPathProvider {
+object Selenium : AbstractTransformerObject(Configuration), ClassPathProvider by RuntimeClassPathProvider {
 
     private const val Command = "org.openqa.selenium.remote.Command"
     private const val ImmutableMap = "com.google.common.collect.ImmutableMap"
@@ -55,7 +55,7 @@ object Selenium : AbstractTransformerObject(), ClassPathProvider by RuntimeClass
         }
     }
 
-    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
+    override fun permit(className: String, superName: String?, interfaces: Array<String?>): Boolean {
         return className == "org/openqa/selenium/remote/RemoteWebDriver"
     }
 

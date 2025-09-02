@@ -32,7 +32,7 @@ abstract class TestNGPrioritizingStrategy : AbstractTestStrategy() {
 
     override fun enabled(): Boolean = Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_ENABLED]
 
-    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
+    override fun permit(className: String, superName: String?, interfaces: Array<String?>): Boolean {
         return interfaces.any { it == "org/testng/IMethodSelector" }
     }
 

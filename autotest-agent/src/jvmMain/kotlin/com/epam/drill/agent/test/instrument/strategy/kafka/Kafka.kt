@@ -17,17 +17,18 @@ package com.epam.drill.agent.test.instrument.strategy.kafka
 
 import com.epam.drill.agent.instrument.*
 import com.epam.drill.agent.test.*
+import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.instrument.RuntimeClassPathProvider
 import javassist.*
 import mu.KotlinLogging
 
-object Kafka : AbstractTransformerObject(), ClassPathProvider by RuntimeClassPathProvider {
+object Kafka : AbstractTransformerObject(Configuration), ClassPathProvider by RuntimeClassPathProvider {
 
     private const val KAFKA_PRODUCER_INTERFACE = "org/apache/kafka/clients/producer/Producer"
 
     override val logger = KotlinLogging.logger {}
 
-    override fun permit(className: String?, superName: String?, interfaces: Array<String?>) = interfaces.any { it == KAFKA_PRODUCER_INTERFACE }
+    override fun permit(className: String, superName: String?, interfaces: Array<String?>) = interfaces.any { it == KAFKA_PRODUCER_INTERFACE }
 
     override fun transform(className: String, ctClass: CtClass) {
         ctClass.getDeclaredMethods("send").forEach {

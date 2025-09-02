@@ -28,7 +28,7 @@ abstract class CucumberV5_6 : CucumberStrategy() {
     /**
      * From cucumber 5 TestStep class location doesn't change
      */
-    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
+    override fun permit(className: String, superName: String?, interfaces: Array<String?>): Boolean {
         return className == "io/cucumber/core/runner/TestStep"
     }
 

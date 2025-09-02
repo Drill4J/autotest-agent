@@ -15,7 +15,7 @@
  */
 package com.epam.drill.agent.test.instrument.servers
 
-import com.epam.drill.agent.instrument.AbstractTransformerObject
+import com.epam.drill.agent.test.instrument.AbstractTransformerObject
 import com.epam.drill.agent.instrument.TransformerObject
 
 actual object ReactorTransformer: TransformerObject, AbstractTransformerObject()
