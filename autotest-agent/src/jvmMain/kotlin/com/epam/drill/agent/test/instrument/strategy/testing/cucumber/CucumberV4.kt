@@ -15,11 +15,12 @@
  */
 package com.epam.drill.agent.test.instrument.strategy.testing.cucumber
 
+import com.epam.drill.agent.test.configuration.Configuration
 import javassist.*
 import org.objectweb.asm.*
 
 @Suppress("unused")
-object CucumberV4 : CucumberStrategy() {
+object CucumberV4 : CucumberStrategy(Configuration) {
     override val testPackage = "cucumber.api.event"
     override val Status = "cucumber.api.Result.Type"
     override val EventBus = "cucumber.runner.EventBus"

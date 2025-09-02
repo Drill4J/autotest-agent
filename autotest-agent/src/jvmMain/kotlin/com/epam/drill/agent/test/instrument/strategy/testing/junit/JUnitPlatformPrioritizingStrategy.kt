@@ -25,7 +25,7 @@ import mu.KotlinLogging
 import java.security.ProtectionDomain
 
 @Suppress("unused")
-object JUnitPlatformPrioritizingStrategy : AbstractTestStrategy() {
+object JUnitPlatformPrioritizingStrategy : AbstractJUnitStrategy(Configuration) {
 
     private val logger = KotlinLogging.logger {}
     private val DrillJUnit5Filter = "${this.javaClass.`package`.name}.gen.DrillJUnit5Filter"

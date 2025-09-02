@@ -17,7 +17,6 @@ package com.epam.drill.agent.test.instrument.strategy.testing.junit
 
 import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.configuration.ParameterDefinitions
-import com.epam.drill.agent.test.instrument.strategy.AbstractTestStrategy
 import com.epam.drill.agent.test.prioritization.RecommendedTests
 import javassist.*
 import mu.KotlinLogging
@@ -27,7 +26,7 @@ private const val Filter = "org.junit.runner.manipulation.Filter"
 private const val Description = "org.junit.runner.Description"
 
 @Suppress("unused")
-object JUnit4PrioritizingStrategy : AbstractTestStrategy() {
+object JUnit4PrioritizingStrategy : AbstractJUnitStrategy(Configuration) {
     private val logger = KotlinLogging.logger {}
     private val engineSegment = "junit"
     private val DrillJUnit4Filter = "${this.javaClass.`package`.name}.gen.DrillJUnit4Filter"
@@ -35,7 +34,7 @@ object JUnit4PrioritizingStrategy : AbstractTestStrategy() {
     override val id: String
         get() = "junit"
 
-    override fun enabled(): Boolean = Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_ENABLED]
+    override fun enabled(): Boolean = super.enabled() && agentConfiguration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_ENABLED]
 
     override fun permit(className: String, superName: String?, interfaces: Array<String?>): Boolean {
         return className == "org/junit/runners/JUnit4"

@@ -15,6 +15,8 @@
  */
 package com.epam.drill.agent.test.instrument.strategy
 
+import com.epam.drill.agent.common.configuration.AgentConfiguration
+import com.epam.drill.agent.instrument.InstrumentationParameterDefinitions.INSTRUMENTATION_ENABLED
 import java.io.ByteArrayInputStream
 import java.security.ProtectionDomain
 import javassist.ClassPool
@@ -25,7 +27,7 @@ import com.epam.drill.agent.instrument.Transformer
 import com.epam.drill.agent.test.instrument.StrategyManager
 
 @Suppress("LeakingThis")
-abstract class AbstractTestStrategy : Transformer {
+abstract class AbstractTestStrategy(internal val agentConfiguration: AgentConfiguration) : Transformer {
 
     init {
         StrategyManager.allStrategies[id] =
@@ -35,6 +37,10 @@ abstract class AbstractTestStrategy : Transformer {
     private val logger = KotlinLogging.logger {}
 
     abstract val id: String
+
+    override fun enabled(): Boolean {
+        return agentConfiguration.parameters[INSTRUMENTATION_ENABLED]
+    }
 
     override fun transform(
         className: String,

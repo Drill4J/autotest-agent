@@ -15,6 +15,7 @@
  */
 package com.epam.drill.agent.test.instrument.strategy.testing.junit
 
+import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.instrument.strategy.*
 import com.epam.drill.agent.test.execution.TestController
 import com.epam.drill.agent.test.execution.TestMethodInfo
@@ -22,7 +23,7 @@ import javassist.*
 import java.security.*
 
 @Suppress("unused")
-object JUnit5Strategy : AbstractTestStrategy() {
+object JUnit5Strategy : AbstractJUnitStrategy(Configuration) {
     override val id: String
         get() = "junit"
 

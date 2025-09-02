@@ -15,12 +15,13 @@
  */
 package com.epam.drill.agent.test.instrument.strategy.testing.cucumber
 
+import com.epam.drill.agent.test.configuration.Configuration
 import java.security.ProtectionDomain
 import javassist.ClassPool
 import javassist.CtClass
 
 @Suppress("unused")
-object CucumberV5 : CucumberV5_6() {
+object CucumberV5 : CucumberV5_6(Configuration) {
     override val versionPattern: Regex = "5\\.[0-9]+\\.[0-9]+".toRegex()
     override val Event: String = "io.cucumber.plugin.event.Event"
 

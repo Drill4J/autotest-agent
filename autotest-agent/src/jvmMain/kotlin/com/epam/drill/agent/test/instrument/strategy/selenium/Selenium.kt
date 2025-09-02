@@ -20,6 +20,7 @@ import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.configuration.ParameterDefinitions
 import com.epam.drill.agent.test.*
 import com.epam.drill.agent.test.configuration.*
+import com.epam.drill.agent.test.configuration.ParameterDefinitions.INSTRUMENTATION_SELENIUM_ENABLED
 import com.epam.drill.agent.test.instrument.RuntimeClassPathProvider
 import javassist.*
 import org.objectweb.asm.*
@@ -54,6 +55,8 @@ object Selenium : AbstractTransformerObject(Configuration), ClassPathProvider by
             writeBytes(extension.readBytes())
         }
     }
+
+    override fun enabled() = super.enabled() && agentConfiguration.parameters[INSTRUMENTATION_SELENIUM_ENABLED]
 
     override fun permit(className: String, superName: String?, interfaces: Array<String?>): Boolean {
         return className == "org/openqa/selenium/remote/RemoteWebDriver"

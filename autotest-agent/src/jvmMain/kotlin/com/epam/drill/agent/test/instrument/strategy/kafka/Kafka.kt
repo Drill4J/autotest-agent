@@ -28,6 +28,10 @@ object Kafka : AbstractTransformerObject(Configuration), ClassPathProvider by Ru
 
     override val logger = KotlinLogging.logger {}
 
+    override fun enabled(): Boolean {
+        return super.enabled()
+    }
+
     override fun permit(className: String, superName: String?, interfaces: Array<String?>) = interfaces.any { it == KAFKA_PRODUCER_INTERFACE }
 
     override fun transform(className: String, ctClass: CtClass) {

@@ -25,7 +25,7 @@ import kotlin.experimental.ExperimentalNativeApi
 
 object ClassFileLoadHook {
 
-    private val logger = KotlinLogging.logger("com.epam.drill.agent.test.instrumenting.ClassFileLoadHook")
+    private val logger = KotlinLogging.logger("com.epam.drill.agent.test.jvmti.ClassFileLoadHook")
     private const val DRILL_PACKAGE = "com/epam/drill/agent"
 
     @OptIn(ExperimentalForeignApi::class)

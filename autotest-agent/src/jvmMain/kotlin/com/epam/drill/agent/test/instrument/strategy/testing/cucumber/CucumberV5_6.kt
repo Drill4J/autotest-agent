@@ -15,9 +15,10 @@
  */
 package com.epam.drill.agent.test.instrument.strategy.testing.cucumber
 
+import com.epam.drill.agent.common.configuration.AgentConfiguration
 import javassist.*
 
-abstract class CucumberV5_6 : CucumberStrategy() {
+abstract class CucumberV5_6(configuration: AgentConfiguration) : CucumberStrategy(configuration) {
     override val Status = "io.cucumber.plugin.event.Status"
     override val EventBus: String = "io.cucumber.core.eventbus.EventBus"
     override val EventHandler = """io.cucumber.plugin.event.EventHandler"""

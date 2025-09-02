@@ -13,19 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.agent.test.instrument.strategy.testing.testng
+package com.epam.drill.agent.test.instrument.strategy.testing.junit
 
-import com.epam.drill.agent.test.configuration.Configuration
-import mu.KotlinLogging
+import com.epam.drill.agent.common.configuration.AgentConfiguration
+import com.epam.drill.agent.test.configuration.ParameterDefinitions.INSTRUMENTATION_JUNIT_ENABLED
+import com.epam.drill.agent.test.instrument.strategy.AbstractTestStrategy
 
-object TestNGv6PrioritizingStrategy: TestNGPrioritizingStrategy(Configuration) {
-    override val logger = KotlinLogging.logger {}
-    override val versionRegex: Regex = "testng-6\\.[0-9]+(\\.[0-9]+)*".toRegex()
-
-    override val id: String
-        get() = "testng"
-
-    override fun getMethodParametersExpression(): String {
-        return "getConstructorOrMethod().getParameterTypes()"
-    }
+abstract class AbstractJUnitStrategy(configuration: AgentConfiguration): AbstractTestStrategy(configuration) {
+    override fun enabled() = super.enabled() && agentConfiguration.parameters[INSTRUMENTATION_JUNIT_ENABLED]
 }
