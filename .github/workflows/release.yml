@@ -90,7 +90,6 @@ jobs:
         with:
           java-version: 8.0
           distribution: corretto
-      - uses: gradle/wrapper-validation-action@v1
       - if: matrix.config.preset == 'linuxX64' || matrix.config.preset == 'macosX64' || matrix.config.preset == 'macosArm64'
         run: chmod +x ${{ github.workspace }}/gradlew
       - if: matrix.config.preset == 'linuxX64' || matrix.config.preset == 'macosX64' || matrix.config.preset == 'macosArm64'
@@ -102,6 +101,8 @@ jobs:
       - uses: gradle/gradle-build-action@v2
         with:
           arguments: assemble
+      - name: List build/distributions contents
+        run: ls -l ${{ github.workspace }}/build/distributions/
       - uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
