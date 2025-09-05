@@ -15,9 +15,10 @@
  */
 package com.epam.drill.agent.test.instrument.strategy.testing.testng
 
+import com.epam.drill.agent.test.configuration.Configuration
 import mu.KotlinLogging
 
-object TestNGv7PrioritizingStrategy: TestNGPrioritizingStrategy() {
+object TestNGv7PrioritizingStrategy: TestNGPrioritizingStrategy(Configuration) {
     override val logger = KotlinLogging.logger {}
     override val versionRegex: Regex = "testng-7\\.[0-9]+(\\.[0-9]+)*".toRegex()
 

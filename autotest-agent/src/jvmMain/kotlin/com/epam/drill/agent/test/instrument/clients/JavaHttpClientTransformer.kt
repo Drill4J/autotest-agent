@@ -19,11 +19,12 @@ import com.epam.drill.agent.instrument.ClassPathProvider
 import com.epam.drill.agent.instrument.HeadersProcessor
 import com.epam.drill.agent.instrument.TransformerObject
 import com.epam.drill.agent.instrument.clients.JavaHttpClientTransformerObject
+import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.instrument.RuntimeClassPathProvider
 import com.epam.drill.agent.test.instrument.TestSessionHeadersProcessor
 
 actual object JavaHttpClientTransformer :
     TransformerObject,
-    JavaHttpClientTransformerObject(),
+    JavaHttpClientTransformerObject(Configuration),
     HeadersProcessor by TestSessionHeadersProcessor,
     ClassPathProvider by RuntimeClassPathProvider

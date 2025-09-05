@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.agent.test.instrument.clients
+package com.epam.drill.agent.test.instrument
 
-import com.epam.drill.agent.test.instrument.AbstractTransformerObject
-import com.epam.drill.agent.instrument.TransformerObject
+import com.epam.drill.agent.instrument.JvmTransformerObject
 
-actual object OkHttp3ClientTransformer : TransformerObject, AbstractTransformerObject()
+abstract class AbstractTransformerObject: JvmTransformerObject()

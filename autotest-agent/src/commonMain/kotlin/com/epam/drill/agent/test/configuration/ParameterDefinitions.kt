@@ -78,4 +78,11 @@ object ParameterDefinitions: AgentParameterDefinitionCollection() {
 
     val TEST_TRACING_ENABLED = AgentParameterDefinition.forBoolean(name = "testTracingEnabled", defaultValue = true).register()
     val TEST_LAUNCH_METADATA_SENDING_ENABLED = AgentParameterDefinition.forBoolean(name = "testLaunchMetadataSendingEnabled", defaultValue = true).register()
+
+    val INSTRUMENTATION_JUNIT_ENABLED = AgentParameterDefinition.forBoolean(name = "instrumentationJUnitEnabled", defaultValue = true).register()
+    val INSTRUMENTATION_TESTNG_ENABLED = AgentParameterDefinition.forBoolean(name = "instrumentationTestNGEnabled", defaultValue = true).register()
+    val INSTRUMENTATION_CUCUMBER_ENABLED = AgentParameterDefinition.forBoolean(name = "instrumentationCucumberEnabled", defaultValue = true).register()
+    val INSTRUMENTATION_SELENIUM_ENABLED = AgentParameterDefinition.forBoolean(name = "instrumentationSeleniumEnabled", defaultValue = true).register()
+    val INSTRUMENTATION_JMETER_ENABLED = AgentParameterDefinition.forBoolean(name = "instrumentationJMeterEnabled", defaultValue = true).register()
+
 }

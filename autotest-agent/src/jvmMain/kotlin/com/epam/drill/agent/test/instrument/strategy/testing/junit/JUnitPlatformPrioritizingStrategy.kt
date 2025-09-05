@@ -25,7 +25,7 @@ import mu.KotlinLogging
 import java.security.ProtectionDomain
 
 @Suppress("unused")
-object JUnitPlatformPrioritizingStrategy : AbstractTestStrategy() {
+object JUnitPlatformPrioritizingStrategy : AbstractJUnitStrategy(Configuration) {
 
     private val logger = KotlinLogging.logger {}
     private val DrillJUnit5Filter = "${this.javaClass.`package`.name}.gen.DrillJUnit5Filter"
@@ -36,7 +36,7 @@ object JUnitPlatformPrioritizingStrategy : AbstractTestStrategy() {
 
     override fun enabled(): Boolean = Configuration.parameters[ParameterDefinitions.RECOMMENDED_TESTS_ENABLED]
 
-    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
+    override fun permit(className: String, superName: String?, interfaces: Array<String?>): Boolean {
         return className == "org/junit/platform/launcher/core/DefaultLauncher"
     }
 

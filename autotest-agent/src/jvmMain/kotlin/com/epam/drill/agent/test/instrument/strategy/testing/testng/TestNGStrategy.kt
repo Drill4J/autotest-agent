@@ -15,6 +15,7 @@
  */
 package com.epam.drill.agent.test.instrument.strategy.testing.testng
 
+import com.epam.drill.agent.common.configuration.AgentConfiguration
 import com.epam.drill.agent.test.instrument.strategy.*
 import com.epam.drill.agent.test.execution.TestController
 import javassist.*
@@ -22,7 +23,7 @@ import java.lang.reflect.*
 import java.security.*
 import mu.KotlinLogging
 
-abstract class TestNGStrategy : AbstractTestStrategy() {
+abstract class TestNGStrategy(configuration: AgentConfiguration) : AbstractTestNGStrategy(configuration) {
     companion object {
         const val engineSegment = "testng"
         const val TestNGMethod = "org.testng.internal.TestNGMethod"
@@ -36,7 +37,7 @@ abstract class TestNGStrategy : AbstractTestStrategy() {
 
     abstract val versionRegex: Regex
 
-    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
+    override fun permit(className: String, superName: String?, interfaces: Array<String?>): Boolean {
         return className == "org/testng/TestRunner"
     }
 

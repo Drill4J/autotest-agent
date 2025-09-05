@@ -15,11 +15,12 @@
  */
 package com.epam.drill.agent.test.instrument.strategy.testing.testng
 
+import com.epam.drill.agent.test.configuration.Configuration
 import javassist.*
 import java.security.*
 
 @Suppress("unused")
-object TestNGStrategyV7 : TestNGStrategy() {
+object TestNGStrategyV7 : TestNGStrategy(Configuration) {
 
     override val versionRegex: Regex = "testng-7\\.[0-9]+(\\.[0-9]+)*".toRegex()
     override val id: String = "testng7"

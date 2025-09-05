@@ -15,12 +15,14 @@
  */
 package com.epam.drill.agent.test.instrument.strategy.testing.cucumber
 
+import com.epam.drill.agent.common.configuration.AgentConfiguration
+import com.epam.drill.agent.test.configuration.ParameterDefinitions.INSTRUMENTATION_CUCUMBER_ENABLED
 import com.epam.drill.agent.test.instrument.strategy.*
 import com.epam.drill.agent.test.execution.TestController
 import javassist.*
 import java.security.*
 
-abstract class CucumberStrategy : AbstractTestStrategy() {
+abstract class CucumberStrategy(configuration: AgentConfiguration) : AbstractTestStrategy(configuration) {
     val engineSegment = "cucumber"
     val EventBusProxy = "EventBusProxy"
     override val id: String
@@ -32,6 +34,8 @@ abstract class CucumberStrategy : AbstractTestStrategy() {
     abstract val Event: String
     abstract val PickleStepDefinitionMatch: String
     abstract val testPackage: String
+
+    override fun enabled() = super.enabled() && agentConfiguration.parameters[INSTRUMENTATION_CUCUMBER_ENABLED]
 
     override fun instrument(
         ctClass: CtClass,

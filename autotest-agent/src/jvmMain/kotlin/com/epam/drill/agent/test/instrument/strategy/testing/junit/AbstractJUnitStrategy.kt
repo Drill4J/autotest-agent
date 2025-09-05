@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.drill.agent.test.instrument.clients
+package com.epam.drill.agent.test.instrument.strategy.testing.junit
 
-import com.epam.drill.agent.test.instrument.AbstractTransformerObject
-import com.epam.drill.agent.instrument.TransformerObject
+import com.epam.drill.agent.common.configuration.AgentConfiguration
+import com.epam.drill.agent.test.configuration.ParameterDefinitions.INSTRUMENTATION_JUNIT_ENABLED
+import com.epam.drill.agent.test.instrument.strategy.AbstractTestStrategy
 
-actual object OkHttp3ClientTransformer : TransformerObject, AbstractTransformerObject()
+abstract class AbstractJUnitStrategy(configuration: AgentConfiguration): AbstractTestStrategy(configuration) {
+    override fun enabled() = super.enabled() && agentConfiguration.parameters[INSTRUMENTATION_JUNIT_ENABLED]
+}

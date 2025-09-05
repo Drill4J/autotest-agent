@@ -16,19 +16,20 @@
 package com.epam.drill.agent.test.instrument.strategy.testing.jmeter
 
 import com.epam.drill.agent.test.instrument.AgentClassTransformer
-import com.epam.drill.agent.test.*
-import com.epam.drill.agent.test.instrument.*
+import com.epam.drill.agent.test.configuration.Configuration
+import com.epam.drill.agent.test.configuration.ParameterDefinitions.INSTRUMENTATION_JMETER_ENABLED
 import com.epam.drill.agent.test.instrument.strategy.*
 import javassist.*
-import org.objectweb.asm.*
 import java.security.*
 
 @Suppress("unused")
-object JMeterStrategy : AbstractTestStrategy() {
+object JMeterStrategy : AbstractTestStrategy(Configuration) {
     override val id: String
         get() = "jmeter"
 
-    override fun permit(className: String?, superName: String?, interfaces: Array<String?>): Boolean {
+    override fun enabled() = super.enabled() && agentConfiguration.parameters[INSTRUMENTATION_JMETER_ENABLED]
+
+    override fun permit(className: String, superName: String?, interfaces: Array<String?>): Boolean {
         return className == "org/apache/jmeter/protocol/http/sampler/HTTPHC4Impl"
     }
 
