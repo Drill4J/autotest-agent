@@ -30,7 +30,7 @@ import com.epam.drill.agent.test.configuration.ParameterDefinitions
 private val logger = KotlinLogging.logger {}
 private const val QUEUE_DEFAULT_SIZE: Long = 512L * 1024 * 1024
 
-object TestAgentMessageSender : AgentMessageSender<AgentMessage> by messageSender()
+object TestAgentMessageSender : AgentMessageSender by messageSender()
 
 fun agentTransport(): AgentMessageTransport = HttpAgentMessageTransport(
     Configuration.parameters[ParameterDefinitions.API_URL],
@@ -41,9 +41,9 @@ fun agentTransport(): AgentMessageTransport = HttpAgentMessageTransport(
     gzipCompression = false
 )
 
-fun messageSender(): AgentMessageSender<AgentMessage> {
+fun messageSender(): AgentMessageSender {
     val transport = agentTransport()
-    val serializer = JsonAgentMessageSerializer<AgentMessage>()
+    val serializer = JsonAgentMessageSerializer()
     val mapper = HttpAgentMessageDestinationMapper("data-ingest")
     val queue = InMemoryAgentMessageQueue(
         capacity = Configuration.parameters[ParameterDefinitions.MESSAGE_QUEUE_LIMIT].let(::parseBytes)

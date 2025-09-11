@@ -56,7 +56,8 @@ class JsCoverageSenderImpl : JsCoverageSender {
                 "POST",
                 "raw-javascript-coverage"
             ),
-            message = payload
+            message = payload,
+            serializer = AddSessionData.serializer()
         )
     }.onFailure {
         logger.warn(it) { "can't send js raw coverage ${SessionController.getSessionId()}" }

@@ -31,7 +31,7 @@ interface TestInfoSender {
 }
 
 class IntervalTestInfoSender(
-    private val messageSender: AgentMessageSender<AgentMessage>,
+    private val messageSender: AgentMessageSender,
     private val intervalMs: Long = 1000,
     private val collectTests: () -> List<TestLaunchPayload> = { emptyList() }
 ) : TestInfoSender {
@@ -68,7 +68,8 @@ class IntervalTestInfoSender(
                 groupId = Configuration.parameters[ParameterDefinitions.GROUP_ID],
                 sessionId = SessionController.getSessionId(),
                 tests = tests
-            )
+            ),
+            serializer = AddTestsPayload.serializer()
         )
     }
 }
