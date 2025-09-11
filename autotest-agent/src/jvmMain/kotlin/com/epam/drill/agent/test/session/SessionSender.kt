@@ -24,13 +24,14 @@ interface SessionSender {
 }
 
 class SessionSenderImpl(
-    private val messageSender: AgentMessageSender<AgentMessage>
+    private val messageSender: AgentMessageSender
 ) : SessionSender {
 
     override fun sendSession(payload: SessionPayload) {
         messageSender.send(
             AgentMessageDestination("PUT", "sessions"),
-            payload
+            payload,
+            SessionPayload.serializer()
         )
     }
 }

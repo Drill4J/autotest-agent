@@ -34,7 +34,7 @@ object DevToolsMessageSender {
         drillInternal = false,
         gzipCompression = false,
     )
-    private val messageSerializer = JsonAgentMessageSerializer<DevToolsMessage>()
+    private val messageSerializer = JsonAgentMessageSerializer()
     private val messageDeserializer = JsonAgentMessageDeserializer()
     private val logger = KotlinLogging.logger {}
 
@@ -44,7 +44,7 @@ object DevToolsMessageSender {
         message: DevToolsMessage
     ) = messageTransport.send(
         AgentMessageDestination(method, path),
-        messageSerializer.serialize(message),
+        messageSerializer.serialize(message, DevToolsMessage.serializer()),
         messageSerializer.contentType()
     )
         .mapContent { it.decodeToString() }
@@ -57,7 +57,7 @@ object DevToolsMessageSender {
         clazz: KClass<T>
     ) = messageTransport.send(
         AgentMessageDestination(method, path),
-        messageSerializer.serialize(message),
+        messageSerializer.serialize(message, DevToolsMessage.serializer()),
         messageSerializer.contentType()
     )
         .mapContent {
