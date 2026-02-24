@@ -15,6 +15,6 @@
  */
 package com.epam.drill.agent.test.instrument.servers
 
-import com.epam.drill.agent.instrument.TransformerObject
+import com.epam.drill.agent.instrument.Transformer
 
-expect object ReactorTransformer: TransformerObject
+expect object ReactorTransformer: Transformer

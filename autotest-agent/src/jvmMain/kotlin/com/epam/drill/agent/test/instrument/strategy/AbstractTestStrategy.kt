@@ -24,10 +24,11 @@ import javassist.CtClass
 import javassist.LoaderClassPath
 import mu.KotlinLogging
 import com.epam.drill.agent.instrument.Transformer
+import com.epam.drill.agent.instrument.TransformerObject
 import com.epam.drill.agent.test.instrument.StrategyManager
 
 @Suppress("LeakingThis")
-abstract class AbstractTestStrategy(internal val agentConfiguration: AgentConfiguration) : Transformer {
+abstract class AbstractTestStrategy(internal val agentConfiguration: AgentConfiguration) : TransformerObject {
 
     init {
         StrategyManager.allStrategies[id] =

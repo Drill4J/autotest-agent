@@ -31,6 +31,7 @@ val aesyDatasizeVersion: String by parent!!.extra
 val nativeAgentLibName: String by parent!!.extra
 val macosLd64: String by parent!!.extra
 val ktorVersion : String by parent!!.extra
+val asmVersion: String by parent!!.extra
 
 repositories {
     mavenCentral()
@@ -108,7 +109,7 @@ kotlin {
                 implementation("io.aesy:datasize:$aesyDatasizeVersion")
                 implementation("com.benasher44:uuid:$uuidVersion")
                 implementation(project(":agent-transport"))
-                implementation(project(":knasm"))
+                implementation("org.ow2.asm:asm:${asmVersion}")
                 implementation(project(":agent-instrumentation"))
             }
         }
