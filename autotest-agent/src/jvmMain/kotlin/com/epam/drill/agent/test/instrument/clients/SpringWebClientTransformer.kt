@@ -22,7 +22,7 @@ import com.epam.drill.agent.test.instrument.RuntimeClassPathProvider
 import com.epam.drill.agent.test.instrument.TestSessionHeadersProcessor
 
 actual object SpringWebClientTransformer:
-    TransformerObject,
+    Transformer,
     SpringWebClientTransformerObject(Configuration),
     HeadersProcessor by TestSessionHeadersProcessor,
     ClassPathProvider by RuntimeClassPathProvider

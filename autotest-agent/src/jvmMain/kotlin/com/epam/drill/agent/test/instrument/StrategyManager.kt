@@ -88,13 +88,25 @@ actual object StrategyManager {
         loader: Any?,
         protectionDomain: Any?,
     ): ByteArray? {
-        val transformedClassBytes = mutableListOf<ByteArray?>()
-        val classReader = ClassReader(classBytes)
-        for (strategy in strategies) {
-            if (strategy.permit(className, classReader.superName, classReader.interfaces)) {
-                transformedClassBytes.add(strategy.transform(className, classBytes, loader, protectionDomain))
-            }
-        }
-        return transformedClassBytes.firstOrNull { it != null && !it.contentEquals(classBytes) }
+        val reader = runCatching { ClassReader(classBytes) }
+            .onFailure { logger.warn(it) { "Can't read class: $classBytes" } }
+            .getOrNull() ?: return classBytes
+        return strategies.fold(classBytes) { bytes, transformer ->
+            runCatching {
+                when {
+                    transformer is TransformerObject && !transformer.permit(
+                        className,
+                        reader.superName,
+                        reader.interfaces
+                    ) -> bytes
+
+                    else -> transformer.transform(className, bytes, loader, protectionDomain)
+                }
+            }.onFailure {
+                logger.warn(it) { "Can't transform class: $className with ${transformer::class.simpleName}" }
+            }.getOrNull()?.takeIf { it !== bytes }?.also {
+                logger.debug { "$className was transformed by ${transformer::class.simpleName}" }
+            } ?: bytes
+        } 
     }
 }

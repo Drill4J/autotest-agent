@@ -19,13 +19,10 @@ import com.epam.drill.agent.instrument.*
 import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.configuration.ParameterDefinitions
 import com.epam.drill.agent.test.*
-import com.epam.drill.agent.test.configuration.*
 import com.epam.drill.agent.test.configuration.ParameterDefinitions.INSTRUMENTATION_SELENIUM_ENABLED
 import com.epam.drill.agent.test.instrument.RuntimeClassPathProvider
 import javassist.*
-import org.objectweb.asm.*
 import java.io.*
-import java.security.*
 import mu.KotlinLogging
 
 @Suppress("PrivatePropertyName")

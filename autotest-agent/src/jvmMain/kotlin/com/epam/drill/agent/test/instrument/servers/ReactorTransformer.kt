@@ -19,7 +19,7 @@ import com.epam.drill.agent.instrument.servers.ReactorTransformerObject
 
 import com.epam.drill.agent.instrument.AbstractTransformerObject
 import com.epam.drill.agent.instrument.ClassPathProvider
-import com.epam.drill.agent.instrument.TransformerObject
+import com.epam.drill.agent.instrument.Transformer
 import com.epam.drill.agent.test.configuration.Configuration
 import com.epam.drill.agent.test.instrument.RuntimeClassPathProvider
 import com.epam.drill.agent.test.instrument.reactor.transformers.FluxTransformer
@@ -35,6 +35,6 @@ private val reactorTransformers = setOf<AbstractTransformerObject>(
 )
 
 actual object ReactorTransformer :
-    TransformerObject,
+    Transformer,
     ReactorTransformerObject(reactorTransformers, Configuration),
     ClassPathProvider by RuntimeClassPathProvider

@@ -15,6 +15,6 @@
  */
 package com.epam.drill.agent.test.instrument.clients
 
-import com.epam.drill.agent.instrument.TransformerObject
+import com.epam.drill.agent.instrument.Transformer
 
-expect object ApacheHttpClientTransformer : TransformerObject
+expect object ApacheHttpClientTransformer : Transformer

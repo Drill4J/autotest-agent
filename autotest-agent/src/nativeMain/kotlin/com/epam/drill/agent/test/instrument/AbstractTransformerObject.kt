@@ -15,6 +15,6 @@
  */
 package com.epam.drill.agent.test.instrument
 
-import com.epam.drill.agent.instrument.JvmTransformerObject
+import com.epam.drill.agent.instrument.JvmTransformer
 
-abstract class AbstractTransformerObject: JvmTransformerObject()
+abstract class AbstractTransformerObject: JvmTransformer()
